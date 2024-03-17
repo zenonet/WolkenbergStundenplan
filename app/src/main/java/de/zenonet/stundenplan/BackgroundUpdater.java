@@ -44,6 +44,9 @@ public class BackgroundUpdater extends BroadcastReceiver {
             Lesson nextLesson = timeTable.Lessons[dayOfWeek][nextPeriod];
             Lesson lessonAfterThat = timeTable.Lessons[dayOfWeek].length > nextPeriod + 1 ? timeTable.Lessons[dayOfWeek][nextPeriod + 1] : null;
 
+            // Just don't show a notification if the next lesson is not taking place
+            if(!nextLesson.isTakingPlace()) return; // TODO: Make it create a notification here, that says when the next lesson starts
+
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -56,7 +59,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
             }
 
             notificationManager.notify(666, builder.build());
-        });
+        }, true);
     }
 }
 
