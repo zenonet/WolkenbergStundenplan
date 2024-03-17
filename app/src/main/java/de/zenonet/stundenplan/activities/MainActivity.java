@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         NameLookup.setFallbackLookup(this.getString(R.string.fallback_lookup));
 
 
-        client.fetchTimeTable(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
+        client.fetchTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
 
         });
 /*

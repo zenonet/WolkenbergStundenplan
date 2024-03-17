@@ -71,130 +71,135 @@ public class TimeTableClient {
         }
     }
 
-    public void fetchTimeTable(int weekOfYear, TimeTableFetchedCallback callback) {
-        int studentId = 536;
-        Thread thread = new Thread(() -> {
+    public void fetchTimeTable(int weekOfYear) {
 
-            if (!isLoggedIn) login();
+        if (!isLoggedIn) login();
 
-            // Just retry if it didn't work the first time
-            if (!isLoggedIn) login();
+        // Just retry if it didn't work the first time
+        if (!isLoggedIn) login();
 
 
-            Calendar timeTableTime = Calendar.getInstance();
-            timeTableTime.setFirstDayOfWeek(Calendar.MONDAY);
-            timeTableTime.set(Calendar.WEEK_OF_YEAR, weekOfYear);
+        Calendar timeTableTime = Calendar.getInstance();
+        timeTableTime.setFirstDayOfWeek(Calendar.MONDAY);
+        timeTableTime.set(Calendar.WEEK_OF_YEAR, weekOfYear);
 
-            // Get data from api
-            String raw = getTimeTableRaw(536);
+        // Get data from api
+        String raw = getTimeTableRaw(536);
 
-            // Interpret the data
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:sssss");
+        // Interpret the data
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:sssss");
 
-            timeTable = new TimeTable();
-            try {
-                // Basically a 3D array with this structure: weekDay -> period -> week      I'd really like to know why
-                JSONArray jsonArray = new JSONArray(raw);
-                for (int dayI = 0; dayI < 5; dayI++) {
-                    JSONObject weekDay = jsonArray.getJSONObject(dayI);
-                    final int lessonCount = weekDay.length();
-                    timeTable.Lessons[dayI] = new Lesson[lessonCount];
+        timeTable = new TimeTable();
+        try {
+            // Basically a 3D array with this structure: weekDay -> period -> week      I'd really like to know why
+            JSONArray jsonArray = new JSONArray(raw);
+            for (int dayI = 0; dayI < 5; dayI++) {
+                JSONObject weekDay = jsonArray.getJSONObject(dayI);
+                final int lessonCount = weekDay.length();
+                timeTable.Lessons[dayI] = new Lesson[lessonCount];
 
-                    // Don't blame me, It was not me who decided to TWO-INDEX THIS!!!!!
-                    for (int periodI = 2; periodI < lessonCount + 2; periodI++) {
+                // Don't blame me, It was not me who decided to TWO-INDEX THIS!!!!!
+                for (int periodI = 2; periodI < lessonCount + 2; periodI++) {
 
-                        JSONArray timeTables = weekDay.getJSONArray(String.valueOf(periodI));
+                    JSONArray timeTables = weekDay.getJSONArray(String.valueOf(periodI));
 
-                        // find the first timetable version whose end time is in the future
-                        for (int i = 0; i < timeTables.length(); i++) {
-                            JSONObject tt = timeTables.getJSONObject(i);
+                    // find the first timetable version whose end time is in the future
+                    for (int i = 0; i < timeTables.length(); i++) {
+                        JSONObject tt = timeTables.getJSONObject(i);
 
-                            String dateString = tt.getJSONObject("DATE_TO").getString("date");
-                            Date endDate = dateFormat.parse(dateString);
-                            if (endDate.after(timeTableTime.getTime())) {
-                                // Create the lesson
-                                Lesson lesson = new Lesson();
-                                lesson.Subject = lookup.lookupSubjectName(tt.getInt("SUBJECT_ID"));
-                                lesson.SubjectShortName = lookup.lookupSubjectShortName(tt.getInt("SUBJECT_ID"));
-                                lesson.Teacher = lookup.lookupTeacher(tt.getInt("TEACHER_ID"));
-                                lesson.Room = lookup.lookupRoom(tt.getInt("ROOM_ID"));
+                        String dateString = tt.getJSONObject("DATE_TO").getString("date");
+                        Date endDate = dateFormat.parse(dateString);
+                        if (endDate.after(timeTableTime.getTime())) {
+                            // Create the lesson
+                            Lesson lesson = new Lesson();
+                            lesson.Subject = lookup.lookupSubjectName(tt.getInt("SUBJECT_ID"));
+                            lesson.SubjectShortName = lookup.lookupSubjectShortName(tt.getInt("SUBJECT_ID"));
+                            lesson.Teacher = lookup.lookupTeacher(tt.getInt("TEACHER_ID"));
+                            lesson.Room = lookup.lookupRoom(tt.getInt("ROOM_ID"));
 
-                                Pair<LocalTime, LocalTime> startAndEndTime = getStartAndEndTimeOfPeriod(periodI - 2);
-                                lesson.StartTime = startAndEndTime.first;
-                                lesson.EndTime = startAndEndTime.second;
+                            Pair<LocalTime, LocalTime> startAndEndTime = getStartAndEndTimeOfPeriod(periodI - 2);
+                            lesson.StartTime = startAndEndTime.first;
+                            lesson.EndTime = startAndEndTime.second;
 
-                                // Add it to the timetable
-                                timeTable.Lessons[dayI][periodI - 2] = lesson;
-                                break;
-                            }
-                        }
-
-
-                    }
-                }
-
-
-                // Get substitution data from api
-                String rawSubstitutions = getSubstitutionsRaw(536);
-
-                // Interpret substitution data
-                int year = timeTableTime.get(Calendar.YEAR);
-
-                JSONArray substitutions = new JSONObject(rawSubstitutions).getJSONObject("substitutions").getJSONArray(String.format("%s-%s", year, weekOfYear));
-                for (int dayI = 0; dayI < 5; dayI++) {
-
-                    if (substitutions.isNull(dayI)) continue;
-
-                    JSONObject substitutionsThatDay = substitutions.getJSONObject(dayI);
-
-                    if (substitutionsThatDay.has("substitutions")) {
-                        JSONArray substitutionsArray = substitutionsThatDay.getJSONArray("substitutions");
-                        for (int i = 0; i < substitutionsArray.length(); i++) {
-                            JSONObject substitution = substitutionsArray.getJSONObject(i);
-                            int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
-
-                            if (substitution.getString("TYPE").equals("ELIMINATION")) {
-                                timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
-                                continue;
-                            }
-
-                            if (substitution.getString("TYPE").equals("SUBSTITUTION")) {
-                                // Update the timetable according to the substitutions
-                                if (substitution.has("SUBJECT_ID_NEW")) {
-                                    timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                                    timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                                }
-                                if (substitution.has("ROOM_ID_NEW")) {
-                                    timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                                }
-                                if (substitution.has("TEACHER_ID_NEW")) {
-                                    timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                                }
-                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                                continue;
-                            }
-                            System.out.println("Unknown substitution type");
+                            // Add it to the timetable
+                            timeTable.Lessons[dayI][periodI - 2] = lesson;
+                            break;
                         }
                     }
-                    if (substitutionsThatDay.has("absences")) {
-                        JSONArray absencesArray = substitutionsThatDay.getJSONArray("absences");
-                        for (int i = 0; i < absencesArray.length(); i++) {
-                            int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
-                            int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
 
-                            for (int p = periodFrom; p < periodTo; p++) {
-                                timeTable.Lessons[dayI][p].Type = LessonType.Absent;
-                            }
-                        }
-                    }
 
                 }
-
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
 
+
+            // Get substitution data from api
+            String rawSubstitutions = getSubstitutionsRaw(536);
+
+            // Interpret substitution data
+            int year = timeTableTime.get(Calendar.YEAR);
+
+            JSONArray substitutions = new JSONObject(rawSubstitutions).getJSONObject("substitutions").getJSONArray(String.format("%s-%s", year, weekOfYear));
+            for (int dayI = 0; dayI < 5; dayI++) {
+
+                if (substitutions.isNull(dayI)) continue;
+
+                JSONObject substitutionsThatDay = substitutions.getJSONObject(dayI);
+
+                if (substitutionsThatDay.has("substitutions")) {
+                    JSONArray substitutionsArray = substitutionsThatDay.getJSONArray("substitutions");
+                    for (int i = 0; i < substitutionsArray.length(); i++) {
+                        JSONObject substitution = substitutionsArray.getJSONObject(i);
+                        int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
+
+                        if (substitution.getString("TYPE").equals("ELIMINATION")) {
+                            timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
+                            continue;
+                        }
+
+                        if (substitution.getString("TYPE").equals("SUBSTITUTION")) {
+                            // Update the timetable according to the substitutions
+                            if (substitution.has("SUBJECT_ID_NEW")) {
+                                timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
+                                timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
+                            }
+                            if (substitution.has("ROOM_ID_NEW")) {
+                                timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
+                            }
+                            if (substitution.has("TEACHER_ID_NEW")) {
+                                timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
+                            }
+                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+                            continue;
+                        }
+                        System.out.println("Unknown substitution type");
+                    }
+                }
+                if (substitutionsThatDay.has("absences")) {
+                    JSONArray absencesArray = substitutionsThatDay.getJSONArray("absences");
+                    for (int i = 0; i < absencesArray.length(); i++) {
+                        int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
+                        int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
+
+                        for (int p = periodFrom; p < periodTo; p++) {
+                            timeTable.Lessons[dayI][p].Type = LessonType.Absent;
+                        }
+                    }
+                }
+
+            }
+
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public void fetchTimeTableAsync(int weekOfYear, TimeTableFetchedCallback callback) {
+
+        int studentId = 536;
+        Thread thread = new Thread(() -> {
+            fetchTimeTable(weekOfYear);
             callback.timeTableFetched(timeTable);
         });
         thread.start();

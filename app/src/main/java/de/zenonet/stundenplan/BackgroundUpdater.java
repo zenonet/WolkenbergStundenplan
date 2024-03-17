@@ -37,7 +37,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
         client.sharedPreferences = context.getSharedPreferences("de.zenonet.stundenplan", Context.MODE_PRIVATE);
         NameLookup.setFallbackLookup(context.getString(R.string.fallback_lookup));
 
-        client.fetchTimeTable(cal.get(Calendar.WEEK_OF_YEAR), timeTable -> {
+        client.fetchTimeTableAsync(cal.get(Calendar.WEEK_OF_YEAR), timeTable -> {
             cal.get(Calendar.DAY_OF_WEEK);
             int dayOfWeek = (cal.get(Calendar.DAY_OF_WEEK) - 2);
             //int dayOfWeek = 0;
