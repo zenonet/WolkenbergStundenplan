@@ -226,6 +226,10 @@ public class TimeTableClient {
                             timeTable.Lessons[dayI][p].Type = LessonType.Absent;
                         }
                     }
+                } else if (substitutionsThatDay.has("holiday")) {
+                    for (int i = 0; i < timeTable.Lessons[dayI].length; i++) {
+                        timeTable.Lessons[dayI][i].Type = LessonType.Holiday;
+                    }
                 }
 
             }

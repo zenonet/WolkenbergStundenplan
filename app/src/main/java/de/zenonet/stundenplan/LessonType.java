@@ -6,4 +6,5 @@ public enum LessonType {
     Substitution,
     Absent,
     ExtraLesson,
+    Holiday,
 }
