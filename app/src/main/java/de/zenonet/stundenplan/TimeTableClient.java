@@ -380,6 +380,7 @@ public class TimeTableClient {
     public void loadCachedTimetable() {
         try {
             File cacheFile = new File(CachePath, "/timetable.json");
+
             int length = (int) cacheFile.length();
             byte[] bytes = new byte[length];
             try (FileInputStream in = new FileInputStream(cacheFile)) {
@@ -395,15 +396,19 @@ public class TimeTableClient {
             throw new RuntimeException(e);
         }
     }
+    private boolean isCacheValid(){
+        return new File(CachePath, "/timetable.json").exists() && sharedPreferences.getInt("weekOfCache", -1) == Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+    }
 
     public void loadTimeTableAsync(int weekOfYear, TimeTableLoadedCallback callback) {
         boolean isCurrentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear;
+        boolean isCacheValid = isCacheValid();
         Thread fetchThread = new Thread(() -> {
             Instant t0 = Instant.now();
 
-            // Only refuse to fetch if loading the current week AND there are no changes AND the cache represents the current week
-            if (isCurrentWeek && sharedPreferences.getInt("weekOfCache", -1) == weekOfYear && !checkForChanges()) {
-                Log.w(LOG_TAG, "Not loading timetable from api because cache is not outdated");
+            // Only refuse to fetch if loading the current week AND there are no changes AND the cache is valid
+            if (isCurrentWeek && isCacheValid && !checkForChanges()) {
+                Log.w(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
                 return;
             }
 
@@ -417,14 +422,13 @@ public class TimeTableClient {
         fetchThread.start();
 
         // Only get timetable from cache when loading the current week AND the cache represents the current week
-        if(isCurrentWeek && sharedPreferences.getInt("weekOfCache", -1) == weekOfYear) {
+        if(isCurrentWeek && isCacheValid) {
             Thread cacheLoadThread = new Thread(() -> {
                 Instant t0 = Instant.now();
                 loadCachedTimetable();
 
                 Instant t1 = Instant.now();
                 Log.w(LOG_TAG, String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
-
                 callback.timeTableLoaded(timeTable);
             });
             cacheLoadThread.start();
