@@ -8,6 +8,6 @@ public class Lesson {
     public String SubjectShortName;
     public String Room;
     public LessonType Type = LessonType.Regular;
-    public LocalTime StartTime;
-    public LocalTime EndTime;
+    public transient LocalTime StartTime;
+    public transient LocalTime EndTime;
 }

@@ -5,4 +5,5 @@ public enum LessonType {
     Cancelled,
     Substitution,
     Absent,
+    ExtraLesson,
 }

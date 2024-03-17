@@ -29,11 +29,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         TimeTableClient client = new TimeTableClient();
-        client.sharedPreferences = this.getSharedPreferences("de.zenonet.stundenplan", Context.MODE_PRIVATE);
-        NameLookup.setFallbackLookup(this.getString(R.string.fallback_lookup));
+        client.init(this);
 
 
-        client.fetchTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
+        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
 
         });
 /*
