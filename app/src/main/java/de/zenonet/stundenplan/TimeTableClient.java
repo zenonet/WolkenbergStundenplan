@@ -26,6 +26,7 @@ import java.util.Hashtable;
 
 public class TimeTableClient {
 
+    public static final String LOG_TAG = "timeTableLoading";
     public SharedPreferences sharedPreferences;
 
     public String token;
@@ -97,6 +98,7 @@ public class TimeTableClient {
 
         timeTable = new TimeTable();
         timeTable.isFromCache = false;
+
         try {
             // Basically a 3D array with this structure: weekDay -> period -> week      I'd really like to know why
             JSONArray jsonArray = new JSONArray(raw);
@@ -183,13 +185,13 @@ public class TimeTableClient {
                             timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
 
                             // Determine if the period array needs to be resized
-                            if(period >= timeTable.Lessons[dayI].length){
+                            if (period >= timeTable.Lessons[dayI].length) {
                                 // Resize the period array
-                                timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period+1);
+                                timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
 
                                 // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
                                 timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                            }else{
+                            } else {
                                 timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
                             }
                             timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
@@ -200,12 +202,12 @@ public class TimeTableClient {
                             continue;
                         }
 
-                        if(substitution.getString("TYPE").equals("CLASS_SUBSTITUTION")){
+                        if (substitution.getString("TYPE").equals("CLASS_SUBSTITUTION")) {
                             // This is only interesting from a teachers perspective and I doubt a teacher will ever use this app.
                             continue;
                         }
 
-                        if(substitution.getString("TYPE").equals("REDUNDANCY")){
+                        if (substitution.getString("TYPE").equals("REDUNDANCY")) {
                             // Pretty funny that giving information about redundancies is actually completely redundant.
                             continue;
                         }
@@ -227,7 +229,9 @@ public class TimeTableClient {
                 }
 
             }
-            cacheTimetable();
+            // Only cache if the current week is being fetched
+            if(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear)
+                cacheTimetable();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -351,12 +355,19 @@ public class TimeTableClient {
 
     public void cacheTimetable() {
         try {
+
+            Log.w(LOG_TAG, "Caching timetable...");
             String json = new Gson().toJson(timeTable);
             File cacheFile = new File(CachePath, "/timetable.json");
 
             try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
                 stream.write(json.getBytes(StandardCharsets.UTF_8));
             }
+
+            // Save when the cache was created
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("weekOfCache", Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
+            editor.apply();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -382,32 +393,38 @@ public class TimeTableClient {
     }
 
     public void loadTimeTableAsync(int weekOfYear, TimeTableLoadedCallback callback) {
+        boolean isCurrentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear;
         Thread fetchThread = new Thread(() -> {
             Instant t0 = Instant.now();
-            if (!checkForChanges()) {
-                Log.w("timeTableLoading", "Not loading timetable from api because cache is not outdated");
+
+            // Only refuse to fetch if loading the current week AND there are no changes AND the cache represents the current week
+            if (isCurrentWeek && sharedPreferences.getInt("weekOfCache", -1) == weekOfYear && !checkForChanges()) {
+                Log.w(LOG_TAG, "Not loading timetable from api because cache is not outdated");
                 return;
             }
 
             fetchTimeTable(weekOfYear);
 
             Instant t1 = Instant.now();
-            Log.w("timeTableLoading", String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
+            Log.w(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
 
             callback.timeTableLoaded(timeTable);
         });
         fetchThread.start();
 
-        Thread cacheLoadThread = new Thread(() -> {
-            Instant t0 = Instant.now();
-            loadCachedTimetable();
+        // Only get timetable from cache when loading the current week AND the cache represents the current week
+        if(isCurrentWeek && sharedPreferences.getInt("weekOfCache", -1) == weekOfYear) {
+            Thread cacheLoadThread = new Thread(() -> {
+                Instant t0 = Instant.now();
+                loadCachedTimetable();
 
-            Instant t1 = Instant.now();
-            Log.w("timeTableLoading", String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
+                Instant t1 = Instant.now();
+                Log.w(LOG_TAG, String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
 
-            callback.timeTableLoaded(timeTable);
-        });
-        cacheLoadThread.start();
+                callback.timeTableLoaded(timeTable);
+            });
+            cacheLoadThread.start();
+        }
     }
 
     static final String periodTimeJSON = "{\"0\":{\"PERIOD_TIME_ID\":0,\"START_TIME\":800,\"END_TIME\":845},\"1\":{\"PERIOD_TIME_ID\":1,\"START_TIME\":850,\"END_TIME\":935},\"2\":{\"PERIOD_TIME_ID\":2,\"START_TIME\":955,\"END_TIME\":1040},\"3\":{\"PERIOD_TIME_ID\":3,\"START_TIME\":1045,\"END_TIME\":1130},\"4\":{\"PERIOD_TIME_ID\":4,\"START_TIME\":1155,\"END_TIME\":1240},\"5\":{\"PERIOD_TIME_ID\":5,\"START_TIME\":1245,\"END_TIME\":1330},\"6\":{\"PERIOD_TIME_ID\":6,\"START_TIME\":1340,\"END_TIME\":1425},\"7\":{\"PERIOD_TIME_ID\":7,\"START_TIME\":1430,\"END_TIME\":1515},\"8\":{\"PERIOD_TIME_ID\":8,\"START_TIME\":1520,\"END_TIME\":1605}}";
