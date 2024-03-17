@@ -179,8 +179,8 @@ public class TimeTableClient {
                     if (substitutionsThatDay.has("absences")) {
                         JSONArray absencesArray = substitutionsThatDay.getJSONArray("absences");
                         for (int i = 0; i < absencesArray.length(); i++) {
-                            int periodFrom = absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2; // Two-indexing again (I am going insane)
-                            int periodTo = absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2;
+                            int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
+                            int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
 
                             for (int p = periodFrom; p < periodTo; p++) {
                                 timeTable.Lessons[dayI][p].Type = LessonType.Absent;
