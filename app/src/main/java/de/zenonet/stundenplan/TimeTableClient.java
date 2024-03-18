@@ -411,14 +411,13 @@ public class TimeTableClient {
             Instant t0 = Instant.now();
 
             // Only refuse to fetch if loading the current week AND there are no changes AND the cache is valid
-            if (isCurrentWeek && isCacheValid && !checkForChanges()) {
-                Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
-            } else {
+            if (!isCurrentWeek || !isCacheValid || checkForChanges()) {
                 fetchTimeTable(weekOfYear);
 
                 Instant t1 = Instant.now();
                 Log.i(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
-
+            } else {
+                Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
             }
 
             callback.timeTableLoaded(timeTable);
