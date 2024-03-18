@@ -18,9 +18,6 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
 
     public TimeTableClient client = new TimeTableClient();
-    TimePicker tp;
-    Button lookupButton;
-    TextView tokenView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,10 +28,10 @@ public class MainActivity extends AppCompatActivity {
         TimeTableClient client = new TimeTableClient();
         client.init(this);
 
-
+/*
         client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
-
-        });
+            System.out.println(timeTable);
+        });*/
 /*
         tokenView = findViewById(R.id.tokenView);
         tokenView.setText(client.token);
