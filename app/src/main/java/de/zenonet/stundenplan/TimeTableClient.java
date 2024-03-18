@@ -320,13 +320,11 @@ public class TimeTableClient {
         return sb.toString();
     }
 
-    private boolean checkForChanges() {
-        Instant t0 = Instant.now();
-
+    private boolean checkForChanges() throws IOException {
         if (!isLoggedIn) login();
 
-        HttpURLConnection httpCon;
         try {
+            HttpURLConnection httpCon;
             URL url = new URL("https://wolkenberg-gymnasium.de/wolkenberg-app/api/counter");
             httpCon = (HttpURLConnection) url.openConnection();
             httpCon.setRequestMethod("GET");
@@ -350,13 +348,11 @@ public class TimeTableClient {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putLong("counter", counter);
             editor.apply();
-            Instant t1 = Instant.now();
-            System.out.println(Duration.between(t0, t1));
 
             return counter > lastCounter;
         } catch (Exception e) {
+            if(e instanceof IOException) throw (IOException) e;
             throw new RuntimeException(e);
-            //return true;
         }
     }
 
@@ -411,15 +407,23 @@ public class TimeTableClient {
             Instant t0 = Instant.now();
 
             // Only refuse to fetch if loading the current week AND there are no changes AND the cache is valid
-            if (!isCurrentWeek || !isCacheValid || checkForChanges()) {
-                fetchTimeTable(weekOfYear);
+            try {
+                if (!isCurrentWeek || !isCacheValid || checkForChanges()) {
+                    fetchTimeTable(weekOfYear);
 
-                Instant t1 = Instant.now();
-                Log.i(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
-            } else {
-                Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
+                    Instant t1 = Instant.now();
+                    Log.i(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
+                } else {
+                    Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
+
+                    timeTable.isCacheStateConfirmed = true;
+                }
+            } catch (IOException e) {
+                // If the check for changes didn't work (because there's no internet connection)
+                Log.i(LOG_TAG, "IO exception occurred while checking for changes. (Likely because of no internet connection) Cache is used to provide data");
             }
 
+            // TODO: Handle the case that the cache is not valid and no internet connection can be established
             callback.timeTableLoaded(timeTable);
         });
         fetchThread.start();
