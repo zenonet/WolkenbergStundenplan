@@ -234,7 +234,7 @@ public class TimeTableClient {
 
             }
             // Only cache if the current week is being fetched
-            if(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear)
+            if (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear)
                 cacheTimetable();
 
         } catch (Exception e) {
@@ -336,6 +336,9 @@ public class TimeTableClient {
 
             int respCode = httpCon.getResponseCode();
 
+            if (respCode != 200) {
+                Log.e(LOG_TAG, String.format("Unable to check for updates: Response code %d", respCode));
+            }
             JSONObject response = new JSONObject(readAllFromStream(httpCon.getInputStream()));
 
             // Let's just assume this counter works like a big number with a few random dashes between digits
@@ -360,7 +363,7 @@ public class TimeTableClient {
     public void cacheTimetable() {
         try {
 
-            Log.w(LOG_TAG, "Caching timetable...");
+            Log.i(LOG_TAG, "Caching timetable...");
             String json = new Gson().toJson(timeTable);
             File cacheFile = new File(CachePath, "/timetable.json");
 
@@ -396,7 +399,8 @@ public class TimeTableClient {
             throw new RuntimeException(e);
         }
     }
-    private boolean isCacheValid(){
+
+    private boolean isCacheValid() {
         return new File(CachePath, "/timetable.json").exists() && sharedPreferences.getInt("weekOfCache", -1) == Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
     }
 
@@ -417,11 +421,6 @@ public class TimeTableClient {
 
             }
 
-            fetchTimeTable(weekOfYear);
-
-            Instant t1 = Instant.now();
-            Log.w(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
-
             callback.timeTableLoaded(timeTable);
         });
         fetchThread.start();
@@ -433,7 +432,7 @@ public class TimeTableClient {
                 loadCachedTimetable();
 
                 Instant t1 = Instant.now();
-                Log.w(LOG_TAG, String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
+                Log.i(LOG_TAG, String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
 
                 // This only works if cache loading is faster than fetching but when would that not be the case
                 if (!onlyCallOnce)
