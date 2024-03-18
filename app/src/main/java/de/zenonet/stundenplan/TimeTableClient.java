@@ -408,8 +408,13 @@ public class TimeTableClient {
 
             // Only refuse to fetch if loading the current week AND there are no changes AND the cache is valid
             if (isCurrentWeek && isCacheValid && !checkForChanges()) {
-                Log.w(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
-                return;
+                Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
+            } else {
+                fetchTimeTable(weekOfYear);
+
+                Instant t1 = Instant.now();
+                Log.i(LOG_TAG, String.format("TimeTable loaded from api in %d ms", Duration.between(t0, t1).toMillis()));
+
             }
 
             fetchTimeTable(weekOfYear);
@@ -422,7 +427,7 @@ public class TimeTableClient {
         fetchThread.start();
 
         // Only get timetable from cache when loading the current week AND the cache represents the current week
-        if(isCurrentWeek && isCacheValid) {
+        if (isCurrentWeek && isCacheValid) {
             Thread cacheLoadThread = new Thread(() -> {
                 Instant t0 = Instant.now();
                 loadCachedTimetable();
@@ -431,7 +436,7 @@ public class TimeTableClient {
                 Log.w(LOG_TAG, String.format("TimeTable loaded from cache in %d ms", Duration.between(t0, t1).toMillis()));
 
                 // This only works if cache loading is faster than fetching but when would that not be the case
-                if(!onlyCallOnce)
+                if (!onlyCallOnce)
                     callback.timeTableLoaded(timeTable);
             });
             cacheLoadThread.start();
