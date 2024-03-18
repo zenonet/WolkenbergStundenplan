@@ -421,6 +421,11 @@ public class TimeTableClient {
             } catch (IOException e) {
                 // If the check for changes didn't work (because there's no internet connection)
                 Log.i(LOG_TAG, "IO exception occurred while checking for changes. (Likely because of no internet connection) Cache is used to provide data");
+
+                // TODO: This is an ugly solution for the case that there's no internet which causes the app to reach this point before the cache was loaded
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {}
             }
 
             // TODO: Handle the case that the cache is not valid and no internet connection can be established
