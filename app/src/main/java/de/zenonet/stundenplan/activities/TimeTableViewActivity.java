@@ -1,5 +1,6 @@
 package de.zenonet.stundenplan.activities;
 
+import android.graphics.Color;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TableRow;
@@ -7,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.core.view.ViewCompat;
+import de.zenonet.stundenplan.LessonType;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.TimeTable;
 import de.zenonet.stundenplan.TimeTableClient;
@@ -45,8 +47,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
             for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
                 int viewId = 666 + dayI * 9 + periodI;
                 TextView lessonView = findViewById(viewId);
-                if (lessonView != null)
-                    lessonView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
+
+                if (lessonView == null) continue; // TODO: This should never happen
+
+                lessonView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
+
+                // TODO: Select better colors for this
+                if(!timeTable.Lessons[dayI][periodI].isTakingPlace())
+                    lessonView.setBackgroundColor(Color.GREEN);
+                else if(timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
+                    lessonView.setBackgroundColor(Color.RED);
+                else
+                    lessonView.setBackgroundColor(Color.TRANSPARENT);
             }
         }
     }
