@@ -12,6 +12,6 @@ public class Lesson {
     public transient LocalTime EndTime;
 
     public boolean isTakingPlace(){
-        return Type == LessonType.Cancelled || Type == LessonType.Absent || Type == LessonType.Holiday;
+        return Type != LessonType.Cancelled && Type != LessonType.Absent && Type != LessonType.Holiday;
     }
 }
