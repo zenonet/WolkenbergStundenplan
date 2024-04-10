@@ -450,6 +450,59 @@ public class TimeTableClient {
             throw new RuntimeException(e);
         }
     }
+/*
+    private void loadStaticLookupData(){
+
+        try {
+            HttpURLConnection httpCon;
+            URL url = new URL("https://wolkenberg-gymnasium.de/wolkenberg-app/api/all");
+            httpCon = (HttpURLConnection) url.openConnection();
+            httpCon.setRequestMethod("HEAD");
+            httpCon.setRequestProperty("Content-Type", "application/json");
+            httpCon.setRequestProperty("Authorization", "Bearer " + token);
+            httpCon.setRequestProperty("Accept-Encoding", "gzip, deflate, br, zstd");
+            httpCon.setDoInput(true);
+
+            int respCode = httpCon.getResponseCode();
+
+            if (respCode != 200) {
+                Log.e(LOG_TAG, String.format("Unable to load static lookup data: Response code %d", respCode));
+            }
+
+            int lookupLength = Integer.parseInt(httpCon.getHeaderField("Content-Length"));
+            long lastLookupLength = sharedPreferences.getInt("lookupLength", 0);
+
+            if(lastLookupLength != lookupLength)
+
+
+            JSONObject response = new JSONObject(readAllFromStream(httpCon.getInputStream()));
+
+
+            // Save new value
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putLong("counter", counter);
+            editor.apply();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            String json = new Gson().toJson(timeTable);
+            File cacheFile = new File(CachePath, "/timetable.json");
+
+            try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
+                stream.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Save when the cache was created
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("weekOfCache", Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
+            editor.apply();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }*/
 
     private boolean isCacheValid() {
         return new File(CachePath, "/timetable.json").exists() && sharedPreferences.getInt("weekOfCache", -1) == Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
@@ -458,12 +511,13 @@ public class TimeTableClient {
     public void loadTimeTableAsync(int weekOfYear, TimeTableLoadedCallback callback, boolean onlyCallOnce) {
         boolean isCurrentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear;
         boolean isCacheValid = isCacheValid();
+        final boolean forceFetch = true;
         Thread fetchThread = new Thread(() -> {
             Instant t0 = Instant.now();
 
             // Only refuse to fetch if loading the current week AND there are no changes AND the cache is valid
             try {
-                if (!isCurrentWeek || !isCacheValid || checkForChanges()) {
+                if (!isCurrentWeek || !isCacheValid || checkForChanges() || forceFetch) {
                     fetchTimeTable(weekOfYear);
 
                     Instant t1 = Instant.now();
