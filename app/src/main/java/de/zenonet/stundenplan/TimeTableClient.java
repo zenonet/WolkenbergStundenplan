@@ -166,12 +166,13 @@ public class TimeTableClient {
                         JSONObject substitution = substitutionsArray.getJSONObject(i);
                         int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
 
-                        if (substitution.getString("TYPE").equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
+                        String type = substitution.getString("TYPE");
+                        if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
                             timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
                             continue;
                         }
 
-                        if (substitution.getString("TYPE").equals("SUBSTITUTION") || substitution.getString("TYPE").equals("SWAP") || substitution.getString("TYPE").equals("ROOM_SUBSTITUTION")) {
+                        if (type.equals("SUBSTITUTION") || type.equals("SWAP") || type.equals("ROOM_SUBSTITUTION")) {
                             // Update the timetable according to the substitutions
                             if (substitution.has("SUBJECT_ID_NEW")) {
                                 timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
@@ -183,7 +184,11 @@ public class TimeTableClient {
                             if (substitution.has("TEACHER_ID_NEW")) {
                                 timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
                             }
-                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+                            if(type.equals("ROOM_SUBSTITUTION"))
+                                timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
+                            else
+                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+
                             continue;
                         }
 
@@ -208,17 +213,17 @@ public class TimeTableClient {
                             continue;
                         }
 
-                        if (substitution.getString("TYPE").equals("CLASS_SUBSTITUTION")) {
+                        if (type.equals("CLASS_SUBSTITUTION")) {
                             // This is only interesting from a teachers perspective and I doubt a teacher will ever use this app.
                             continue;
                         }
 
-                        if (substitution.getString("TYPE").equals("REDUNDANCY")) {
+                        if (type.equals("REDUNDANCY")) {
                             // Pretty funny that giving information about redundancies is actually completely redundant.
                             continue;
                         }
 
-                        Log.w("timetableloading", String.format("Unknown substitution type '%s'", substitution.getString("TYPE")));
+                        Log.w("timetableloading", String.format("Unknown substitution type '%s'", type));
 
                     }
                 }
