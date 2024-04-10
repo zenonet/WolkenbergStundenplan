@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 import com.google.gson.Gson;
+import de.zenonet.stundenplan.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.callbacks.TimeTableFetchedCallback;
 import de.zenonet.stundenplan.callbacks.TimeTableLoadedCallback;
 import org.json.JSONArray;
@@ -301,7 +302,51 @@ public class TimeTableClient {
     }
 
     private String getRefreshToken() {
-        return sharedPreferences.getString("refreshToken", "0.AQUAbReNd3UPKkevzKhVU6sG3anigvv9Ho5KmsaSQTq0tYsbAco.AgABAAEAAADnfolhJpSnRYB1SVj-Hgd8AgDs_wUA9P-YPZxfz5lRcipTW6bUImtZ85-xeSV5-_hW7afh9SG0ioTmwYRHWIm7o4ydIm3PLvNliBZO48nYQ7GI5A8TV2s8amOTMV7jItIq9hcwkmW0xFw9Br1QtjfPHuZ8gpCfP-hKgU1bvmLnttP6HTSEacHBAVCiWxI0Yjs8OhX8GdfRgdmL9FJZPTKjZJxiAJ_hTb0fKbqDJ0P97N4Eie8JVd_Ss7VxTXz4We5yOreooxHZOBpUtnnCbPnZRpvnrlWlOHzPOFyxNNQZU8Y6jjGOt8dhsbL0fhy7XX-FwZHUxxjmKulFs0J44R2wLqAyDQLNYiV8jnvg3R7E77W-qMhXNOJil0Bupt6AhVPyBY_Sw9fC85nP9AliDfraF6WCvlMHaAQFkpC8rMkHBgr1lLYeK4rZ4rWAgiLg7Xlqd9D3KRpltbgBRyzN0-ox1joVvTOeAiPvxKRPEeog7wGf1oQRVZWsRbhQHvIjXpHXj9Ts_gbzjsTwYZp__6eWI629b9smmvyfZblN2nYXyw5qC-XkILB37YZYB3rlH3pPXszzVUMsCgzz7rvtLXTTEFxdmhRluVZ9HTcnuPgu2Kbx4HsXviVRkoIgZ7h3B3P5Ig10dXjasoGgcvLH5jJfHVSbAAOrTaFJ7PDlhszxO7mzdBvM3q6ZL82AUCFDiM3ozxXOxi15tm_ejkvdELOcfug-Ujb7lBCSGhqJ4cwT2slfmdQE-VwYpXg_OdFTyJAvqIn423hJOMoHgtM5BlRs2puuEDVxBEpGjtHAnYM");
+        String refreshToken = sharedPreferences.getString("refreshToken", "fuck");
+        if(refreshToken.equals("fuck")){
+            Log.e(LOG_TAG, "Well, fuck, there's no refreshToken in cache");
+        }
+        return refreshToken;
+    }
+
+    public void redeemOAuthCodeAsync(String code){
+        redeemOAuthCodeAsync(code, null);
+    }
+
+    public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback){
+        new Thread(() -> {
+            HttpURLConnection httpCon;
+            try {
+                URL url = new URL("https://www.wolkenberg-gymnasium.de/wolkenberg-app/api/token");
+                httpCon = (HttpURLConnection) url.openConnection();
+                httpCon.setRequestProperty("Content-Type", "application/json");
+                httpCon.setRequestProperty("referer", "https://www.wolkenberg-gymnasium.de/wolkenberg-app/stundenplan-web-app/");
+                httpCon.setDoOutput(true);
+                httpCon.setDoInput(true);
+
+                OutputStream os = httpCon.getOutputStream();
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+                osw.write("{\"code\":\"" + code + "\",\"scope\":\"https://wgmail.onmicrosoft.com/f863619c-ea91-4f1d-85f4-2f907c53963b/user_impersonation\"}");
+                osw.flush();
+                osw.close();
+                os.close();
+
+                int respCode = httpCon.getResponseCode();
+                Log.i(LOG_TAG, "Get response code " + respCode + " while redeeming OAuth code");
+
+                String body = readAllFromStream(httpCon.getInputStream());
+                JSONObject jObj = new JSONObject(body);
+                token = jObj.getString("access_token");
+                String refreshToken = jObj.getString("refresh_token");
+                setRefreshToken(refreshToken);
+                isLoggedIn = true;
+
+                if(callback != null) callback.authCodeRedeemed();
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     private void setRefreshToken(String newRefreshToken) {
