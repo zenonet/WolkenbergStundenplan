@@ -14,4 +14,7 @@ public class Lesson {
     public boolean isTakingPlace(){
         return Type != LessonType.Cancelled && Type != LessonType.Absent && Type != LessonType.Holiday;
     }
+    public boolean isSubstitution(){
+        return Type == LessonType.Substitution || Type == LessonType.RoomSubstitution;
+    }
 }
