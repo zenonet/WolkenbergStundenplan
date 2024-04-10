@@ -24,16 +24,31 @@ public class TimeTableViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        // We do that before the other stuff to make sure it's already loading asynchronously while the activity boots up
-
+        setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_time_table_view);
 
+        // Check if the application is set up
+        if (!getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE).contains("refreshToken") && !getIntent().hasExtra("code")) {
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+
+
         client = new TimeTableClient();
         client.init(this);
-        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
-            runOnUiThread(() -> updateTimeTableView(timeTable));
-        });
+
+        {
+            // Login with oauth auth code if this activity was started by the login activity with a code
+            Intent intent = getIntent();
+            if (intent.hasExtra("code")) {
+
+                client.redeemOAuthCodeAsync(intent.getStringExtra("code"), this::loadTimeTableAsync);
+            }
+            else{
+                loadTimeTableAsync();
+            }
+        }
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
