@@ -58,13 +58,18 @@ public class TimeTableClient {
             httpCon.setDoOutput(true);
             httpCon.setDoInput(true);
 
-            // I think this actually connects already
             OutputStream os = httpCon.getOutputStream();
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
             osw.write("{\"refresh_token\":\"" + refreshToken + "\",\"scope\":\"https://wgmail.onmicrosoft.com/f863619c-ea91-4f1d-85f4-2f907c53963b/user_impersonation\"}");
             osw.flush();
             osw.close();
             os.close();
+
+            int respCode = httpCon.getResponseCode();
+
+            if(respCode != 200){
+                Log.e(LOG_TAG, "Login unsuccessful:" + httpCon.getResponseMessage());
+            }
 
             String content = readAllFromStream(httpCon.getInputStream());
 
@@ -74,8 +79,8 @@ public class TimeTableClient {
             setRefreshToken(jObj.getString("refresh_token"));
             token = jObj.getString("access_token");
             isLoggedIn = true;
-
-        } catch (Exception ignored) {
+            Log.i(LOG_TAG, "Logged in successfully");
+        } catch (Exception e) {
         }
     }
 
