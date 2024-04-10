@@ -1,13 +1,12 @@
 package de.zenonet.stundenplan.activities;
-
+import android.content.Intent;
 import android.graphics.Color;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import androidx.core.view.ViewCompat;
+
 import de.zenonet.stundenplan.LessonType;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.TimeTable;
@@ -18,7 +17,7 @@ import java.util.Calendar;
 public class TimeTableViewActivity extends AppCompatActivity {
 
     TimeTableClient client;
-    LinearLayout table;
+    TableLayout table;
     TextView stateView;
 
     @Override
@@ -26,7 +25,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_time_table_view);
 
         // Check if the application is set up
         if (!getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE).contains("refreshToken") && !getIntent().hasExtra("code")) {
@@ -55,59 +53,133 @@ public class TimeTableViewActivity extends AppCompatActivity {
         createTableLayout();
     }
 
+    private void loadTimeTableAsync(){
+        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
+            runOnUiThread(() -> updateTimeTableView(timeTable));
+        });
+    }
+
     private void updateTimeTableView(TimeTable timeTable) {
 
         stateView.setText(timeTable.isFromCache ? (timeTable.isCacheStateConfirmed ? "From cache (confirmed)" : "From cache") : "From API");
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
                 int viewId = 666 + dayI * 9 + periodI;
-                TextView lessonView = findViewById(viewId);
+                ViewGroup lessonView = findViewById(viewId);
 
-                if (lessonView == null) continue; // TODO: This should never happen
+                TextView subjectView = (TextView) lessonView.getChildAt(0);
+                TextView roomView = (TextView) (lessonView.getChildAt(1));
+                TextView teacherView = (TextView) (lessonView.getChildAt(2));
 
-                lessonView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
+                subjectView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
+                roomView.setText(timeTable.Lessons[dayI][periodI].Room);
+                teacherView.setText(timeTable.Lessons[dayI][periodI].Teacher);
 
                 // TODO: Select better colors for this
-                if(!timeTable.Lessons[dayI][periodI].isTakingPlace())
-                    lessonView.setBackgroundColor(Color.GREEN);
-                else if(timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
-                    lessonView.setBackgroundColor(Color.RED);
+                if (!timeTable.Lessons[dayI][periodI].isTakingPlace())
+                    lessonView.setBackgroundColor(getColor(R.color.cancelled_lesson));
+                else if (timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
+                    lessonView.setBackgroundColor(getColor(R.color.substituted_lesson));
+                else if(timeTable.Lessons[dayI][periodI].Type == LessonType.RoomSubstitution)
+                    lessonView.setBackgroundColor(getColor(R.color.room_substituted_lesson));
                 else
-                    lessonView.setBackgroundColor(Color.TRANSPARENT);
+                    lessonView.setBackgroundColor(getColor(R.color.regular_lesson));
             }
         }
     }
 
     private void createTableLayout() {
         final int widthPerRow = table.getMeasuredWidth() / 5;
+        final int lessonMargin = 3;
 
-        TableRow.LayoutParams rowParams = new TableRow.LayoutParams(50, 500);
-        for (int dayI = 0; dayI < 5; dayI++) {
+        table.setForegroundGravity(Gravity.FILL);
+
+        for (int periodI = 0; periodI < 10; periodI++) {
             TableRow row = new TableRow(this);
+
+            for (int dayI = 0; dayI < 5; dayI++) {
+
+                LinearLayout lessonLayout = new LinearLayout(this);
+                final int lessonTextPaddingH = 30;
+                final int lessonTextPaddingV = 15;
+                lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
+                lessonLayout.setOrientation(LinearLayout.VERTICAL);
+                lessonLayout.setMinimumWidth(widthPerRow);
+                row.addView(lessonLayout);
+
+
+
+                // Subject view:
+                TextView subjectView = new TextView(this);
+                lessonLayout.addView(subjectView);
+                subjectView.setTextColor(Color.BLACK);
+                subjectView.setTextSize(16);
+                //alignViewInRelativeLayout(subjectView, RelativeLayout.ALIGN_PARENT_LEFT);
+
+                // Room view:
+                TextView roomView = new TextView(this);
+                lessonLayout.addView(roomView);
+                roomView.setTextColor(Color.BLACK);
+                roomView.setTextSize(11);
+
+
+                // Teacher view:
+                TextView teacherView = new TextView(this);
+                lessonLayout.addView(teacherView);
+                teacherView.setTextColor(Color.BLACK);
+                teacherView.setTextSize(11);
+
+
+                TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(widthPerRow, ViewGroup.LayoutParams.MATCH_PARENT);
+                layoutParams.leftMargin = lessonMargin;
+                layoutParams.rightMargin = lessonMargin;
+                layoutParams.topMargin = lessonMargin;
+                layoutParams.bottomMargin = lessonMargin;
+
+                lessonLayout.setId(666 + dayI * 9 + periodI);
+                lessonLayout.setLayoutParams(layoutParams);
+            }
+
+            table.addView(row);
+        }
+
+/*        for (int dayI = 0; dayI < 5; dayI++) {
+            //TableRow row = new TableRow(this);
             //row.setLayoutParams(rowParams);
             //row.setBackgroundColor(dayI % 2 == 0 ? Color.RED : Color.BLUE);
-            row.setId(ViewCompat.generateViewId());
-            row.setOrientation(LinearLayout.VERTICAL);
-            row.setMinimumWidth(widthPerRow);
+            //row.setId(ViewCompat.generateViewId());
+            //row.setOrientation(LinearLayout.VERTICAL);
+            //row.setMinimumWidth(widthPerRow);
 
-            LinearLayout innerLayout = new LinearLayout(this);
-            innerLayout.setOrientation(LinearLayout.VERTICAL);
+            //LinearLayout innerLayout = new LinearLayout(this);
+            //innerLayout.setOrientation(LinearLayout.VERTICAL);
             for (int periodI = 0; periodI < 9; periodI++) {
                 TextView lessonView = new TextView(this);
                 final int lessonTextPaddingH = 30;
                 final int lessonTextPaddingV = 15;
                 lessonView.setMinWidth(widthPerRow);
+                lessonView.setMinWidth(50);
+                lessonView.setGravity(Gravity.FILL_HORIZONTAL);
+                lessonView.setForegroundGravity(Gravity.FILL);
                 lessonView.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
                 lessonView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                 lessonView.setId(666 + dayI * 9 + periodI);
                 lessonView.setBackground(getDrawable(R.drawable.border));
+
                 lessonView.setTextSize(22);
 
-                innerLayout.addView(lessonView);
+                GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(GridLayout.spec(periodI), GridLayout.spec(dayI));
+
+                layoutParams.width = widthPerRow;
+                layoutParams.setGravity(Gravity.FILL);
+                lessonView.setLayoutParams(layoutParams);
+
+                //innerLayout.addView(lessonView);
+                table.addView(lessonView);
             }
 
-            row.addView(innerLayout);
-            table.addView(row);
-        }
+            //row.addView(innerLayout);
+            //table.addView(row);
+        }*/
     }
 }

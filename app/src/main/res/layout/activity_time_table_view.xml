@@ -12,11 +12,13 @@
             android:layout_width="match_parent">
 
     </TextView>
-    <LinearLayout
-            android:layout_height="500dp"
+    <TableLayout
+            android:stretchColumns="0,1,2,3,4"
+            android:columnCount="5"
+            android:layout_height="match_parent"
             android:layout_width="match_parent"
             android:id="@+id/tableLayout"
             android:orientation="horizontal" android:layout_marginTop="1dp" android:layout_below="@+id/stateView">
 
-    </LinearLayout>
+    </TableLayout>
 </RelativeLayout>
