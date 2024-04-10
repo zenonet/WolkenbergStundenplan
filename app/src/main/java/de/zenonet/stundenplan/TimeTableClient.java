@@ -511,7 +511,7 @@ public class TimeTableClient {
     public void loadTimeTableAsync(int weekOfYear, TimeTableLoadedCallback callback, boolean onlyCallOnce) {
         boolean isCurrentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear;
         boolean isCacheValid = isCacheValid();
-        final boolean forceFetch = true;
+        final boolean forceFetch = false;
         Thread fetchThread = new Thread(() -> {
             Instant t0 = Instant.now();
 
