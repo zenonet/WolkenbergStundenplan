@@ -192,18 +192,18 @@ public class TimeTableClient {
                             continue;
                         }
 
-                        if (substitution.getString("TYPE").equals("EXTRA_LESSON")) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
+                        if (type.equals("EXTRA_LESSON")) {
+                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
 
-                            // Determine if the period array needs to be resized
+                            // Determine if the period array needs to be resized (Hopefully this will never have to happen)
                             if (period >= timeTable.Lessons[dayI].length) {
                                 // Resize the period array
                                 timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
 
+                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
+                            } else {
                                 // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
                                 timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                            } else {
-                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
                             }
                             timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
                             timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
