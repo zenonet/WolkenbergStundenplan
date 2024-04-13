@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -511,7 +512,7 @@ public class TimeTableClient {
     public void loadTimeTableAsync(int weekOfYear, TimeTableLoadedCallback callback, boolean onlyCallOnce) {
         boolean isCurrentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) == weekOfYear;
         boolean isCacheValid = isCacheValid();
-        final boolean forceFetch = false;
+        final boolean forceFetch = sharedPreferences.getBoolean("forceFetch", false);
         Thread fetchThread = new Thread(() -> {
             Instant t0 = Instant.now();
 
@@ -525,7 +526,7 @@ public class TimeTableClient {
                 } else {
                     Log.i(LOG_TAG, "Not loading timetable from api because cache is valid and not outdated.");
 
-                    timeTable.isCacheStateConfirmed = true;
+                    timeTable.lastConfirmedDate = LocalDateTime.now();
                 }
             } catch (IOException e) {
                 // If the check for changes didn't work (because there's no internet connection)
