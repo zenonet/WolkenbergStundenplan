@@ -1,7 +1,10 @@
 package de.zenonet.stundenplan;
 
+import androidx.annotation.Keep;
+
 import java.time.LocalTime;
 
+@Keep
 public class Lesson {
     public String Teacher;
     public String Subject;
