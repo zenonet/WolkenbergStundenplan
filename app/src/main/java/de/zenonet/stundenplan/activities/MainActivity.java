@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,9 +25,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        findViewById(R.id.start_view_button).setOnClickListener((args) -> {
+            Intent intent = new Intent(MainActivity.this, TimeTableViewActivity.class);
+            startActivity(intent);
+        });
+
+        /*
 
         TimeTableClient client = new TimeTableClient();
-        client.init(this);
+        client.init(this);*/
 
 /*
         client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {

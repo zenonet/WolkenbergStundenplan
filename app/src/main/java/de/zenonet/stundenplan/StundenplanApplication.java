@@ -34,7 +34,7 @@ public class StundenplanApplication extends Application {
 
     private void scheduleUpdateRepeating() {
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(StundenplanApplication.this, BackgroundUpdater.class);
+        Intent intent = new Intent(this, BackgroundUpdater.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(StundenplanApplication.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         try {

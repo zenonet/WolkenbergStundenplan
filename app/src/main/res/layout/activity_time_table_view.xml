@@ -1,24 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.TimeTableViewActivity">
+
+<!--    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".activities.TimeTableViewActivity">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />-->
 
     <TextView
-            android:id="@+id/stateView"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent">
+        android:id="@+id/stateView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
     </TextView>
+
     <TableLayout
-            android:stretchColumns="0,1,2,3,4"
-            android:columnCount="5"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:id="@+id/tableLayout"
-            android:orientation="horizontal" android:layout_marginTop="1dp" android:layout_below="@+id/stateView">
+        android:id="@+id/tableLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/stateView"
+        android:layout_marginTop="1dp"
+        android:columnCount="5"
+        android:orientation="horizontal"
+        android:stretchColumns="0,1,2,3,4">
 
     </TableLayout>
 </RelativeLayout>
