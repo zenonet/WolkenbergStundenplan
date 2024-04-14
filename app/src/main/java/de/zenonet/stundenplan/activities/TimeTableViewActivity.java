@@ -1,16 +1,23 @@
 package de.zenonet.stundenplan.activities;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 
 import de.zenonet.stundenplan.LessonType;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.TimeTable;
 import de.zenonet.stundenplan.TimeTableClient;
+import de.zenonet.stundenplan.models.User;
 
 import java.util.Calendar;
 
@@ -27,7 +34,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Check if the application is set up
-        if (!getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE).contains("refreshToken") && !getIntent().hasExtra("code")) {
+        if (!getSharedPreferences().contains("refreshToken") && !getIntent().hasExtra("code")) {
             startActivity(new Intent(this, LoginActivity.class));
             return;
         }
@@ -41,9 +48,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
             Intent intent = getIntent();
             if (intent.hasExtra("code")) {
 
-                client.redeemOAuthCodeAsync(intent.getStringExtra("code"), this::loadTimeTableAsync);
-            }
-            else{
+                client.redeemOAuthCodeAsync(intent.getStringExtra("code"), () -> {
+                    client.fetchPersonalData();
+
+                    // Save client id to shared prefs TODO
+                    getSharedPreferences().edit().putInt("userId", client.user.id).apply();
+
+                    loadTimeTableAsync();
+                });
+            } else {
                 loadTimeTableAsync();
             }
         }
@@ -53,10 +66,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
         createTableLayout();
     }
 
-    private void loadTimeTableAsync(){
-        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> {
-            runOnUiThread(() -> updateTimeTableView(timeTable));
-        });
+    private void loadTimeTableAsync() {
+        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> runOnUiThread(() -> updateTimeTableView(timeTable)));
     }
 
     private void updateTimeTableView(TimeTable timeTable) {
@@ -73,14 +84,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
                 subjectView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
                 roomView.setText(timeTable.Lessons[dayI][periodI].Room);
-                teacherView.setText(timeTable.Lessons[dayI][periodI].Teacher);
+                teacherView.setText(formatTeacherName(timeTable.Lessons[dayI][periodI].Teacher));
 
                 // TODO: Select better colors for this
                 if (!timeTable.Lessons[dayI][periodI].isTakingPlace())
                     lessonView.setBackgroundColor(getColor(R.color.cancelled_lesson));
                 else if (timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
                     lessonView.setBackgroundColor(getColor(R.color.substituted_lesson));
-                else if(timeTable.Lessons[dayI][periodI].Type == LessonType.RoomSubstitution)
+                else if (timeTable.Lessons[dayI][periodI].Type == LessonType.RoomSubstitution)
                     lessonView.setBackgroundColor(getColor(R.color.room_substituted_lesson));
                 else
                     lessonView.setBackgroundColor(getColor(R.color.regular_lesson));
@@ -89,7 +100,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void createTableLayout() {
-        final int widthPerRow = table.getMeasuredWidth() / 5;
+        final int width = table.getMeasuredWidth();
+        final int widthPerRow = width / 5;
         final int lessonMargin = 3;
 
         table.setForegroundGravity(Gravity.FILL);
@@ -106,7 +118,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 lessonLayout.setOrientation(LinearLayout.VERTICAL);
                 lessonLayout.setMinimumWidth(widthPerRow);
                 row.addView(lessonLayout);
-
 
 
                 // Subject view:
@@ -130,7 +141,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 teacherView.setTextSize(11);
 
 
-                TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(widthPerRow, ViewGroup.LayoutParams.MATCH_PARENT);
+                TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(widthPerRow,
+                        getSharedPreferences().getBoolean("useCursedLayout", false)
+                                ? ViewGroup.LayoutParams.WRAP_CONTENT
+                                : ViewGroup.LayoutParams.MATCH_PARENT);
                 layoutParams.leftMargin = lessonMargin;
                 layoutParams.rightMargin = lessonMargin;
                 layoutParams.topMargin = lessonMargin;
@@ -181,5 +195,19 @@ public class TimeTableViewActivity extends AppCompatActivity {
             //row.addView(innerLayout);
             //table.addView(row);
         }*/
+    }
+
+    String formatTeacherName(String teacherName) {
+        if (!getSharedPreferences().getBoolean("showTeachersInitials", false)) {
+            for (int i = 0; i < teacherName.length(); i++) {
+                if (teacherName.charAt(i) == '.')
+                    return teacherName.substring(i + 2);
+            }
+        }
+        return teacherName;
+    }
+
+    private SharedPreferences getSharedPreferences() {
+        return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
     }
 }
