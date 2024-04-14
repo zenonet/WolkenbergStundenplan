@@ -2,12 +2,17 @@ package de.zenonet.stundenplan;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.JsonReader;
 import android.util.Log;
 import android.util.Pair;
+
 import com.google.gson.Gson;
+
 import de.zenonet.stundenplan.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.callbacks.TimeTableFetchedCallback;
 import de.zenonet.stundenplan.callbacks.TimeTableLoadedCallback;
+import de.zenonet.stundenplan.models.User;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,11 +45,15 @@ public class TimeTableClient {
 
     public String CachePath;
 
+    public User user;
+    private int userId;
+
     public void init(Context context) {
         CachePath = context.getCacheDir().getAbsolutePath();
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
         NameLookup.setFallbackLookup(context.getString(R.string.fallback_lookup));
         sharedPreferences = context.getSharedPreferences("de.zenonet.stundenplan", Context.MODE_PRIVATE);
+        userId = sharedPreferences.getInt("userId", -1);
     }
 
     public void login() {
@@ -68,7 +77,7 @@ public class TimeTableClient {
 
             int respCode = httpCon.getResponseCode();
 
-            if(respCode != 200){
+            if (respCode != 200) {
                 Log.e(LOG_TAG, "Login unsuccessful:" + httpCon.getResponseMessage());
             }
 
@@ -98,7 +107,7 @@ public class TimeTableClient {
         timeTableTime.set(Calendar.WEEK_OF_YEAR, weekOfYear);
 
         // Get data from api
-        String raw = getTimeTableRaw(536);
+        String raw = getTimeTableRaw(userId);
 
         // Interpret the data
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:sssss");
@@ -149,7 +158,7 @@ public class TimeTableClient {
 
 
             // Get substitution data from api
-            String rawSubstitutions = getSubstitutionsRaw(536);
+            String rawSubstitutions = getSubstitutionsRaw(userId);
 
             // Interpret substitution data
             int year = timeTableTime.get(Calendar.YEAR);
@@ -185,7 +194,7 @@ public class TimeTableClient {
                             if (substitution.has("TEACHER_ID_NEW")) {
                                 timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
                             }
-                            if(type.equals("ROOM_SUBSTITUTION"))
+                            if (type.equals("ROOM_SUBSTITUTION"))
                                 timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
                             else
                                 timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
@@ -257,7 +266,6 @@ public class TimeTableClient {
 
     public void fetchTimeTableAsync(int weekOfYear, TimeTableFetchedCallback callback) {
 
-        int studentId = 536;
         Thread thread = new Thread(() -> {
             fetchTimeTable(weekOfYear);
             callback.timeTableFetched(timeTable);
@@ -314,17 +322,17 @@ public class TimeTableClient {
 
     private String getRefreshToken() {
         String refreshToken = sharedPreferences.getString("refreshToken", "fuck");
-        if(refreshToken.equals("fuck")){
+        if (refreshToken.equals("fuck")) {
             Log.e(LOG_TAG, "Well, fuck, there's no refreshToken in cache");
         }
         return refreshToken;
     }
 
-    public void redeemOAuthCodeAsync(String code){
+    public void redeemOAuthCodeAsync(String code) {
         redeemOAuthCodeAsync(code, null);
     }
 
-    public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback){
+    public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback) {
         new Thread(() -> {
             HttpURLConnection httpCon;
             try {
@@ -352,12 +360,40 @@ public class TimeTableClient {
                 setRefreshToken(refreshToken);
                 isLoggedIn = true;
 
-                if(callback != null) callback.authCodeRedeemed();
+                if (callback != null) callback.authCodeRedeemed();
 
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }).start();
+    }
+
+    public User fetchPersonalData() {
+        if (!isLoggedIn) login();
+
+        try {
+            HttpURLConnection httpCon;
+            URL url = new URL("https://wolkenberg-gymnasium.de/wolkenberg-app/api/me");
+            httpCon = (HttpURLConnection) url.openConnection();
+            httpCon.setRequestMethod("GET");
+            httpCon.setRequestProperty("Content-Type", "application/json");
+            httpCon.setRequestProperty("Authorization", "Bearer " + token);
+
+            int respCode = httpCon.getResponseCode();
+
+            if (respCode != 200) {
+                Log.e(LOG_TAG, String.format("Unable to load personal data: Response code %d", respCode));
+            }
+
+            user = new Gson().fromJson(new InputStreamReader(httpCon.getInputStream()), User.class);
+            // TODO:
+            sharedPreferences.edit().putInt("userId", user.id).apply();
+            userId = user.id;
+
+            return user;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setRefreshToken(String newRefreshToken) {
@@ -407,7 +443,7 @@ public class TimeTableClient {
 
             return counter > lastCounter;
         } catch (Exception e) {
-            if(e instanceof IOException) throw (IOException) e;
+            if (e instanceof IOException) throw (IOException) e;
             throw new RuntimeException(e);
         }
     }
@@ -535,7 +571,8 @@ public class TimeTableClient {
                 // TODO: This is an ugly solution for the case that there's no internet which causes the app to reach this point before the cache was loaded
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
 
             // TODO: Handle the case that the cache is not valid and no internet connection can be established
