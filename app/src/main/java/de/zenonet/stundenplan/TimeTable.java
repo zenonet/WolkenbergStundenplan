@@ -8,6 +8,7 @@ public class TimeTable {
     public LocalDateTime lastConfirmedDate;
     public transient boolean isFromCache;
     public transient boolean isCacheStateConfirmed;
+    public long CounterValue;
     public TimeTable(){
         Lessons = new Lesson[5][];
     }

@@ -3,7 +3,7 @@
     <PreferenceCategory app:title="Stundenplan Ansicht">
         <SwitchPreferenceCompat
             app:key="useDarkMode"
-            app:title="@string/useDarkMode" />
+            app:title="Dunkles Theme verwenden" />
         <SwitchPreferenceCompat
             app:key="showTeachersInitials"
             app:title="Lehrer-Vornamen-Anfangsbuchstaben" />

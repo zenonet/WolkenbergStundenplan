@@ -2,13 +2,11 @@ package de.zenonet.stundenplan.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -16,14 +14,12 @@ import android.os.Bundle;
 import de.zenonet.stundenplan.LessonType;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.TimeTable;
-import de.zenonet.stundenplan.TimeTableClient;
-import de.zenonet.stundenplan.models.User;
-
-import java.util.Calendar;
+import de.zenonet.stundenplan.TimeTableManager;
+import de.zenonet.stundenplan.UserLoadException;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
-    TimeTableClient client;
+    TimeTableManager manager;
     TableLayout table;
     TextView stateView;
 
@@ -40,24 +36,36 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
 
 
-        client = new TimeTableClient();
-        client.init(this);
+        manager = new TimeTableManager();
+        try {
+            manager.init(this);
+        } catch (UserLoadException e) {
+            // TODO: Show a message saying that the user id couldn't be loaded
+        }
 
+        // OAuth code login
         {
             // Login with oauth auth code if this activity was started by the login activity with a code
             Intent intent = getIntent();
             if (intent.hasExtra("code")) {
 
-                client.redeemOAuthCodeAsync(intent.getStringExtra("code"), () -> {
-                    client.fetchPersonalData();
-
-                    // Save client id to shared prefs TODO
-                    getSharedPreferences().edit().putInt("userId", client.user.id).apply();
-
+                // TODO
+                manager.apiClient.redeemOAuthCodeAsync(intent.getStringExtra("code"), () -> {
+                    try {
+                        manager.login();
+                    } catch (UserLoadException e) {
+                    }
                     loadTimeTableAsync();
                 });
             } else {
-                loadTimeTableAsync();
+                new Thread(() -> {
+                    try {
+                        manager.login();
+                        loadTimeTableAsync();
+                    } catch (UserLoadException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).start();
             }
         }
 
@@ -67,12 +75,22 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void loadTimeTableAsync() {
-        client.loadTimeTableAsync(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR), timeTable -> runOnUiThread(() -> updateTimeTableView(timeTable)));
+        manager.getTimeTableAsyncWithAdjustments(
+                (timeTable) ->
+                        runOnUiThread(() ->
+                                updateTimeTableView(timeTable)
+                        )
+        );
     }
 
     private void updateTimeTableView(TimeTable timeTable) {
 
         stateView.setText(timeTable.isFromCache ? (timeTable.isCacheStateConfirmed ? "From cache (confirmed)" : "From cache") : "From API");
+
+        // Return if it's a confirmed timetable because cache is always there before it's being confirmed
+
+        if(timeTable.isCacheStateConfirmed) return;
+
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
                 int viewId = 666 + dayI * 9 + periodI;
