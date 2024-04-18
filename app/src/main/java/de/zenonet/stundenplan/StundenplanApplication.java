@@ -3,8 +3,14 @@ package de.zenonet.stundenplan;
 import android.app.*;
 import android.content.Context;
 import android.content.Intent;
+import android.content.PeriodicSync;
+
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 public class StundenplanApplication extends Application {
     @Override
@@ -33,16 +39,13 @@ public class StundenplanApplication extends Application {
     }
 
     private void scheduleUpdateRepeating() {
-        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, BackgroundUpdater.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(StundenplanApplication.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        try {
-            pendingIntent.send();
-        } catch (PendingIntent.CanceledException e) {
 
-        }
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis()-1,
-                AlarmManager.INTERVAL_HALF_HOUR, pendingIntent);
+
+        PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 30, TimeUnit.MINUTES)
+                .build();
+
+        WorkManager workManager = WorkManager.getInstance(this);
+        workManager.enqueueUniquePeriodicWork("timetable_notification_update_worker", ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, workRequest);
     }
 }
