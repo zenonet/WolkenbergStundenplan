@@ -8,7 +8,7 @@ It is written in pure Java to ensure the best startup performance even under ext
 All time measurements are in seconds.
 
 | Test-Device           | Startup time with official client | Startup time with this client | Speed increase |
-|-----------------------|-----------------------------------|-------------------------------| -------------- |
+|-----------------------|-----------------------------------|-------------------------------|----------------|
 | Samsung Galaxy A12    | 6.923                             | 0.784                         | 8.83x          |
 | Samsung Galaxy Tab S9 | 1.768                             | 0.336[^1]                     | 5.26x          |
 
