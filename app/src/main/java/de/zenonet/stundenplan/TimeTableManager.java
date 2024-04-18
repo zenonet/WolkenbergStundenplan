@@ -5,6 +5,8 @@ import static de.zenonet.stundenplan.Utils.LOG_TAG;
 import android.content.Context;
 import android.util.Log;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,7 +43,6 @@ public class TimeTableManager implements TimeTableClient {
         }
 
         user = getUser();
-        apiClient.user = user;
     }
 
     public boolean checkForChanges() throws DataNotAvailableException {
@@ -78,18 +79,24 @@ public class TimeTableManager implements TimeTableClient {
         return timeTable;
     }
 
-    public void getTimeTableAsyncWithAdjustments(TimeTableLoadedCallback callback) {
+    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(TimeTableLoadedCallback callback) {
 
         AtomicInteger stage = new AtomicInteger();
-        AtomicReference<TimeTable> timeTableFromCache = new AtomicReference<>();
+
+        // This is kind of the wrong name. It really is more like the currently best version of the timetable, we have
+        AtomicReference<TimeTable> timeTableFromCache = new AtomicReference<>(null);
         // API fetch thread
         new Thread(() -> {
             try {
+                if(!apiClient.isLoggedIn)
+                    login();
+
                 if (apiClient.checkForChanges()) {
                     TimeTable timeTable = apiClient.getCurrentTimeTable();
                     cacheClient.cacheCurrentTimetable(timeTable);
 
                     stage.set(2);
+                    timeTableFromCache.set(timeTable);
                     callback.timeTableLoaded(timeTable);
                 }else{
                     if(stage.get() == 1){
@@ -111,6 +118,7 @@ public class TimeTableManager implements TimeTableClient {
         new Thread(() -> {
             try {
                 TimeTable timeTable = cacheClient.getCurrentTimeTable();
+                Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable loaded: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
                 // This is just for the astronomically small chance, that the API is faster than the cache, maybe remove later
                 if(stage.get() == 2) return;
@@ -123,6 +131,7 @@ public class TimeTableManager implements TimeTableClient {
                 stage.set(-1);
             }
         }).start();
+        return timeTableFromCache;
     }
 
     public TimeTable getTimeTableForWeekForPerson() {
@@ -131,11 +140,12 @@ public class TimeTableManager implements TimeTableClient {
 
     public User getUser() throws UserLoadException {
         try {
-            return cacheClient.getUser();
+            user = cacheClient.getUser();
         } catch (UserLoadException exception) {
-            User user = apiClient.getUser();
+            user = apiClient.getUser();
             cacheClient.saveUser(user);
-            return user;
         }
+        apiClient.user = user;
+        return user;
     }
 }

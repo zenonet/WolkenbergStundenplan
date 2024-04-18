@@ -9,13 +9,16 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 public class StundenplanApplication extends Application {
+    public static Instant applicationEntrypointInstant;
     @Override
     public void onCreate() {
         super.onCreate();
+        applicationEntrypointInstant = Instant.now();
 
         createNotificationChannel();
         scheduleUpdateRepeating();

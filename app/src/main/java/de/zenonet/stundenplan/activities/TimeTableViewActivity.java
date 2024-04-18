@@ -3,6 +3,7 @@ package de.zenonet.stundenplan.activities;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -11,11 +12,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
+
 import de.zenonet.stundenplan.LessonType;
 import de.zenonet.stundenplan.R;
+import de.zenonet.stundenplan.StundenplanApplication;
 import de.zenonet.stundenplan.TimeTable;
+import de.zenonet.stundenplan.TimeTableClient;
 import de.zenonet.stundenplan.TimeTableManager;
 import de.zenonet.stundenplan.UserLoadException;
+import de.zenonet.stundenplan.Utils;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
@@ -23,9 +31,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TableLayout table;
     TextView stateView;
 
+    Instant activityCreatedInstant;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        activityCreatedInstant = StundenplanApplication.applicationEntrypointInstant;
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
 
@@ -52,19 +63,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 // TODO
                 manager.apiClient.redeemOAuthCodeAsync(intent.getStringExtra("code"), () -> {
                     try {
-                        manager.login();
+                        manager.getUser();
                     } catch (UserLoadException e) {
                     }
                     loadTimeTableAsync();
                 });
             } else {
                 new Thread(() -> {
-                    try {
-                        manager.login();
-                        loadTimeTableAsync();
-                    } catch (UserLoadException e) {
-                        throw new RuntimeException(e);
-                    }
+                    Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetch thread start: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
+                    loadTimeTableAsync();
                 }).start();
             }
         }
@@ -74,11 +81,29 @@ public class TimeTableViewActivity extends AppCompatActivity {
         createTableLayout();
     }
 
+    private AtomicReference<TimeTable> loadingTimeTableReference;
+
     private void loadTimeTableAsync() {
-        manager.getTimeTableAsyncWithAdjustments(
+        loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(
                 (timeTable) ->
-                        runOnUiThread(() ->
-                                updateTimeTableView(timeTable)
+                        runOnUiThread(() -> {
+
+                                    if (timeTable == null) {
+                                        // Show some kind of message here
+                                        return;
+                                    }
+
+                                    if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
+                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable received: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
+                                    else if (timeTable.isCacheStateConfirmed) {
+                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable confirmed: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
+                                    } else {
+                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetched timetable received: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
+                                    }
+
+
+                                    updateTimeTableView(timeTable);
+                                }
                         )
         );
     }
@@ -89,7 +114,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         // Return if it's a confirmed timetable because cache is always there before it's being confirmed
 
-        if(timeTable.isCacheStateConfirmed) return;
+        if (timeTable.isCacheStateConfirmed) return;
 
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
@@ -115,6 +140,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     lessonView.setBackgroundColor(getColor(R.color.regular_lesson));
             }
         }
+        if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
+            Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
 
     private void createTableLayout() {
@@ -175,44 +202,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
             table.addView(row);
         }
 
-/*        for (int dayI = 0; dayI < 5; dayI++) {
-            //TableRow row = new TableRow(this);
-            //row.setLayoutParams(rowParams);
-            //row.setBackgroundColor(dayI % 2 == 0 ? Color.RED : Color.BLUE);
-            //row.setId(ViewCompat.generateViewId());
-            //row.setOrientation(LinearLayout.VERTICAL);
-            //row.setMinimumWidth(widthPerRow);
+        Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view generated: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
-            //LinearLayout innerLayout = new LinearLayout(this);
-            //innerLayout.setOrientation(LinearLayout.VERTICAL);
-            for (int periodI = 0; periodI < 9; periodI++) {
-                TextView lessonView = new TextView(this);
-                final int lessonTextPaddingH = 30;
-                final int lessonTextPaddingV = 15;
-                lessonView.setMinWidth(widthPerRow);
-                lessonView.setMinWidth(50);
-                lessonView.setGravity(Gravity.FILL_HORIZONTAL);
-                lessonView.setForegroundGravity(Gravity.FILL);
-                lessonView.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
-                lessonView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                lessonView.setId(666 + dayI * 9 + periodI);
-                lessonView.setBackground(getDrawable(R.drawable.border));
-
-                lessonView.setTextSize(22);
-
-                GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(GridLayout.spec(periodI), GridLayout.spec(dayI));
-
-                layoutParams.width = widthPerRow;
-                layoutParams.setGravity(Gravity.FILL);
-                lessonView.setLayoutParams(layoutParams);
-
-                //innerLayout.addView(lessonView);
-                table.addView(lessonView);
-            }
-
-            //row.addView(innerLayout);
-            //table.addView(row);
-        }*/
+        // If the cached version is available already, update the view directly
+        if (loadingTimeTableReference != null && loadingTimeTableReference.get() != null) {
+            Log.i(Utils.LOG_TAG, "Updating view directly after creating it.");
+            updateTimeTableView(loadingTimeTableReference.get());
+        }
     }
 
     String formatTeacherName(String teacherName) {
