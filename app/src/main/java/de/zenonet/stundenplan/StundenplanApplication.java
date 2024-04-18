@@ -42,6 +42,6 @@ public class StundenplanApplication extends Application {
                 .build();
 
         WorkManager workManager = WorkManager.getInstance(this);
-        workManager.enqueueUniquePeriodicWork("timetable_notification_update_worker", ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE, workRequest);
+        workManager.enqueueUniquePeriodicWork("timetable_notification_update_worker", ExistingPeriodicWorkPolicy.KEEP, workRequest);
     }
 }

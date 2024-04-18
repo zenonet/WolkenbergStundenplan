@@ -48,9 +48,6 @@
              </intent-filter>-->
 
         </activity>
-
-        <receiver android:name=".BackgroundUpdater" />
-        <profileable android:shell="true" android:enabled="true"/>
     </application>
 
 </manifest>
