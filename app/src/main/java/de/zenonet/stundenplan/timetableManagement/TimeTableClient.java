@@ -1,6 +1,5 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
-import de.zenonet.stundenplan.callbacks.TimeTableLoadedCallback;
 import de.zenonet.stundenplan.models.User;
 
 public interface TimeTableClient {

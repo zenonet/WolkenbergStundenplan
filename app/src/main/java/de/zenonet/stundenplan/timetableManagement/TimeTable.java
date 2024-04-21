@@ -1,4 +1,4 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

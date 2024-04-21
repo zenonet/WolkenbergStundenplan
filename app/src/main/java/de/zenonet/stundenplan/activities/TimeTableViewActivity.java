@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentContainerView;
 
 import android.os.Bundle;
 
@@ -16,13 +17,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.zenonet.stundenplan.LessonType;
+import de.zenonet.stundenplan.timetableManagement.LessonType;
+import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.StundenplanApplication;
-import de.zenonet.stundenplan.TimeTable;
-import de.zenonet.stundenplan.TimeTableClient;
-import de.zenonet.stundenplan.TimeTableManager;
-import de.zenonet.stundenplan.UserLoadException;
+import de.zenonet.stundenplan.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.timetableManagement.TimeTableManager;
+import de.zenonet.stundenplan.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.Utils;
 
 public class TimeTableViewActivity extends AppCompatActivity {
@@ -45,7 +46,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoginActivity.class));
             return;
         }
-
 
         manager = new TimeTableManager();
         try {
@@ -107,6 +107,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         )
         );
     }
+    private boolean nonCrucialUiLoaded = false;
 
     private void updateTimeTableView(TimeTable timeTable) {
 
@@ -142,6 +143,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+
+        if(!nonCrucialUiLoaded){
+            loadNonCrucialUi();
+        }
+
+        if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
+            Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view is actually rendered: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
 
     private void createTableLayout() {
@@ -223,5 +231,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private SharedPreferences getSharedPreferences() {
         return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
+    }
+
+    private void loadNonCrucialUi(){
+        ViewGroup viewGroup = findViewById(R.id.mainViewGroup);
+        FragmentContainerView container = new FragmentContainerView(this);
+        container.setId(221+1);
+        viewGroup.addView(container);
+        getSupportFragmentManager().beginTransaction().add(221+1, new NonCrucialUiFragment()).commit();
+
+        nonCrucialUiLoaded = true;
+        Log.i(Utils.LOG_TAG, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
 }

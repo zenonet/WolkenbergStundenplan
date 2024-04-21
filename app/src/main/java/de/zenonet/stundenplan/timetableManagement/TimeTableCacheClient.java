@@ -1,7 +1,6 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
 import static de.zenonet.stundenplan.Utils.LOG_TAG;
-import static de.zenonet.stundenplan.Utils.periodTimeJSON;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,9 +8,6 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.gson.Gson;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,17 +18,17 @@ import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Hashtable;
 
+import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.Utils;
 import de.zenonet.stundenplan.models.User;
 
 public class TimeTableCacheClient implements TimeTableClient {
 
-    public String cachePath;
     public String dataPath;
     public NameLookup lookup = new NameLookup();
     private SharedPreferences sharedPreferences;
 
     public void init(Context context) {
-        cachePath = context.getCacheDir().getAbsolutePath();
         dataPath = context.getDataDir().getAbsolutePath();
         sharedPreferences = context.getSharedPreferences("de.zenonet.stundenplan", Context.MODE_PRIVATE);
     }
@@ -42,7 +38,7 @@ public class TimeTableCacheClient implements TimeTableClient {
 
         // TODO: Check if current cache is from this week
         try {
-            File cacheFile = new File(cachePath, "timetable.json");
+            File cacheFile = new File(Utils.CachePath, "timetable.json");
 
             int length = (int) cacheFile.length();
             byte[] bytes = new byte[length];
@@ -64,7 +60,7 @@ public class TimeTableCacheClient implements TimeTableClient {
     @Override
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
         try {
-            File cacheFile = new File(cachePath, "/" + week + "/.json");
+            File cacheFile = new File(Utils.CachePath, "/" + week + "/.json");
 
             int length = (int) cacheFile.length();
             byte[] bytes = new byte[length];
@@ -105,7 +101,7 @@ public class TimeTableCacheClient implements TimeTableClient {
 
             Log.i(LOG_TAG, "Caching timetable...");
             String json = new Gson().toJson(timeTable);
-            File cacheFile = new File(cachePath, "/timetable.json");
+            File cacheFile = new File(Utils.CachePath, "/timetable.json");
 
             try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
                 stream.write(json.getBytes(StandardCharsets.UTF_8));

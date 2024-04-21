@@ -5,6 +5,10 @@ import android.util.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalTime;
 
 public class Utils {
@@ -67,5 +71,17 @@ public class Utils {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public static String CachePath;
+
+    public static String readAllFromStream(InputStream stream) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+        StringBuilder sb = new StringBuilder();
+        String output;
+        while ((output = br.readLine()) != null) {
+            sb.append(output);
+        }
+        return sb.toString();
     }
 }

@@ -1,24 +1,23 @@
 package de.zenonet.stundenplan;
 
 import android.Manifest;
-import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.IBinder;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.time.LocalTime;
 import java.util.Calendar;
+
+import de.zenonet.stundenplan.timetableManagement.Lesson;
+import de.zenonet.stundenplan.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.timetableManagement.TimeTableManager;
+import de.zenonet.stundenplan.timetableManagement.UserLoadException;
 
 public class BackgroundUpdater extends Worker {
 

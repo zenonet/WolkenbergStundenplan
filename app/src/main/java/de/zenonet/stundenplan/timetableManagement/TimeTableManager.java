@@ -1,4 +1,4 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
 import static de.zenonet.stundenplan.Utils.LOG_TAG;
 
@@ -10,6 +10,11 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import de.zenonet.stundenplan.DataNotAvailableException;
+import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.R;
+import de.zenonet.stundenplan.StundenplanApplication;
+import de.zenonet.stundenplan.Utils;
 import de.zenonet.stundenplan.callbacks.TimeTableLoadedCallback;
 import de.zenonet.stundenplan.models.User;
 

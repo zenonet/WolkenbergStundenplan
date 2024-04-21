@@ -19,6 +19,7 @@ public class StundenplanApplication extends Application {
     public void onCreate() {
         super.onCreate();
         applicationEntrypointInstant = Instant.now();
+        Utils.CachePath = this.getCacheDir().getPath();
 
         createNotificationChannel();
         scheduleUpdateRepeating();

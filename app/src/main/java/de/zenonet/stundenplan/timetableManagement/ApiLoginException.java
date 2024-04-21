@@ -1,4 +1,4 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
 public class ApiLoginException extends Exception{
 }

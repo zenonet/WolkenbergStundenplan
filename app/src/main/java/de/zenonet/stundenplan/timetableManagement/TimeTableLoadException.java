@@ -1,6 +1,8 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
-public class TimeTableLoadException extends DataNotAvailableException{
+import de.zenonet.stundenplan.DataNotAvailableException;
+
+public class TimeTableLoadException extends DataNotAvailableException {
     public Exception causingException;
     public TimeTableLoadException(Exception causingException){
         this.causingException = causingException;

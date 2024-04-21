@@ -1,7 +1,6 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.timetableManagement;
 
 import static de.zenonet.stundenplan.Utils.LOG_TAG;
-import static de.zenonet.stundenplan.Utils.periodTimeJSON;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -14,9 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -29,6 +26,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
+import de.zenonet.stundenplan.DataNotAvailableException;
+import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.Utils;
 import de.zenonet.stundenplan.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.models.User;
 
@@ -55,7 +55,7 @@ public class TimeTableApiClient implements TimeTableClient {
             int respCode = httpCon.getResponseCode();
             if (respCode != 200)
                 throw new TimeTableLoadException();
-            String raw = readAllFromStream(httpCon.getInputStream());
+            String raw = Utils.readAllFromStream(httpCon.getInputStream());
 
 
             // Interpret the data
@@ -119,7 +119,7 @@ public class TimeTableApiClient implements TimeTableClient {
             if (httpCon.getResponseCode() != 200)
                 throw new TimeTableLoadException();
 
-            String rawSubstitutions = readAllFromStream(httpCon.getInputStream());
+            String rawSubstitutions = Utils.readAllFromStream(httpCon.getInputStream());
 
             // Interpret substitution data
             int year = time.get(Calendar.YEAR);
@@ -246,11 +246,11 @@ public class TimeTableApiClient implements TimeTableClient {
         }
     }
 
-    public boolean checkForChanges() throws DataNotAvailableException{
+    public boolean checkForChanges() throws DataNotAvailableException {
         try{
             HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "counter");
 
-            JSONObject response = new JSONObject(readAllFromStream(httpCon.getInputStream()));
+            JSONObject response = new JSONObject(Utils.readAllFromStream(httpCon.getInputStream()));
 
             // Let's just assume this counter works like a big number with a few dashes between digits
             long counter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
@@ -286,7 +286,7 @@ public class TimeTableApiClient implements TimeTableClient {
                 throw new ApiLoginException();
             }
 
-            String content = readAllFromStream(httpCon.getInputStream());
+            String content = Utils.readAllFromStream(httpCon.getInputStream());
 
             // Deserialization
             JSONObject jObj = new JSONObject(content);
@@ -321,7 +321,7 @@ public class TimeTableApiClient implements TimeTableClient {
                 int respCode = httpCon.getResponseCode();
                 Log.i(LOG_TAG, "Get response code " + respCode + " while redeeming OAuth code");
 
-                String body = readAllFromStream(httpCon.getInputStream());
+                String body = Utils.readAllFromStream(httpCon.getInputStream());
                 JSONObject jObj = new JSONObject(body);
                 accessToken = jObj.getString("access_token");
                 isLoggedIn = true;
@@ -352,13 +352,4 @@ public class TimeTableApiClient implements TimeTableClient {
         return httpCon;
     }
 
-    private String readAllFromStream(InputStream stream) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-        StringBuilder sb = new StringBuilder();
-        String output;
-        while ((output = br.readLine()) != null) {
-            sb.append(output);
-        }
-        return sb.toString();
-    }
 }
