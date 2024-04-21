@@ -23,20 +23,11 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_view);
 
-        // Clear all the Application Cache, Web SQL Database and the HTML5 Web Storage
-        WebStorage.getInstance().deleteAllData();
-
-        // Clear all the cookies
-        CookieManager.getInstance().removeAllCookies(null);
-        CookieManager.getInstance().flush();
-
         WebView webView = findViewById(R.id.webView);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onLoadResource(WebView view, String url) {
                 checkForCodeUrl(view, url);
-
-
             }
 
             public boolean shouldOverrideUrlLoading (WebView view, String url) {
@@ -59,8 +50,9 @@ public class LoginActivity extends AppCompatActivity {
 
                 // Log.i("TokenExtractor", "onPageStarted: Found the code (I think): " + refreshToken);
 
-                Toast.makeText(LoginActivity.this, "Refresh token found!", Toast.LENGTH_SHORT).show();
+                clearCacheBloat();
 
+                Toast.makeText(LoginActivity.this, "Refresh token found!", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(LoginActivity.this, TimeTableViewActivity.class);
                 intent.putExtra("code", oAuthCode);
                 startActivity(intent);
@@ -82,5 +74,14 @@ public class LoginActivity extends AppCompatActivity {
         if (!matcher.matches()) return null;
 
         return matcher.group(1);
+    }
+
+    private void clearCacheBloat(){
+        // Clear all the Application Cache, Web SQL Database and the HTML5 Web Storage
+        WebStorage.getInstance().deleteAllData();
+
+        // Clear all the cookies
+        CookieManager.getInstance().removeAllCookies(null);
+        CookieManager.getInstance().flush();
     }
 }
