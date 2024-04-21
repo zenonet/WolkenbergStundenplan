@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="lessonBackground" format="color" />
+    <attr name="lessonForeground" format="color" />
+    <attr name="normalForeground" format="color" />
+</resources>

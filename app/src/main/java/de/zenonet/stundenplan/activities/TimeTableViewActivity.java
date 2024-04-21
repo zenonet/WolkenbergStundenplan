@@ -11,10 +11,13 @@ import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentContainerView;
 
 import android.os.Bundle;
+
+import com.google.android.material.color.MaterialColors;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -86,6 +89,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
         createTableLayout();
+
+
+        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
     }
 
     private AtomicReference<TimeTable> loadingTimeTableReference;
@@ -182,21 +188,21 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 // Subject view:
                 TextView subjectView = new TextView(this);
                 lessonLayout.addView(subjectView);
-                subjectView.setTextColor(Color.BLACK);
+                subjectView.setTextColor(MaterialColors.getColor(subjectView, R.attr.lessonForeground));
                 subjectView.setTextSize(16);
                 //alignViewInRelativeLayout(subjectView, RelativeLayout.ALIGN_PARENT_LEFT);
 
                 // Room view:
                 TextView roomView = new TextView(this);
                 lessonLayout.addView(roomView);
-                roomView.setTextColor(Color.BLACK);
+                roomView.setTextColor(MaterialColors.getColor(roomView, R.attr.lessonForeground));
                 roomView.setTextSize(11);
 
 
                 // Teacher view:
                 TextView teacherView = new TextView(this);
                 lessonLayout.addView(teacherView);
-                teacherView.setTextColor(Color.BLACK);
+                teacherView.setTextColor(MaterialColors.getColor(teacherView, R.attr.lessonForeground));
                 teacherView.setTextSize(11);
 
 
