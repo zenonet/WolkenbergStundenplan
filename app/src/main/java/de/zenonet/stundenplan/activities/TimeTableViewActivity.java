@@ -3,12 +3,15 @@ package de.zenonet.stundenplan.activities;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentContainerView;
 
 import android.os.Bundle;
@@ -34,12 +37,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     Instant activityCreatedInstant;
 
+    boolean nonCrucialUiLoaded = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         activityCreatedInstant = StundenplanApplication.applicationEntrypointInstant;
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
+
+        nonCrucialUiLoaded = savedInstanceState != null;
 
         // Check if the application is set up
         if (!getSharedPreferences().contains("refreshToken") && !getIntent().hasExtra("code")) {
@@ -107,7 +114,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         )
         );
     }
-    private boolean nonCrucialUiLoaded = false;
 
     private void updateTimeTableView(TimeTable timeTable) {
 
@@ -144,9 +150,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
-        if(!nonCrucialUiLoaded){
+        if (!nonCrucialUiLoaded)
             loadNonCrucialUi();
-        }
+
 
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view is actually rendered: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
@@ -233,14 +239,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
     }
 
-    private void loadNonCrucialUi(){
-        ViewGroup viewGroup = findViewById(R.id.mainViewGroup);
-        FragmentContainerView container = new FragmentContainerView(this);
-        container.setId(221+1);
-        viewGroup.addView(container);
-        getSupportFragmentManager().beginTransaction().add(221+1, new NonCrucialUiFragment()).commit();
-
+    private void loadNonCrucialUi() {
+        getSupportFragmentManager().beginTransaction().add(R.id.fragmentContainer, NonCrucialUiFragment.class, null).commit();
         nonCrucialUiLoaded = true;
+
         Log.i(Utils.LOG_TAG, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
 }
