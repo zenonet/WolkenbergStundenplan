@@ -2,9 +2,6 @@
 
     <PreferenceCategory app:title="Stundenplan Ansicht">
         <SwitchPreferenceCompat
-            app:key="useDarkMode"
-            app:title="Dunkles Theme verwenden" />
-        <SwitchPreferenceCompat
             app:key="showTeachersInitials"
             app:title="Lehrer-Vornamen-Anfangsbuchstaben" />
 
@@ -23,7 +20,7 @@
             app:summaryOn="Stundenplan wird auch neu geladen, wenn er nicht verändert wurde"
             app:title="Neuladen erzwingen" />
         <SwitchPreferenceCompat
-            app:key="cursedLayout"
+            app:key="useCursedLayout"
             app:title="Use cursed timetable-layout" />
     </PreferenceCategory>
 </PreferenceScreen>
