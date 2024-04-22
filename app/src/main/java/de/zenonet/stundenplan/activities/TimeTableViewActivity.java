@@ -9,11 +9,9 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentContainerView;
+
+import androidx.preference.PreferenceManager;
 
 import android.os.Bundle;
 
@@ -242,7 +240,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private SharedPreferences getSharedPreferences() {
-        return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
+        return PreferenceManager.getDefaultSharedPreferences(this);
+        //return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
     }
 
     private void loadNonCrucialUi() {

@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.preference.PreferenceManager;
+
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -220,7 +222,7 @@ public class TimeTableApiClient implements TimeTableClient {
     }
 
     public void init(Context context) {
-        sharedPreferences = context.getSharedPreferences("de.zenonet.stundenplan", Context.MODE_PRIVATE);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     @Override
