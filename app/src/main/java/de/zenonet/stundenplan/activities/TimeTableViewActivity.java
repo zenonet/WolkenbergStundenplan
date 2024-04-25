@@ -2,8 +2,6 @@ package de.zenonet.stundenplan.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
@@ -21,14 +19,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.zenonet.stundenplan.timetableManagement.LessonType;
+import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.StundenplanApplication;
-import de.zenonet.stundenplan.timetableManagement.TimeTable;
-import de.zenonet.stundenplan.timetableManagement.TimeTableManager;
-import de.zenonet.stundenplan.timetableManagement.UserLoadException;
-import de.zenonet.stundenplan.Utils;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
+import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
+import de.zenonet.stundenplan.common.Utils;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 

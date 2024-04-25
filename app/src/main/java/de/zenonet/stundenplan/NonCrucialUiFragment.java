@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import de.zenonet.stundenplan.quoteOfTheDay.QuoteProvider;
+import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider;
 
 public class NonCrucialUiFragment extends Fragment {
 

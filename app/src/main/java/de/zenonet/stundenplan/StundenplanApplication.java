@@ -1,17 +1,15 @@
 package de.zenonet.stundenplan;
 
 import android.app.*;
-import android.content.Context;
-import android.content.Intent;
-import android.content.PeriodicSync;
 
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
+
+import de.zenonet.stundenplan.common.Utils;
 
 public class StundenplanApplication extends Application {
     public static Instant applicationEntrypointInstant;

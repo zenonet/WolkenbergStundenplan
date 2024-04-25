@@ -14,10 +14,11 @@ import androidx.work.WorkerParameters;
 import java.time.LocalTime;
 import java.util.Calendar;
 
-import de.zenonet.stundenplan.timetableManagement.Lesson;
-import de.zenonet.stundenplan.timetableManagement.TimeTable;
-import de.zenonet.stundenplan.timetableManagement.TimeTableManager;
-import de.zenonet.stundenplan.timetableManagement.UserLoadException;
+import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.timetableManagement.Lesson;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
+import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 
 public class BackgroundUpdater extends Worker {
 
