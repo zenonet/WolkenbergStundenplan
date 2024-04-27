@@ -77,6 +77,4 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
-
-    wearApp(":stundenplan_wear")
 }
