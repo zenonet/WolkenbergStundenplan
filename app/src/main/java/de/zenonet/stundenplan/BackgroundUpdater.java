@@ -29,23 +29,22 @@ public class BackgroundUpdater extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        LocalTime time = LocalTime.now();
-
-        //LocalTime time = LocalTime.of(10, 50);
-        int nextPeriod = Utils.getCurrentPeriod(time.plusMinutes(45));
-
-        // nextPeriod = 2;
-
-        // Ensure it is schooltime
-        if (nextPeriod == -1) return Result.success();
-
         Calendar cal = Calendar.getInstance();
 
         // Ensure it's a weekday
         if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-            return Result.failure();
+            return Result.success();
 
+        int nextPeriod = Utils.getCurrentPeriod(LocalTime.now().plusMinutes(45));
+        // nextPeriod = 2;
         Context context = getApplicationContext();
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+        // Ensure it is schooltime
+        if (nextPeriod == -1) {
+            notificationManager.cancel(666);
+            return Result.success();
+        }
 
         // Ensure the app is permitted to send notifications
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
@@ -71,11 +70,14 @@ public class BackgroundUpdater extends Worker {
             Lesson nextLesson = timeTable.Lessons[dayOfWeek][nextPeriod];
             Lesson lessonAfterThat = timeTable.Lessons[dayOfWeek].length > nextPeriod + 1 ? timeTable.Lessons[dayOfWeek][nextPeriod + 1] : null;
 
-            // Just don't show a notification if the next lesson is not taking place
-            if (!nextLesson.isTakingPlace())
-                return Result.failure(); // TODO: Make it create a notification here, that says when the next lesson starts
 
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+            // Just don't show a notification if the next lesson is not taking place
+            if (!nextLesson.isTakingPlace()){
+                notificationManager.cancel(666);
+
+                return Result.failure(); // TODO: Make it create a notification here, that says when the next lesson starts
+            }
+
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_launcher_foreground)
                     .setContentTitle(String.format("%s %s mit %s bis %s", nextLesson.Room, nextLesson.Subject, nextLesson.Teacher, nextLesson.EndTime))
