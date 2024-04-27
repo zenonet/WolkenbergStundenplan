@@ -8,5 +8,5 @@
         <item name="normalForeground">@color/black</item>
     </style>
 
-    <style name="Theme.Stundenplan" parent="Base.Theme.Stundenplan"/>
+    <style name="Theme.Stundenplan" parent="Base.Theme.Stundenplan" />
 </resources>
