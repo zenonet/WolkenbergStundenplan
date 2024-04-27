@@ -82,7 +82,7 @@ public class BackgroundUpdater extends Worker {
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setSilent(true);
 
-            if (lessonAfterThat != null) {
+            if (lessonAfterThat != null && lessonAfterThat.isTakingPlace()) {
                 builder.setContentText(String.format("Danach: %s %s mit %s", lessonAfterThat.Room, lessonAfterThat.Subject, lessonAfterThat.Teacher));
             }
 
