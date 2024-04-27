@@ -7,8 +7,9 @@ android {
     namespace = "de.zenonet.stundenplan.wear"
     compileSdk = 34
 
+
     defaultConfig {
-        applicationId = "de.zenonet.stundenplan.wear"
+        applicationId = "de.zenonet.stundenplan"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -26,6 +27,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -58,6 +60,10 @@ dependencies {
     implementation("androidx.wear.compose:compose-foundation:1.2.1")
     implementation("androidx.activity:activity-compose:1.7.2")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.wear:wear-remote-interactions:1.0.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.material3:material3")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")

@@ -1359,4 +1359,5 @@
     <!-- Strings used for fragments for navigation -->
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="title_activity_remote_login">RemoteLoginActivity</string>
 </resources>
