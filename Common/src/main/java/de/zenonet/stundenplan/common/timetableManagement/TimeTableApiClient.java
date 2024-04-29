@@ -36,7 +36,7 @@ public class TimeTableApiClient implements TimeTableClient {
     private String accessToken;
     public User user;
 
-    public NameLookup lookup; // TODO: Initialize
+    public NameLookup lookup;
     public SharedPreferences sharedPreferences;
     public boolean isLoggedIn;
 
@@ -122,6 +122,25 @@ public class TimeTableApiClient implements TimeTableClient {
             return timeTable;
         } catch (Exception e) {
             throw new TimeTableLoadException(e);
+        }
+    }
+
+    public void fetchMasterData() throws DataNotAvailableException {
+
+        try {
+            // Get raw json data
+            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "/all");
+            httpCon.connect();
+            int respCode = httpCon.getResponseCode();
+            if (respCode != 200)
+                throw new DataNotAvailableException();
+            String raw = Utils.readAllFromStream(httpCon.getInputStream());
+            lookup.saveLookupFile(raw);
+            //File lookupFile = new File()
+
+            // Save
+        } catch (Exception e) {
+            throw new DataNotAvailableException();
         }
     }
 

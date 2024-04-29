@@ -3,6 +3,7 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,9 +26,7 @@ public class TimeTableManager implements TimeTableClient {
     public TimeTable currentTimeTable;
 
     public void init(Context context) throws UserLoadException {
-
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
-        NameLookup.setFallbackLookup(context.getString(R.string.fallback_lookup));
 
         apiClient.lookup = lookup;
         apiClient.init(context);
@@ -41,8 +40,15 @@ public class TimeTableManager implements TimeTableClient {
 
         try {
             apiClient.login();
+
+            if(!lookup.isLookupDataAvailable())
+                apiClient.fetchMasterData();
+            else
+                lookup.loadLookupData();
         } catch (ApiLoginException e) {
             Log.i(Utils.LOG_TAG, "Unable to log into API");
+        } catch (DataNotAvailableException | IOException e) {
+            throw new RuntimeException(e);
         }
 
         user = getUser();
