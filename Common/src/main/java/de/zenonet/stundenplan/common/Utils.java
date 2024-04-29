@@ -6,9 +6,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 
 public class Utils {
@@ -83,5 +87,19 @@ public class Utils {
             sb.append(output);
         }
         return sb.toString();
+    }
+
+    public static void writeAllText(File file, String content) throws IOException {
+        try (FileOutputStream stream = new FileOutputStream(file)) {
+            stream.write(content.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+    public static String readAllText(File file) throws IOException {
+        int length = (int) file.length();
+        byte[] bytes = new byte[length];
+        try (FileInputStream in = new FileInputStream(file)) {
+            in.read(bytes);
+        }
+        return new String(bytes);
     }
 }
