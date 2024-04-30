@@ -102,6 +102,7 @@ public class TimeTableManager implements TimeTableClient {
 
                 // Load from API if there are changes or if the cache failed
                 if (apiClient.checkForChanges() || stage.get() == -1) {
+                    apiClient.fetchMasterData();
                     TimeTable timeTable = apiClient.getCurrentTimeTable();
                     cacheClient.cacheCurrentTimetable(timeTable);
 
