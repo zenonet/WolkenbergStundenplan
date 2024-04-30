@@ -45,9 +45,19 @@ public class NameLookup {
 
     public void saveLookupFile(String lookupData) {
         try {
+            // Check if anything changed
+            File hashFile = new File(lookupDirectory, "lookup.hash");
+            int localHash = hashFile.exists() ? Integer.parseInt(Utils.readAllText(hashFile)) : -1;
+            int newHash = lookupData.hashCode();
+            if(localHash == newHash){
+                return;
+            }
+
             LookupData = new JSONObject(lookupData);
             File file = new File(lookupDirectory, "lookup.json");
             Utils.writeAllText(file, lookupData);
+
+            Utils.writeAllText(hashFile, String.valueOf(newHash));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
