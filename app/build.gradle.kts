@@ -77,4 +77,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
+    implementation("me.zhanghai.compose.preference:library:1.0.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.31.0-alpha")
 }

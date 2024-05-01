@@ -2,6 +2,7 @@ package de.zenonet.stundenplan;
 
 import android.app.*;
 
+import androidx.preference.PreferenceManager;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -39,7 +40,10 @@ public class StundenplanApplication extends Application {
 
     }
 
-    private void scheduleUpdateRepeating() {
+    public void scheduleUpdateRepeating() {
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_notifications", false))
+            return;
+
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 30, TimeUnit.MINUTES)
                 .build();
 

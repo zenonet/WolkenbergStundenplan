@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
+import de.zenonet.stundenplan.SettingsActivitiy;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.R;
@@ -87,7 +88,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         createTableLayout();
 
 
-        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
+        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivitiy.class)));
     }
 
     private AtomicReference<TimeTable> loadingTimeTableReference;
@@ -228,7 +229,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     String formatTeacherName(String teacherName) {
-        if (!getSharedPreferences().getBoolean("showTeachersInitials", false)) {
+        if (!getSharedPreferences().getBoolean("showTeacherFirstNameInitial", false)) {
             for (int i = 0; i < teacherName.length(); i++) {
                 if (teacherName.charAt(i) == '.')
                     return teacherName.substring(i + 2);
