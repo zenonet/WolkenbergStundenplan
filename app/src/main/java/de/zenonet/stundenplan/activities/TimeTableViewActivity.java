@@ -1,5 +1,6 @@
 package de.zenonet.stundenplan.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -7,6 +8,8 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.*;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.preference.PreferenceManager;
@@ -48,47 +51,51 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         nonCrucialUiLoaded = savedInstanceState != null;
 
+        initializeTimeTableManagement();
+
         // Check if the application is set up
-        if (!getSharedPreferences().contains("refreshToken") && !getIntent().hasExtra("code")) {
-            startActivity(new Intent(this, LoginActivity.class));
-            return;
-        }
-
-        manager = new TimeTableManager();
-        try {
-            manager.init(this);
-        } catch (UserLoadException e) {
-            // TODO: Show a message saying that the user id couldn't be loaded
-        }
-
-        // OAuth code login
-        {
-            // Login with oauth auth code if this activity was started by the login activity with a code
-            Intent intent = getIntent();
-            if (intent.hasExtra("code")) {
-
-                // TODO
-                manager.apiClient.redeemOAuthCodeAsync(intent.getStringExtra("code"), () -> {
-                    try {
-                        manager.getUser();
-                    } catch (UserLoadException e) {
-                    }
-                    loadTimeTableAsync();
-                });
-            } else {
-                new Thread(() -> {
-                    Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetch thread start: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
-                    loadTimeTableAsync();
-                }).start();
-            }
+        if (!getSharedPreferences().contains("refreshToken")) {
+            startLoginProcess();
         }
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
         createTableLayout();
 
-
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivitiy.class)));
+    }
+
+    private void initializeTimeTableManagement() {
+        manager = new TimeTableManager();
+        try {
+            manager.init(this);
+        } catch (UserLoadException e) {
+            // TODO: Show a message saying that the user id couldn't be loaded
+        }
+    }
+
+    private void startLoginProcess() {
+        ActivityResultLauncher<Intent> intentLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            initializeTimeTableManagement();
+                            String code = data.getStringExtra("code");
+                            manager.apiClient.redeemOAuthCodeAsync(code, () -> {
+                                try {
+                                    manager.getUser();
+                                } catch (UserLoadException e) {
+                                }
+                                loadTimeTableAsync();
+                            });
+                        }
+                    }
+                }
+        );
+        intentLauncher.launch(new Intent(this, LoginActivity.class));
+
     }
 
     private AtomicReference<TimeTable> loadingTimeTableReference;

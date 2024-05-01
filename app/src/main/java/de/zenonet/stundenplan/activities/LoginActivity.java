@@ -53,9 +53,10 @@ public class LoginActivity extends AppCompatActivity {
                 clearCacheBloat();
 
                 Toast.makeText(LoginActivity.this, "Refresh token found!", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(LoginActivity.this, TimeTableViewActivity.class);
-                intent.putExtra("code", oAuthCode);
-                startActivity(intent);
+                Intent data = new Intent();
+                data.putExtra("code", oAuthCode);
+                setResult(RESULT_OK, data);
+                finish();
                 return true;
             }
         });
