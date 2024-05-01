@@ -217,8 +217,8 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                                 val mainActivityIntent =
                                     Intent(activity, TimeTableViewActivity::class.java)
-                                mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
                                 activity.startActivity(mainActivityIntent)
+                                activity.finish()
                             }
                     }
                 }
