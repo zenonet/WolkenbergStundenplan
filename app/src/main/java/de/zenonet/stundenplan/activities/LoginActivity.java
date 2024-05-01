@@ -1,8 +1,6 @@
 package de.zenonet.stundenplan.activities;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.view.KeyEvent;
 import android.webkit.*;
 
@@ -52,7 +50,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 clearCacheBloat();
 
-                Toast.makeText(LoginActivity.this, "Refresh token found!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Auth code found!", Toast.LENGTH_SHORT).show();
                 Intent data = new Intent();
                 data.putExtra("code", oAuthCode);
                 setResult(RESULT_OK, data);

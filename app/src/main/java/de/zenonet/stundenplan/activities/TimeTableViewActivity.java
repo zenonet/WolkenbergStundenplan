@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
+import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.SettingsActivitiy;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
@@ -53,10 +54,20 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         initializeTimeTableManagement();
 
+        if(!getSharedPreferences().contains("onboardingCompleted")){
+            Intent intent = new Intent(this, OnboardingActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         // Check if the application is set up
         if (!getSharedPreferences().contains("refreshToken")) {
             startLoginProcess();
+            return;
         }
+
+        loadTimeTableAsync();
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);

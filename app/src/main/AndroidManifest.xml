@@ -21,6 +21,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".OnboardingActivity"
+            android:exported="true"
+            android:label="Onboarding"
+            android:theme="@style/Theme.Stundenplan" />
+        <activity
             android:name=".SettingsActivitiy"
             android:exported="true"
             android:label="Einstellungen"
