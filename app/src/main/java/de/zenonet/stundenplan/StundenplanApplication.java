@@ -41,7 +41,7 @@ public class StundenplanApplication extends Application {
     }
 
     public void scheduleUpdateRepeating() {
-        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_notifications", false))
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("showNotifications", false))
             return;
 
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 30, TimeUnit.MINUTES)
