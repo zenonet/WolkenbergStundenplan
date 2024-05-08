@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 
@@ -20,6 +21,7 @@ import com.google.android.material.color.MaterialColors;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.OnboardingActivity;
@@ -54,7 +56,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         initializeTimeTableManagement();
 
-        if(!getSharedPreferences().contains("onboardingCompleted")){
+        if(!getSharedPreferences().contains("onboardingCompleted")) {
             Intent intent = new Intent(this, OnboardingActivity.class);
             startActivity(intent);
             finish();
@@ -186,14 +188,34 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         table.setForegroundGravity(Gravity.FILL);
 
+        // Generate header row
+        int dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)-2)%7;
+        TableRow headerRow = new TableRow(this);
+        String[] weekdays = new String[]{"Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
+        for (int i = 0; i < 5; i++) {
+            TextView textView = new TextView(this);
+            headerRow.addView(textView);
+            if(i == dayOfWeek){
+                textView.setTextColor(MaterialColors.getColor(textView, R.attr.lessonForeground));
+                textView.setBackgroundColor(MaterialColors.getColor(textView, R.attr.lessonBackground));
+            }else{
+                textView.setTextColor(MaterialColors.getColor(textView, R.attr.normalForeground));
+            }
+            textView.setTextSize(11);
+            textView.setWidth(widthPerRow);
+            textView.setGravity(View.TEXT_ALIGNMENT_GRAVITY);
+            textView.setText(weekdays[i]);
+        }
+        table.addView(headerRow);
+
         for (int periodI = 0; periodI < 10; periodI++) {
             TableRow row = new TableRow(this);
 
             for (int dayI = 0; dayI < 5; dayI++) {
-
-                LinearLayout lessonLayout = new LinearLayout(this);
                 final int lessonTextPaddingH = 30;
                 final int lessonTextPaddingV = 15;
+
+                LinearLayout lessonLayout = new LinearLayout(this);
                 lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
                 lessonLayout.setOrientation(LinearLayout.VERTICAL);
                 lessonLayout.setMinimumWidth(widthPerRow);
