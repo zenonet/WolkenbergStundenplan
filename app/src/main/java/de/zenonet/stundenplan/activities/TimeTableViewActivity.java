@@ -1,8 +1,10 @@
 package de.zenonet.stundenplan.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -19,9 +21,11 @@ import android.os.Bundle;
 
 import com.google.android.material.color.MaterialColors;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.OnboardingActivity;
@@ -31,6 +35,7 @@ import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.common.Utils;
@@ -45,6 +50,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     boolean nonCrucialUiLoaded = false;
 
+    int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -56,7 +63,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         initializeTimeTableManagement();
 
-        if(!getSharedPreferences().contains("onboardingCompleted")) {
+        if (!getSharedPreferences().contains("onboardingCompleted")) {
             Intent intent = new Intent(this, OnboardingActivity.class);
             startActivity(intent);
             finish();
@@ -76,6 +83,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
         createTableLayout();
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivitiy.class)));
+
+        findViewById(R.id.nextWeekButton).setOnClickListener((sender) -> {
+            selectedWeek++;
+            reloadTimeTable();
+        });
+
+        findViewById(R.id.previousWeekButton).setOnClickListener((sender) -> {
+            selectedWeek--;
+            reloadTimeTable();
+        });
     }
 
     private void initializeTimeTableManagement() {
@@ -138,6 +155,20 @@ public class TimeTableViewActivity extends AppCompatActivity {
         );
     }
 
+    private void reloadTimeTable(){
+        new Thread(() -> {
+            try {
+                TimeTable tt = manager.getTimeTableForWeek(selectedWeek);
+                if(tt == null) return;
+
+                runOnUiThread(() -> updateTimeTableView(tt));
+            } catch (TimeTableLoadException e) {
+                // TODO: Display error message
+                throw new RuntimeException(e);
+            }
+        }).start();
+    }
+
     private void updateTimeTableView(TimeTable timeTable) {
 
         stateView.setText(timeTable.isFromCache ? (timeTable.isCacheStateConfirmed ? "From cache (confirmed)" : "From cache") : "From API");
@@ -173,6 +204,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
+        updateDayDisplayForWeek(selectedWeek);
+
         if (!nonCrucialUiLoaded)
             loadNonCrucialUi();
 
@@ -180,6 +213,34 @@ public class TimeTableViewActivity extends AppCompatActivity {
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view is actually rendered: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
+
+    @SuppressLint("SimpleDateFormat")
+    private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.");
+    private void updateDayDisplayForWeek(int week){
+        Calendar cal = Calendar.getInstance();
+        int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
+        int year = cal.get(Calendar.YEAR);
+        cal.clear(); // Reset the calendar
+        cal.set(Calendar.YEAR, year); // Recover the year
+        cal.set(Calendar.WEEK_OF_YEAR, week); // Set the desired week of year
+        // Now, the calendar points at the first day of the desired week
+
+        // Update all the textViews:
+        for (int i = 444; i < 444 + 5; i++) {
+            TextView view = findViewById(i);
+            view.setText(format.format(cal.getTime()));
+            if (cal.get(Calendar.DAY_OF_YEAR) == dayOfYear) {
+                view.setTextColor(MaterialColors.getColor(view, R.attr.lessonForeground));
+                view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
+            } else {
+                view.setTextColor(MaterialColors.getColor(view, R.attr.normalForeground));
+                view.setBackgroundColor(Color.TRANSPARENT);
+            }
+
+            cal.add(Calendar.DAY_OF_WEEK, 1);
+        }
+    }
+
 
     private void createTableLayout() {
         final int width = table.getMeasuredWidth();
@@ -189,22 +250,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
         table.setForegroundGravity(Gravity.FILL);
 
         // Generate header row
-        int dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)-2)%7;
+        int dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7;
         TableRow headerRow = new TableRow(this);
-        String[] weekdays = new String[]{"Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
         for (int i = 0; i < 5; i++) {
             TextView textView = new TextView(this);
+            textView.setId(444+i);
             headerRow.addView(textView);
-            if(i == dayOfWeek){
-                textView.setTextColor(MaterialColors.getColor(textView, R.attr.lessonForeground));
-                textView.setBackgroundColor(MaterialColors.getColor(textView, R.attr.lessonBackground));
-            }else{
-                textView.setTextColor(MaterialColors.getColor(textView, R.attr.normalForeground));
-            }
+
             textView.setTextSize(11);
             textView.setWidth(widthPerRow);
             textView.setGravity(View.TEXT_ALIGNMENT_GRAVITY);
-            textView.setText(weekdays[i]);
         }
         table.addView(headerRow);
 
