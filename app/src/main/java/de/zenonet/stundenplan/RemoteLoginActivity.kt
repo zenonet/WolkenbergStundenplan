@@ -1,13 +1,14 @@
 package de.zenonet.stundenplan
 
-import android.app.Activity
-import android.app.RemoteAction
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,27 +33,46 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.wear.remote.interactions.RemoteActivityHelper
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Tasks
-import com.google.android.gms.wearable.DataItem
-import com.google.android.gms.wearable.DataMap
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
+import de.zenonet.stundenplan.activities.LoginActivity
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
+import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.net.URLEncoder
 import java.time.Instant
 import kotlin.coroutines.cancellation.CancellationException
 
 
 class RemoteLoginActivity : ComponentActivity() {
+    private lateinit var intentLauncher : ActivityResultLauncher<Intent>;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        intentLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == RESULT_OK) {
+                val data: Intent? = result.data
+                if (data != null) {
+                    val code = data.getStringExtra("code")
+                    val apiClient = TimeTableApiClient()
+                    apiClient.init(this)
+                    apiClient.redeemOAuthCodeAsync(code) {
+                        try {
+                            sendRefreshToken(true)
+                        } catch (e: UserLoadException) {
+                        }
+                    }
+                }
+            }
+        }
+
         setContent {
             StundenplanTheme {
                 // A surface container using the 'background' color from the theme
@@ -61,14 +81,20 @@ class RemoteLoginActivity : ComponentActivity() {
         }
     }
 
-    fun sendRefreshToken() {
+    fun sendRefreshToken(preventRecursion: Boolean = false) {
         lifecycleScope.launch {
             val dataClient = Wearable.getDataClient(this@RemoteLoginActivity);
 
             try {
                 val preferences = PreferenceManager.getDefaultSharedPreferences(this@RemoteLoginActivity);
                 val refreshToken =
-                    preferences.getString("refreshToken", "null") ?: return@launch
+                    preferences.getString("refreshToken", "") ?: return@launch
+
+                if(refreshToken == ""){
+                    if(!preventRecursion)
+                        startLoginProcess()
+                    return@launch
+                }
 
                 val request = PutDataMapRequest.create("/refreshtoken").apply {
                     dataMap.putString("refreshToken", refreshToken)
@@ -85,7 +111,13 @@ class RemoteLoginActivity : ComponentActivity() {
             } catch (exception: Exception) {
                 Log.d(Utils.LOG_TAG, "Saving DataItem failed: $exception")
             }
+            Toast.makeText(this@RemoteLoginActivity, "Login sent!", Toast.LENGTH_SHORT).show()
+            finish()
         }
+    }
+
+    private fun startLoginProcess() {
+        intentLauncher.launch(Intent(this, LoginActivity::class.java))
     }
 }
 
