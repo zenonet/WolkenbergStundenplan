@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +36,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
@@ -49,8 +52,10 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalTime
+import java.util.Calendar
 
 class WearTimeTableViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,19 +122,22 @@ fun TimeTable(context: Context) {
             // Display the shown weekday using a TimeText with a fake TimeSource
             TimeText(timeSource = WeekDayTimeSource(weekDays[pagerState.currentPage]))
 
+            val dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7
+
+            val coroutineScope = rememberCoroutineScope()
+
             HorizontalPager(
                 state = pagerState,
                 Modifier.fillMaxSize(),
             ) { day ->
 
-
+                val listState = rememberScalingLazyListState()
                 ScalingLazyColumn(
                     Modifier
-                        //.verticalScroll(rememberScrollState())
                         .padding(20.dp)
                         .fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    state = rememberScalingLazyListState(),
+                    state = listState,
                 ) {
                     if (timeTable == null) return@ScalingLazyColumn;
 
@@ -141,10 +149,24 @@ fun TimeTable(context: Context) {
                             currentPeriod == period,
                             period + 1
                         )
-                    }
 
+                        // Scroll to the current period
+                        LaunchedEffect(null) {
+                            // Scroll if the school-day is not yet over, this column show the current day and
+                            // this lesson view shows the first lesson (to only scroll once)
+                            if (currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                listState.scrollToItem(currentPeriod)
+                            }
+                        }
+                    }
                 }
 
+            }
+
+            LaunchedEffect(null) {
+                // Scroll to the current day
+                if (dayOfWeek > 4) return@LaunchedEffect
+                pagerState.scrollToPage(dayOfWeek)
             }
         }
     }
@@ -152,10 +174,10 @@ fun TimeTable(context: Context) {
 
 
 @Composable
-fun getBackgroundColorForLesson(lesson: Lesson) : Color{
-    if(!lesson.isTakingPlace) return colorResource(CommonR.color.cancelled_lesson)
+fun getBackgroundColorForLesson(lesson: Lesson): Color {
+    if (!lesson.isTakingPlace) return colorResource(CommonR.color.cancelled_lesson)
 
-    return when(lesson.Type){
+    return when (lesson.Type) {
         LessonType.Substitution -> colorResource(CommonR.color.substituted_lesson)
         LessonType.RoomSubstitution -> colorResource(CommonR.color.room_substituted_lesson)
         else -> {
