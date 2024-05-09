@@ -6,5 +6,6 @@
         <item name="lessonForeground">@color/black</item>
         <item name="lessonBackground">@color/white</item>
         <item name="normalForeground">@color/white</item>
+        <item name="normalBackground">@color/transparent</item>
     </style>
 </resources>

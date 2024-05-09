@@ -214,7 +214,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     @SuppressLint("SimpleDateFormat")
     private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.");
-    private void updateDayDisplayForWeek(int week){
+    private void updateDayDisplayForWeek(int week) {
         Calendar cal = Calendar.getInstance();
         int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
         int year = cal.get(Calendar.YEAR);
@@ -232,7 +232,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
             } else {
                 view.setTextColor(MaterialColors.getColor(view, R.attr.normalForeground));
-                view.setBackgroundColor(Color.TRANSPARENT);
+                view.setBackgroundColor(MaterialColors.getColor(view, R.attr.normalBackground));
             }
 
             cal.add(Calendar.DAY_OF_WEEK, 1);
@@ -244,29 +244,32 @@ public class TimeTableViewActivity extends AppCompatActivity {
         final int width = table.getMeasuredWidth();
         final int widthPerRow = width / 5;
         final int lessonMargin = 3;
+        final int lessonTextPaddingH = 30;
+        final int lessonTextPaddingV = 15;
 
         table.setForegroundGravity(Gravity.FILL);
 
         // Generate header row
-        int dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7;
         TableRow headerRow = new TableRow(this);
         for (int i = 0; i < 5; i++) {
             TextView textView = new TextView(this);
-            textView.setId(444+i);
-            headerRow.addView(textView);
-
+            textView.setId(444 + i);
             textView.setTextSize(11);
             textView.setWidth(widthPerRow);
             textView.setGravity(View.TEXT_ALIGNMENT_GRAVITY);
+            textView.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
+            headerRow.addView(textView);
         }
+        TableRow.LayoutParams params = new TableRow.LayoutParams(widthPerRow, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(lessonMargin, lessonMargin, lessonMargin, lessonMargin);
+        headerRow.setLayoutParams(params);
+
         table.addView(headerRow);
 
         for (int periodI = 0; periodI < 10; periodI++) {
             TableRow row = new TableRow(this);
 
             for (int dayI = 0; dayI < 5; dayI++) {
-                final int lessonTextPaddingH = 30;
-                final int lessonTextPaddingV = 15;
 
                 LinearLayout lessonLayout = new LinearLayout(this);
                 lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
@@ -300,10 +303,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         getSharedPreferences().getBoolean("useCursedLayout", false)
                                 ? ViewGroup.LayoutParams.WRAP_CONTENT
                                 : ViewGroup.LayoutParams.MATCH_PARENT);
-                layoutParams.leftMargin = lessonMargin;
-                layoutParams.rightMargin = lessonMargin;
-                layoutParams.topMargin = lessonMargin;
-                layoutParams.bottomMargin = lessonMargin;
+                layoutParams.setMargins(lessonMargin, lessonMargin, lessonMargin, lessonMargin);
 
                 lessonLayout.setId(666 + dayI * 9 + periodI);
                 lessonLayout.setLayoutParams(layoutParams);
