@@ -18,7 +18,7 @@ import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Hashtable;
 
-import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
 

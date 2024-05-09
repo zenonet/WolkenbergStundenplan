@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters;
 import java.time.LocalTime;
 import java.util.Calendar;
 
+import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;

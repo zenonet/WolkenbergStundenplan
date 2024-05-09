@@ -26,8 +26,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
-import de.zenonet.stundenplan.DataNotAvailableException;
-import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.models.User;

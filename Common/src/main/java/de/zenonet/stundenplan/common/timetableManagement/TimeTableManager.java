@@ -4,15 +4,12 @@ import android.content.Context;
 import android.util.Log;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.zenonet.stundenplan.DataNotAvailableException;
-import de.zenonet.stundenplan.NameLookup;
+import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.NameLookup;
 
-import de.zenonet.stundenplan.common.R;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadedCallback;

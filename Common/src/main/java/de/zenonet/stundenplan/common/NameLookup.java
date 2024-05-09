@@ -1,13 +1,11 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.common;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
-import de.zenonet.stundenplan.common.Utils;
 
 public class NameLookup {
 

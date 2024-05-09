@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -25,14 +24,13 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.OnboardingActivity;
+import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivitiy;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
-import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
@@ -192,13 +190,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
                 // TODO: Select better colors for this
                 if (!timeTable.Lessons[dayI][periodI].isTakingPlace())
-                    lessonView.setBackgroundColor(getColor(R.color.cancelled_lesson));
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
                 else if (timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
-                    lessonView.setBackgroundColor(getColor(R.color.substituted_lesson));
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.substituted_lesson));
                 else if (timeTable.Lessons[dayI][periodI].Type == LessonType.RoomSubstitution)
-                    lessonView.setBackgroundColor(getColor(R.color.room_substituted_lesson));
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.room_substituted_lesson));
                 else
-                    lessonView.setBackgroundColor(getColor(R.color.regular_lesson));
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.regular_lesson));
             }
         }
         if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
