@@ -124,8 +124,6 @@ fun TimeTable(context: Context) {
 
             val dayOfWeek = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7
 
-            val coroutineScope = rememberCoroutineScope()
-
             HorizontalPager(
                 state = pagerState,
                 Modifier.fillMaxSize(),
