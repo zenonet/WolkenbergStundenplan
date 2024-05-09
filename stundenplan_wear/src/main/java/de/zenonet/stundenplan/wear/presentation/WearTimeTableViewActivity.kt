@@ -29,22 +29,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults.chipColors
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeSource
 import androidx.wear.compose.material.TimeText
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
+import de.zenonet.stundenplan.common.timetableManagement.LessonType
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
-import de.zenonet.stundenplan.wear.R
+import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -147,8 +150,27 @@ fun TimeTable(context: Context) {
     }
 }
 
+
+@Composable
+fun getBackgroundColorForLesson(lesson: Lesson) : Color{
+    if(!lesson.isTakingPlace) return colorResource(CommonR.color.cancelled_lesson)
+
+    return when(lesson.Type){
+        LessonType.Substitution -> colorResource(CommonR.color.substituted_lesson)
+        LessonType.RoomSubstitution -> colorResource(CommonR.color.room_substituted_lesson)
+        else -> {
+            colorResource(CommonR.color.regular_lesson)
+        }
+    }
+}
+
 @Composable
 fun LessonView(lesson: Lesson, isCurrent: Boolean = false, displayPeriod: Int) {
+    val chipColors = chipColors(
+        backgroundColor = getBackgroundColorForLesson(lesson),
+        contentColor = Color.Black
+    )
+
     Chip(
         label = {
             val subject = lesson.SubjectShortName
@@ -159,6 +181,7 @@ fun LessonView(lesson: Lesson, isCurrent: Boolean = false, displayPeriod: Int) {
         onClick = { },
         secondaryLabel = { Text("Mit ${lesson.Teacher}") },
         modifier = Modifier.fillMaxWidth(),
+        colors = chipColors
     )
 }
 
