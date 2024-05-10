@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+-keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient { *; }
+-keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableManager { *; }
+-keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableCacheClient { *; }
+-keep class de.zenonet.stundenplan.common.models.User

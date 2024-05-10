@@ -1,6 +1,13 @@
 package de.zenonet.stundenplan.common.quoteOfTheDay;
 
-public class Quote {
+import androidx.annotation.Keep;
+
+@Keep
+public final class Quote {
     public String text;
     public String author;
+
+    @Keep
+    public Quote(){
+    }
 }
