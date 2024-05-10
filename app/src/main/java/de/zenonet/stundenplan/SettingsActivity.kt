@@ -51,21 +51,21 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preferenceCategory
 import me.zhanghai.compose.preference.switchPreference
 
-class SettingsActivitiy : ComponentActivity() {
+class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
 
         // If notifications are enabled but the permission is not
-        if (PreferenceManager.getDefaultSharedPreferences(this@SettingsActivitiy)
+        if (PreferenceManager.getDefaultSharedPreferences(this@SettingsActivity)
                 .getBoolean("showNotifications", false)
             && (ActivityCompat.checkSelfPermission(
-                this@SettingsActivitiy,
+                this@SettingsActivity,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED)
         ) {
             // Disable the preference
-            PreferenceManager.getDefaultSharedPreferences(this@SettingsActivitiy).edit()
+            PreferenceManager.getDefaultSharedPreferences(this@SettingsActivity).edit()
                 .putBoolean("showNotifications", false).apply();
         }
 
@@ -101,7 +101,7 @@ class SettingsActivitiy : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun View(activity: SettingsActivitiy?) {
+fun View(activity: SettingsActivity?) {
     Scaffold(
         topBar = {
             TopAppBar(

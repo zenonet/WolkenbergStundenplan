@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
-import de.zenonet.stundenplan.SettingsActivitiy;
+import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.StundenplanApplication;
@@ -80,7 +80,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         stateView = findViewById(R.id.stateView);
         createTableLayout();
 
-        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivitiy.class)));
+        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
 
         findViewById(R.id.nextWeekButton).setOnClickListener((sender) -> {
             selectedWeek++;
