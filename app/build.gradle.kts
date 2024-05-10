@@ -20,10 +20,16 @@ android {
     }
 
     buildTypes {
+        debug{
+            isDebuggable = true
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
         release {
-            isMinifyEnabled = false // TODO Enable minify for publishing
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("debug")
+
         }
     }
     compileOptions {

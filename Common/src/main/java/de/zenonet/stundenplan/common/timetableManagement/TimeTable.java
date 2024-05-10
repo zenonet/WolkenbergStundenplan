@@ -1,14 +1,17 @@
 package de.zenonet.stundenplan.common.timetableManagement;
 
+import androidx.annotation.Keep;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class TimeTable {
+public final class TimeTable {
     public Lesson[][] Lessons;
     public LocalDateTime lastConfirmedDate;
     public transient boolean isFromCache;
     public transient boolean isCacheStateConfirmed;
     public long CounterValue;
+    @Keep
     public TimeTable(){
         Lessons = new Lesson[5][];
     }

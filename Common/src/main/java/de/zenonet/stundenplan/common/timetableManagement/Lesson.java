@@ -4,8 +4,7 @@ import androidx.annotation.Keep;
 
 import java.time.LocalTime;
 
-@Keep
-public class Lesson {
+public final class Lesson {
     public String Teacher;
     public String Subject;
     public String SubjectShortName;
@@ -14,10 +13,15 @@ public class Lesson {
     public transient LocalTime StartTime;
     public transient LocalTime EndTime;
 
-    public boolean isTakingPlace(){
+    public boolean isTakingPlace() {
         return Type != LessonType.Cancelled && Type != LessonType.Absent && Type != LessonType.Holiday;
     }
-    public boolean isSubstitution(){
+
+    public boolean isSubstitution() {
         return Type == LessonType.Substitution || Type == LessonType.RoomSubstitution;
+    }
+
+    @Keep
+    public Lesson() {
     }
 }

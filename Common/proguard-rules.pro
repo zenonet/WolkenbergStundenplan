@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+-keep class de.zenonet.stundenplan.common.models.User
+-keep class de.zenonet.stundenplan.common.models.UserType
+-keep class de.zenonet.stundenplan.common.timetableManagement.Lesson
+-keep class de.zenonet.stundenplan.common.timetableManagement.TimeTable
+-keep class de.zenonet.stundenplan.common.timetableManagement.LessonType
+-keep class de.zenonet.stundenplan.common.quoteOfTheDay.Quote
