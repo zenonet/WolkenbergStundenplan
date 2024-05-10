@@ -68,6 +68,12 @@ public class BackgroundUpdater extends Worker {
             int dayOfWeek = (cal.get(Calendar.DAY_OF_WEEK) - 2);
             //int dayOfWeek = 0;
 
+            // Ensure it is schooltime (again)
+            if (nextPeriod >= timeTable.Lessons[dayOfWeek].length) {
+                notificationManager.cancel(666);
+                return Result.success();
+            }
+
             Lesson nextLesson = timeTable.Lessons[dayOfWeek][nextPeriod];
             Lesson lessonAfterThat = timeTable.Lessons[dayOfWeek].length > nextPeriod + 1 ? timeTable.Lessons[dayOfWeek][nextPeriod + 1] : null;
 
