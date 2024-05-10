@@ -15,6 +15,7 @@ import java.time.LocalTime;
 import java.util.Calendar;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
@@ -30,13 +31,13 @@ public class BackgroundUpdater extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Calendar cal = Calendar.getInstance();
+        int dayOfWeek = Timing.getCurrentDayOfWeek();
 
         // Ensure it's a weekday
-        if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+        if (dayOfWeek > 4)
             return Result.success();
 
-        int nextPeriod = Utils.getCurrentPeriod(LocalTime.now().plusMinutes(45));
+        int nextPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(45));
         // nextPeriod = 2;
         Context context = getApplicationContext();
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
@@ -64,8 +65,6 @@ public class BackgroundUpdater extends Worker {
                 return Result.failure();
             }
 
-            cal.get(Calendar.DAY_OF_WEEK);
-            int dayOfWeek = (cal.get(Calendar.DAY_OF_WEEK) - 2);
             //int dayOfWeek = 0;
 
             // Ensure it is schooltime (again)
