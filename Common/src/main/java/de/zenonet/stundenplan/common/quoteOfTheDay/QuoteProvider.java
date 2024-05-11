@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -68,14 +69,18 @@ public class QuoteProvider {
         maybeCheckForNewQuotes();
         try {
             File file = new File(Utils.CachePath, "quotes.json");
-            if(!file.exists())
+            if (!file.exists())
                 loadQuotesFromApi();
 
             String contents = Utils.readAllText(file);
             JSONObject root = new JSONObject(contents);
 
-            int index = (int) (LocalDate.now().toEpochDay() % root.getInt("count"));
-            return new Gson().fromJson(root.getJSONArray("quotes").get(index).toString(), Quote.class);
+            if (!root.getBoolean("enabled"))
+                return null;
+
+            JSONArray quotes = root.getJSONArray("quotes");
+            int index = (int) (LocalDate.now().toEpochDay() % quotes.length());
+            return new Gson().fromJson(quotes.get(index).toString(), Quote.class);
         } catch (IOException | JSONException ignored) {
             return null;
         }
@@ -91,7 +96,7 @@ public class QuoteProvider {
 
             File etagFile = new File(Utils.CachePath, "/etag.txt");
 
-            if(!etagFile.exists()){
+            if (!etagFile.exists()) {
                 loadQuotesFromApi();
                 return;
             }
@@ -105,7 +110,7 @@ public class QuoteProvider {
 
             String etag = httpCon.getHeaderField("Etag");
 
-            if(!localEtag.equals(etag)){
+            if (!localEtag.equals(etag)) {
                 loadQuotesFromApi();
             }
 

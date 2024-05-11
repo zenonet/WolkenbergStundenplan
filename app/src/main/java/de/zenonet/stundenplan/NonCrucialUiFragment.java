@@ -24,6 +24,10 @@ public class NonCrucialUiFragment extends Fragment {
 
         // Start loading quote of the day
         new QuoteProvider().getQuoteOfTheDayAsync(quote -> getActivity().runOnUiThread(() -> {
+            if(quote == null){
+                getActivity().findViewById(R.id.quoteContainer).setVisibility(View.GONE);
+                return;
+            }
             ((TextView)getActivity().findViewById(R.id.quoteAuthor)).setText(quote.author);
             ((TextView)getActivity().findViewById(R.id.quoteText)).setText(quote.text);
         }));
