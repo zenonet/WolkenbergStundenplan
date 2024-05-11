@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.wear:wear-complications-data-source-ktx:1.0.0-alpha22")
     implementation("androidx.wear:wear-complications-provider:1.0.0-alpha17")
+    implementation("androidx.wear:wear:1.3.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")

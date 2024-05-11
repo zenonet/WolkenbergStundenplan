@@ -7,9 +7,9 @@
 package de.zenonet.stundenplan.wear.presentation
 
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
 import android.net.Uri
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -28,22 +31,20 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.wear.activity.ConfirmationActivity
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.tasks.Tasks.await
-import com.google.android.gms.wearable.CapabilityClient
-import com.google.android.gms.wearable.DataEvent
-import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
-import java.net.URLDecoder
 
 
 class LoginActivity : ComponentActivity() {
+    lateinit var isShowingContinueOnPhoneAnimation: MutableState<Boolean>;
     private val dataClient by lazy { Wearable.getDataClient(this) }
     private val dataChangedListener by lazy { MyDataChangedListener(this) }
 
@@ -56,7 +57,11 @@ class LoginActivity : ComponentActivity() {
         setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
-            WearApp(activity = this)
+            isShowingContinueOnPhoneAnimation = remember {
+                mutableStateOf(false)
+            }
+            if (!isShowingContinueOnPhoneAnimation.value)
+                WearApp(activity = this)
         }
     }
 
@@ -81,27 +86,18 @@ class LoginActivity : ComponentActivity() {
             // Send the local node id
             //remoteIntent.putExtra("nodeId", await(nodeClient.localNode).id)
 
-            var startedStoreOnAtLeastOneDevice = false
-            var atLeastOneNodeReportedAnError = false
+            try {
+                RemoteActivityHelper(this).startRemoteActivity(remoteIntent)
+                showContinueOnPhone()
+                isShowingContinueOnPhoneAnimation.value = true
+            } catch (e: RemoteActivityHelper.RemoteIntentException) {
 
-            for (node in connectedNodes) {
-                try {
-                    RemoteActivityHelper(this)
-                        .startRemoteActivity(
-                            targetIntent = remoteIntent,
-                            targetNodeId = node.id
-                        )
-                    Log.i(Utils.LOG_TAG, "Remote activity started")
-
-                    startedStoreOnAtLeastOneDevice = true
-                } catch (t: Throwable) {
-                    atLeastOneNodeReportedAnError = true
-                }
             }
+
         }.start();
     }
 
-    fun loginSucceeded(){
+    fun loginSucceeded() {
         startActivity(Intent(this, WearTimeTableViewActivity::class.java))
     }
 
@@ -113,6 +109,19 @@ class LoginActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         dataClient.removeListener(dataChangedListener)
+    }
+
+    private fun showContinueOnPhone() {
+        val confirmation = Intent(this, ConfirmationActivity::class.java).apply {
+            putExtra(
+                ConfirmationActivity.EXTRA_ANIMATION_TYPE,
+                ConfirmationActivity.OPEN_ON_PHONE_ANIMATION
+            )
+            putExtra(ConfirmationActivity.EXTRA_ANIMATION_DURATION_MILLIS, 2000)
+            putExtra(ConfirmationActivity.EXTRA_MESSAGE, "Auf Telefon fortsetzen")
+            addFlags(FLAG_ACTIVITY_NO_HISTORY)
+        }
+        startActivity(confirmation)
     }
 }
 
