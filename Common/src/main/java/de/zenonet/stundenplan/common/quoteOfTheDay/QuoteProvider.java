@@ -75,13 +75,18 @@ public class QuoteProvider {
             String contents = Utils.readAllText(file);
             JSONObject root = new JSONObject(contents);
 
-            if (!root.getBoolean("enabled"))
+            if (root.has("enabled") && !root.getBoolean("enabled"))
                 return null;
 
             JSONArray quotes = root.getJSONArray("quotes");
-            int index = (int) (LocalDate.now().toEpochDay() % quotes.length());
+
+            // Allows the server to force a specific quote
+            int index = root.has("forcedQuote")
+                    ? root.getInt("forcedQuote")
+                    : (int) (LocalDate.now().toEpochDay() % quotes.length());
+
             return new Gson().fromJson(quotes.get(index).toString(), Quote.class);
-        } catch (IOException | JSONException ignored) {
+        } catch (IOException | JSONException e) {
             return null;
         }
     }

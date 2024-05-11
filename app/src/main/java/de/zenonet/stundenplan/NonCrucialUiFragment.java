@@ -30,6 +30,9 @@ public class NonCrucialUiFragment extends Fragment {
             }
             ((TextView)getActivity().findViewById(R.id.quoteAuthor)).setText(quote.author);
             ((TextView)getActivity().findViewById(R.id.quoteText)).setText(quote.text);
+            if(quote.classification != null){
+                ((TextView)getActivity().findViewById(R.id.quoteClassificationText)).setText(quote.classification);
+            }
         }));
     }
 
