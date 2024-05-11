@@ -12,20 +12,34 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
+import kotlin.math.roundToInt
 
 class DayProgressComplicationService : ComplicationProviderService() {
 
 
     override fun getPreviewData(type: ComplicationType): ComplicationData {
-        return RangedValueComplicationData.Builder(
-            min = 1f,
-            max = 6f,
-            value = 4f,
-            contentDescription = PlainComplicationText.Builder(text = "Schul-Fortschritt des Tages")
+        return when (type) {
+            ComplicationType.RANGED_VALUE -> RangedValueComplicationData.Builder(
+                min = 1f,
+                max = 6f,
+                value = 4f,
+                contentDescription = PlainComplicationText.Builder(text = "Schul-Fortschritt des Tages")
+                    .build()
+            )
                 .build()
-        )
-            .build()
+
+            ComplicationType.SHORT_TEXT ->
+                ShortTextComplicationData.Builder(
+                    text = PlainComplicationText.Builder(text = "66%")
+                        .build(),
+                    contentDescription = PlainComplicationText
+                        .Builder(text = "Schul-Fortschritt des Tages in %").build()
+                ).build()
+
+            else -> null!!
+        }
     }
 
     override fun onComplicationRequest(
@@ -50,6 +64,14 @@ class DayProgressComplicationService : ComplicationProviderService() {
                 return@Thread
             }
 
+            val firstLessonStart = Utils.getStartAndEndTimeOfPeriod(0).first;
+            val totalSchooltimeTodaySeconds =
+                Utils.getStartAndEndTimeOfPeriod(day.size - 1).second.toSecondOfDay() -
+                        firstLessonStart.toSecondOfDay()
+
+            val progressInSeconds = Timing.getCurrentTime().toSecondOfDay() - firstLessonStart.toSecondOfDay().toLong()
+            val progress = progressInSeconds.toFloat()/totalSchooltimeTodaySeconds
+
             val data = when (request.complicationType) {
 
                 ComplicationType.RANGED_VALUE -> RangedValueComplicationData.Builder(
@@ -62,7 +84,11 @@ class DayProgressComplicationService : ComplicationProviderService() {
 
                 ComplicationType.SHORT_TEXT ->
                     ShortTextComplicationData.Builder(
-                        text = PlainComplicationText.Builder(text = ((currentPeriod / (day.size - 1) * 100).toString() + "%")).build(),
+                        text = PlainComplicationText.Builder(
+                            text = ((progress * 100).roundToInt()
+                                .toString() + "%")
+                        )
+                            .build(),
                         contentDescription = PlainComplicationText
                             .Builder(text = "Schul-Fortschritt des Tages in %").build()
                     ).build()
