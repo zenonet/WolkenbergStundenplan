@@ -135,7 +135,7 @@ fun TimeTable(context: Context) {
                 ) {
                     if (timeTable == null) return@ScalingLazyColumn;
 
-                    val currentPeriod = Utils.getCurrentPeriod(LocalTime.now())
+                    val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
                     items(timeTable!!.Lessons[day].size) { period ->
                         LessonView(
