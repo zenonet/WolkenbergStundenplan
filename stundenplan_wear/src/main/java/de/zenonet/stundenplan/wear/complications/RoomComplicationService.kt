@@ -31,7 +31,7 @@ class RoomComplicationService : ComplicationProviderService() {
         Thread {
 
             val dayOfWeek = Timing.getCurrentDayOfWeek()
-            val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+            val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(6))
             if (dayOfWeek > 4 || currentPeriod == -1) {
                 listener.onComplicationData(null)
                 return@Thread
@@ -40,7 +40,7 @@ class RoomComplicationService : ComplicationProviderService() {
             val manager = TimeTableManager()
             manager.init(this)
             val timetable = manager.getCurrentTimeTable()
-
+            Log.i(Utils.LOG_TAG, "Successfully loaded current timetable for room complication")
             if (currentPeriod >= timetable.Lessons[dayOfWeek].size) {
                 listener.onComplicationData(null)
                 return@Thread

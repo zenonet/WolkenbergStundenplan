@@ -49,7 +49,7 @@ class DayProgressComplicationService : ComplicationProviderService() {
         Thread {
 
             val dayOfWeek = Timing.getCurrentDayOfWeek()
-            val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+            val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(6))
             if (dayOfWeek > 4 || currentPeriod == -1) {
                 listener.onComplicationData(null)
                 return@Thread
