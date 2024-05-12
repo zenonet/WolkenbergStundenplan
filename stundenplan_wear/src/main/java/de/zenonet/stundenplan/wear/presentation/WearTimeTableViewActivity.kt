@@ -125,6 +125,9 @@ fun TimeTable(context: Context) {
                 Modifier.fillMaxSize(),
             ) { day ->
 
+
+                var hasScrolledToCurrentPeriod by remember{ mutableStateOf(false) }
+
                 val listState = rememberScalingLazyListState()
                 ScalingLazyColumn(
                     Modifier
@@ -148,8 +151,9 @@ fun TimeTable(context: Context) {
                         LaunchedEffect(null) {
                             // Scroll if the school-day is not yet over, this column show the current day and
                             // this lesson view shows the first lesson (to only scroll once)
-                            if (currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                            if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
                                 listState.scrollToItem(currentPeriod)
+                                hasScrolledToCurrentPeriod = true
                             }
                         }
                     }
