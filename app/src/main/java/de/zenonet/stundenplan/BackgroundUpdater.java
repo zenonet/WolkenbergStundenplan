@@ -37,7 +37,7 @@ public class BackgroundUpdater extends Worker {
         if (dayOfWeek > 4)
             return Result.success();
 
-        int nextPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(45));
+        int nextPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(6));
         // nextPeriod = 2;
         Context context = getApplicationContext();
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
