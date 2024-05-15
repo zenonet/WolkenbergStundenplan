@@ -24,11 +24,10 @@ public class Utils {
         int currentMinuteOfDay = time.getHour() * 60 + time.getMinute();
 
         try {
-
             // Deserialize JSON
             JSONObject jsonObject = new JSONObject(periodTimeJSON);
 
-            int previousPeriod = -1;
+            int nextPeriod = -1;
             // Check current period
             for (int i = 0; i < 8; i++) {
                 JSONObject periodJSON = jsonObject.getJSONObject(String.valueOf(i));
@@ -41,14 +40,16 @@ public class Utils {
                 int startMinuteOfDay = startHour * 60 + startMinute;
                 int endMinuteOfDay = endHour * 60 + endMinute;
 
+                // TODO: Refactor this
                 if (currentMinuteOfDay >= startMinuteOfDay && currentMinuteOfDay <= endMinuteOfDay) {
+                    // If time is within this period
                     return i;
                 } else if (currentMinuteOfDay < startMinuteOfDay) {
-                    return previousPeriod;
+                    // If time is before the start of this period but the last period didn't return already
+                    return i;
                 }
-                previousPeriod = i;
             }
-            return -1;
+            return nextPeriod;
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
