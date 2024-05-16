@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.sp
 import androidx.preference.PreferenceManager
 import de.zenonet.stundenplan.activities.LoginActivity
 import de.zenonet.stundenplan.activities.TimeTableViewActivity
+import de.zenonet.stundenplan.common.models.User
+import de.zenonet.stundenplan.common.models.UserType
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
@@ -52,8 +54,10 @@ import kotlinx.coroutines.launch
 
 class OnboardingActivity : ComponentActivity() {
 
-    public var onLoginCompleted: ((ActivityResult) -> Unit)? = null;
-    public var intentLauncher: ActivityResultLauncher<Intent>? = null;
+    var onLoginCompleted: ((ActivityResult) -> Unit)? = null;
+    var intentLauncher: ActivityResultLauncher<Intent>? = null;
+
+    var userData: User? = null;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -155,7 +159,8 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                             val code = data.getStringExtra("code")
                                             apiClient.redeemOAuthCodeAsync(code) {
                                                 try {
-                                                    username = apiClient.getUser().fullName
+                                                    activity.userData = apiClient.getUser()
+                                                    username = activity.userData!!.fullName
                                                     state = 2
                                                     isNextButtonEnabled = true
                                                 } catch (e: UserLoadException) {
@@ -200,6 +205,11 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                             2 -> {
                                 Text("Wilkommen $username!")
                                 Spacer(Modifier.height(10.dp))
+                                if(activity?.userData?.type == UserType.teacher){
+                                    Text("Ups, Sie sind ein Lehrer, aufgrund der Annahme es würde niemals ein Lehrer diese Anwendung benutzen, " +
+                                            "ist sie bis jetzt auch nicht darauf ausgelegt. Es könnte zu Fehlern kommen.")
+                                    Spacer(Modifier.height(10.dp))
+                                }
                                 Text("Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern")
                             }
                         }
