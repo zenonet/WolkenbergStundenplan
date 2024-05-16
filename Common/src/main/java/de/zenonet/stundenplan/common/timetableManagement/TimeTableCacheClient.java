@@ -116,6 +116,21 @@ public class TimeTableCacheClient implements TimeTableClient {
         }
     }
 
+    public void cacheTimetableForWeek(int week, TimeTable timetable){
+        try {
+
+            Log.i(Utils.LOG_TAG, "Caching timetable for week " + week + "...");
+            String json = new Gson().toJson(timetable);
+            File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
+
+            try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
+                stream.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public User getUser() throws UserLoadException {
         try {
