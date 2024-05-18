@@ -1,15 +1,16 @@
 package de.zenonet.stundenplan.common.timetableManagement;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
-
+import androidx.preference.PreferenceManager;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.NameLookup;
-
+import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadedCallback;
@@ -20,9 +21,11 @@ public class TimeTableManager implements TimeTableClient {
     public TimeTableApiClient apiClient = new TimeTableApiClient();
     public TimeTableCacheClient cacheClient = new TimeTableCacheClient();
     public NameLookup lookup = new NameLookup();
-    public TimeTable currentTimeTable;
+    private TimeTableParser parser;
 
     public void init(Context context) throws UserLoadException {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
 
         apiClient.lookup = lookup;
@@ -30,15 +33,17 @@ public class TimeTableManager implements TimeTableClient {
 
         cacheClient.lookup = lookup;
         cacheClient.init(context);
+
+        parser = new TimeTableParser(apiClient, lookup, sharedPreferences);
     }
 
     public void login() throws UserLoadException {
-        if(apiClient.isLoggedIn) return;
+        if (apiClient.isLoggedIn) return;
 
         try {
             apiClient.login();
 
-            if(!lookup.isLookupDataAvailable())
+            if (!lookup.isLookupDataAvailable())
                 apiClient.fetchMasterData();
             else
                 lookup.loadLookupData();
@@ -55,37 +60,32 @@ public class TimeTableManager implements TimeTableClient {
         return apiClient.checkForChanges();
     }
 
-    public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
-        currentTimeTable = null;
-        try {
-            if (apiClient.checkForChanges()) {
-                currentTimeTable = apiClient.getCurrentTimeTable();
-                cacheClient.cacheCurrentTimetable(currentTimeTable);
-            }
-        } catch (DataNotAvailableException ignored) {
-
-        }
-        if (currentTimeTable == null)
-            currentTimeTable = cacheClient.getCurrentTimeTable();
-
-        return currentTimeTable;
-    }
-
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
-        TimeTable timeTable;
+        long counter = apiClient.getLatestCounterValue();
         try {
-            timeTable = apiClient.getTimeTableForWeek(week);
-        } catch (TimeTableLoadException ignored) {
-            try {
-                timeTable = cacheClient.getTimeTableForWeek(week);
-            } catch (TimeTableLoadException ignored2) {
-                throw new TimeTableLoadException();
+            // Get timetable from cache
+            TimeTable timeTable = cacheClient.getTimeTableForWeek(week);
+
+            // Check if it's up to date
+            if (timeTable.CounterValue < counter) {
+                // If not, get the data from the parser
+                return parser.getTimetableForWeek(week);
             }
+
+            return timeTable;
+        } catch (TimeTableLoadException ignored) {
+            // Try parse from raw data cache or from api
+            return parser.getTimetableForWeek(week);
         }
-        return timeTable;
     }
 
-    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(TimeTableLoadedCallback callback) {
+    public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
+        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+        if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
+        return getTimeTableForWeek(weekOfYear);
+    }
+
+    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback) {
 
         AtomicInteger stage = new AtomicInteger();
 
@@ -94,42 +94,35 @@ public class TimeTableManager implements TimeTableClient {
         // API fetch thread
         new Thread(() -> {
             try {
-                if(!apiClient.isLoggedIn)
+                if (!apiClient.isLoggedIn)
                     login();
 
-                // Load from API if there are changes or if the cache failed
-                if (apiClient.checkForChanges() || stage.get() == -1) {
-                    apiClient.fetchMasterData();
-                    TimeTable timeTable = apiClient.getCurrentTimeTable();
-                    cacheClient.cacheCurrentTimetable(timeTable);
+                long counter = apiClient.getLatestCounterValue();
 
+                // If the data, the cache thread loaded is not up to date
+                if(cacheClient.getCounterForCacheEntry(week) < counter){
+                    // Load new data
+                    TimeTable timeTable = parser.getTimetableForWeek(week);
                     stage.set(2);
-                    timeTableFromCache.set(timeTable);
                     callback.timeTableLoaded(timeTable);
-                }else{
-                    if(stage.get() == 1){
-                        timeTableFromCache.get().isCacheStateConfirmed = true;
-                        callback.timeTableLoaded(timeTableFromCache.get());
-                    }
-
-                    stage.set(1);
+                    cacheClient.cacheTimetableForWeek(week, timeTable);
                 }
-
 
             } catch (DataNotAvailableException ignored) {
                 // If the cache and the API failed, indicate that the timetable could not be loaded
-                if(stage.get() == -1) callback.timeTableLoaded(null);
+                if (stage.get() == -1) callback.timeTableLoaded(null);
             }
         }).start();
 
         // cache fetch thread
         new Thread(() -> {
             try {
-                TimeTable timeTable = cacheClient.getCurrentTimeTable();
-                // Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable loaded: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+                TimeTable timeTable = cacheClient.getTimeTableForWeek(week);
+
+                callback.timeTableLoaded(timeTable);
 
                 // This is just for the astronomically small chance, that the API is faster than the cache, maybe remove later
-                if(stage.get() == 2) return;
+                if (stage.get() == 2) return;
 
                 stage.set(1);
                 timeTableFromCache.set(timeTable);
@@ -141,6 +134,13 @@ public class TimeTableManager implements TimeTableClient {
         }).start();
         return timeTableFromCache;
     }
+
+    public AtomicReference<TimeTable> getCurrentTimeTableAsyncWithAdjustments(TimeTableLoadedCallback callback) {
+        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+        if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
+        return getTimeTableAsyncWithAdjustments(weekOfYear, callback);
+    }
+
 
     public TimeTable getTimeTableForWeekForPerson() {
         return null;

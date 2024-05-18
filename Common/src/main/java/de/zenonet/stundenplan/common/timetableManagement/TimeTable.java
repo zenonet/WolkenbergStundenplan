@@ -5,10 +5,12 @@ import androidx.annotation.Keep;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+import de.zenonet.stundenplan.common.TimeTableSource;
+
 public final class TimeTable {
     public Lesson[][] Lessons;
     public LocalDateTime lastConfirmedDate;
-    public transient boolean isFromCache;
+    public transient TimeTableSource source;
     public transient boolean isCacheStateConfirmed;
     public long CounterValue;
     @Keep

@@ -20,11 +20,8 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.NameLookup;
@@ -32,98 +29,13 @@ import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.models.User;
 
-public class TimeTableApiClient implements TimeTableClient {
+public class TimeTableApiClient {
     private String accessToken;
     public User user;
 
     public NameLookup lookup;
     public SharedPreferences sharedPreferences;
     public boolean isLoggedIn;
-
-    @Override
-    public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
-
-        Calendar time = Calendar.getInstance();
-        time.setFirstDayOfWeek(Calendar.MONDAY);
-        time.set(Calendar.WEEK_OF_YEAR, week);
-
-        try {
-
-            // Get raw json data
-            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "timetable/student/" + user.id);
-            httpCon.connect();
-            int respCode = httpCon.getResponseCode();
-            if (respCode != 200)
-                throw new TimeTableLoadException();
-            String raw = Utils.readAllFromStream(httpCon.getInputStream());
-
-            // OPTIMIZABLE: Save hash of raw timetable so that it doesn't need to be parsed again when nothing changed
-
-            // Interpret the data
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:sssss");
-
-            TimeTable timeTable = new TimeTable();
-            timeTable.isFromCache = false;
-
-            // Basically a 3D array with this structure: weekDay -> period -> week      I'd really like to know why
-            JSONArray jsonArray = new JSONArray(raw);
-            for (int dayI = 0; dayI < 5; dayI++) {
-                JSONObject weekDay = jsonArray.getJSONObject(dayI);
-
-                timeTable.Lessons[dayI] = new Lesson[8]; // NOTE: This limits the max hours per day to 8
-                int lessonsThisDay = 0;
-
-                // Don't blame me, It was not me who decided to TWO-INDEX THIS!!!!!
-                for (int periodI = 2; periodI < timeTable.Lessons[dayI].length + 2; periodI++) {
-
-                    // Skip periods that aren't used in any version of the timetable completely
-                    if(!weekDay.has(String.valueOf(periodI)))
-                        continue;
-
-                    JSONArray timeTables = weekDay.getJSONArray(String.valueOf(periodI));
-
-
-                    // OPTIMIZABLE: Instead of iterating here, you could use binary search to improve performance
-                    // find the current timetable version for this lesson
-                    for (int i = 0; i < timeTables.length(); i++) {
-                        JSONObject tt = timeTables.getJSONObject(i);
-
-                        Date startDate = dateFormat.parse(tt.getJSONObject("DATE_FROM").getString("date"));
-                        Date endDate = dateFormat.parse(tt.getJSONObject("DATE_TO").getString("date"));
-
-                        // Check if the current time is inside of the validity range of this timetable-version
-                        if (!endDate.after(time.getTime()) || !startDate.before(time.getTime()))
-                            continue;
-
-                        // Create the lesson
-                        Lesson lesson = new Lesson();
-                        lesson.Subject = lookup.lookupSubjectName(tt.getInt("SUBJECT_ID"));
-                        lesson.SubjectShortName = lookup.lookupSubjectShortName(tt.getInt("SUBJECT_ID"));
-                        lesson.Teacher = lookup.lookupTeacher(tt.getInt("TEACHER_ID"));
-                        lesson.Room = lookup.lookupRoom(tt.getInt("ROOM_ID"));
-
-                        Pair<LocalTime, LocalTime> startAndEndTime = Utils.getStartAndEndTimeOfPeriod(periodI - 2);
-                        lesson.StartTime = startAndEndTime.first;
-                        lesson.EndTime = startAndEndTime.second;
-
-                        // Add it to the timetable
-                        timeTable.Lessons[dayI][periodI - 2] = lesson;
-
-                        lessonsThisDay = periodI - 1;
-                        break;
-                    }
-
-                }
-                // After all lessons have been added, resize the lessons array of the day
-                timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], lessonsThisDay);
-            }
-
-            applySubstitutions(timeTable, time);
-            return timeTable;
-        } catch (Exception e) {
-            throw new TimeTableLoadException(e);
-        }
-    }
 
     public void fetchMasterData() throws DataNotAvailableException {
 
@@ -259,12 +171,7 @@ public class TimeTableApiClient implements TimeTableClient {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    @Override
-    public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
-        return getTimeTableForWeek(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
-    }
 
-    @Override
     public User getUser() throws UserLoadException {
         try {
             HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "me");
@@ -283,21 +190,13 @@ public class TimeTableApiClient implements TimeTableClient {
     }
 
     public boolean checkForChanges() throws DataNotAvailableException {
-        try {
-            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "counter");
+        // Let's just assume this counter works like a big number with a few dashes between digits
+        long counter = getLatestCounterValue();
+        long lastCounter = sharedPreferences.getLong("counter", 0);
 
-            JSONObject response = new JSONObject(Utils.readAllFromStream(httpCon.getInputStream()));
+        sharedPreferences.edit().putLong("counter", counter).apply();
 
-            // Let's just assume this counter works like a big number with a few dashes between digits
-            long counter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
-            long lastCounter = sharedPreferences.getLong("counter", 0);
-
-            sharedPreferences.edit().putLong("counter", counter).apply();
-
-            return counter != lastCounter;
-        } catch (IOException | JSONException e) {
-            throw new DataNotAvailableException();
-        }
+        return counter != lastCounter;
     }
 
     public void login() throws ApiLoginException {
@@ -373,6 +272,29 @@ public class TimeTableApiClient implements TimeTableClient {
         }).start();
     }
 
+    /**
+     * Get the latest currently available counter value from API or from storage
+     */
+    private long latestCounter = -1;
+    public long getLatestCounterValue() {
+        // If the counter has already been fetched, just return it
+        if(latestCounter != -1) // TODO: Add expiration and re-fetching
+            return latestCounter;
+
+        try {
+            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "counter");
+
+            JSONObject response = new JSONObject(Utils.readAllFromStream(httpCon.getInputStream()));
+
+            // Let's just assume this counter works like a big number with a few dashes between digits
+            latestCounter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
+            sharedPreferences.edit().putLong("counter", latestCounter).apply();
+            return latestCounter;
+        } catch (IOException | JSONException e) {
+            return sharedPreferences.getLong("counter", -1);
+        }
+    }
+
     private final String baseUrl = "https://www.wolkenberg-gymnasium.de/wolkenberg-app/api/";
 
     public HttpURLConnection getAuthenticatedUrlConnection(String method, String endpoint) throws IOException {
@@ -388,4 +310,20 @@ public class TimeTableApiClient implements TimeTableClient {
         return httpCon;
     }
 
+    public String getRawData() throws IOException {
+        HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "timetable/student/" + user.id);
+        httpCon.connect();
+        if (httpCon.getResponseCode() != 200)
+            throw new IOException();
+
+        return Utils.readAllFromStream(httpCon.getInputStream());
+    }
+    public String getRawSubstitutionData() throws IOException {
+        HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "substitution/student/" + user.id);
+        httpCon.connect();
+        if (httpCon.getResponseCode() != 200)
+            throw new IOException();
+
+        return Utils.readAllFromStream(httpCon.getInputStream());
+    }
 }

@@ -23,17 +23,18 @@ import com.google.android.material.color.MaterialColors;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
+import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
-import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.common.Utils;
@@ -84,12 +85,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         findViewById(R.id.nextWeekButton).setOnClickListener((sender) -> {
             selectedWeek++;
-            reloadTimeTable();
+            loadTimeTableAsync();
         });
 
         findViewById(R.id.previousWeekButton).setOnClickListener((sender) -> {
             selectedWeek--;
-            reloadTimeTable();
+            loadTimeTableAsync();
         });
     }
 
@@ -128,8 +129,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private AtomicReference<TimeTable> loadingTimeTableReference;
 
+    private boolean timeTableLoaded = false;
+
     private void loadTimeTableAsync() {
-        loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(
+        loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(selectedWeek,
                 (timeTable) ->
                         runOnUiThread(() -> {
 
@@ -137,15 +140,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                         // Show some kind of message here
                                         return;
                                     }
-
-                                    if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
-                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable received: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
-                                    else if (timeTable.isCacheStateConfirmed) {
-                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable confirmed: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
-                                    } else {
-                                        Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetched timetable received: %d ms", Duration.between(activityCreatedInstant, Instant.now()).toMillis()));
-                                    }
-
+                                    if (!timeTableLoaded)
+                                        if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
+                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable received: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                        else if (timeTable.isCacheStateConfirmed) {
+                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable confirmed: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                        } else {
+                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetched timetable received: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                        }
+                                    timeTableLoaded = true;
 
                                     updateTimeTableView(timeTable);
                                 }
@@ -153,23 +156,23 @@ public class TimeTableViewActivity extends AppCompatActivity {
         );
     }
 
-    private void reloadTimeTable(){
-        new Thread(() -> {
-            try {
-                TimeTable tt = manager.getTimeTableForWeek(selectedWeek);
-                if(tt == null) return;
-
-                runOnUiThread(() -> updateTimeTableView(tt));
-            } catch (TimeTableLoadException e) {
-                // TODO: Display error message
-                throw new RuntimeException(e);
-            }
-        }).start();
-    }
-
     private void updateTimeTableView(TimeTable timeTable) {
 
-        stateView.setText(timeTable.isFromCache ? (timeTable.isCacheStateConfirmed ? "From cache (confirmed)" : "From cache") : "From API");
+        String stateText;
+        switch (timeTable.source) {
+            case Api:
+                stateText = "From API";
+                break;
+            case Cache:
+                stateText = "From cache";
+                break;
+            case RawCache:
+                stateText = "From raw cache";
+                break;
+            default:
+                stateText = timeTable.source.toString();
+        }
+        stateView.setText(stateText);
 
         // Return if it's a confirmed timetable because cache is always there before it's being confirmed
 
@@ -199,17 +202,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.regular_lesson));
             }
         }
-        if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
+        if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
         updateDayDisplayForWeek(selectedWeek);
 
         if (!nonCrucialUiLoaded)
             loadNonCrucialUi();
-
-
-        if (timeTable.isFromCache && !timeTable.isCacheStateConfirmed)
-            Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view is actually rendered: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     }
 
     @SuppressLint("SimpleDateFormat")
