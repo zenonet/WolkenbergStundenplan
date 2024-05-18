@@ -8,6 +8,8 @@ import android.util.Pair;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +21,7 @@ import java.util.Calendar;
 import java.util.Hashtable;
 
 import de.zenonet.stundenplan.common.NameLookup;
+import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
 
@@ -37,7 +40,7 @@ public class TimeTableCacheClient implements TimeTableClient {
     @Override
     public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
 
-        // TODO: Check if current cache is from this week
+        // BUG: This never checks if the timetable is from the current week
         try {
             File cacheFile = new File(Utils.CachePath, "timetable.json");
 
@@ -49,11 +52,12 @@ public class TimeTableCacheClient implements TimeTableClient {
             String contents = new String(bytes);
 
             TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
-            timeTable.isFromCache = true;
+            timeTable.source = TimeTableSource.Cache;
             // Re-add the uncached start- and end-times of the periods
             insertTimes(timeTable);
             return timeTable;
         } catch (Exception e) {
+            Log.e(Utils.LOG_TAG, e.getMessage());
             throw new TimeTableLoadException(e);
         }
     }
@@ -61,7 +65,7 @@ public class TimeTableCacheClient implements TimeTableClient {
     @Override
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
         try {
-            File cacheFile = new File(Utils.CachePath, "/" + week + "/.json");
+            File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
 
             int length = (int) cacheFile.length();
             byte[] bytes = new byte[length];
@@ -71,7 +75,7 @@ public class TimeTableCacheClient implements TimeTableClient {
             String contents = new String(bytes);
 
             TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
-            timeTable.isFromCache = true;
+            timeTable.source = TimeTableSource.Cache;
             // Re-add the uncached start- and end-times of the periods
             insertTimes(timeTable);
             return timeTable;
@@ -116,7 +120,7 @@ public class TimeTableCacheClient implements TimeTableClient {
         }
     }
 
-    public void cacheTimetableForWeek(int week, TimeTable timetable){
+    public void cacheTimetableForWeek(int week, TimeTable timetable) {
         try {
 
             Log.i(Utils.LOG_TAG, "Caching timetable for week " + week + "...");
@@ -126,8 +130,33 @@ public class TimeTableCacheClient implements TimeTableClient {
             try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
                 stream.write(json.getBytes(StandardCharsets.UTF_8));
             }
+            putCounterForCacheEntry(week, timetable.CounterValue);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public long getCounterForCacheEntry(int week) {
+        File cacheRegistryFile = new File(Utils.CachePath, "/registry.json");
+
+        try {
+            JSONObject entries = new JSONObject(Utils.readAllText(cacheRegistryFile));
+
+            if (!entries.has(String.valueOf(week))) return -1;
+
+            return entries.getLong(String.valueOf(week));
+        } catch (IOException | JSONException e) {
+            return -1;
+        }
+    }
+    public void putCounterForCacheEntry(int week, long counter){
+        File cacheRegistryFile = new File(Utils.CachePath, "/registry.json");
+
+        try {
+            JSONObject entries = cacheRegistryFile.exists() ? new JSONObject(Utils.readAllText(cacheRegistryFile)) : new JSONObject();
+            entries.put(String.valueOf(week), counter);
+            Utils.writeAllText(cacheRegistryFile, entries.toString());
+        } catch (IOException | JSONException e) {
         }
     }
 

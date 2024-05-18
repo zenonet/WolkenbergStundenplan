@@ -102,7 +102,7 @@ fun TimeTable(context: Context) {
                     timeTableManager!!.init(context)
 
                     // fetch time table
-                    timeTableManager?.getTimeTableAsyncWithAdjustments {
+                    timeTableManager?.getCurrentTimeTableAsyncWithAdjustments {
                         timeTable = it;
                     }
                 }
