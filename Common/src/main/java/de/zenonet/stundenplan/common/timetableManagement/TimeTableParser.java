@@ -41,12 +41,15 @@ public class TimeTableParser {
     }
 
     public TimeTable getTimetableForWeek(int week) throws TimeTableLoadException {
+        if(week < 1 || week > 52) throw new TimeTableLoadException();
+
         long counter = apiClient.getLatestCounterValue();
         long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
 
         TimeTableSource source;
         Pair<String, String> rawData;
-        if (counter > cacheCounter) {
+        boolean isConfirmed = apiClient.isCounterConfirmed;
+        if (counter > cacheCounter || !rawCacheClient.doesRawCacheExist()) {
             // Fetch from api
             try {
                 rawData = new Pair<>(
@@ -58,6 +61,7 @@ public class TimeTableParser {
                 rawCacheClient.saveRawData(rawData.first, rawData.second);
                 sharedPreferences.edit().putLong("rawCacheCounter", counter).apply();
                 source = TimeTableSource.Api;
+                isConfirmed = true;
             } catch (IOException ignored) {
                 // Load older version from raw cache
                 rawData = rawCacheClient.loadRawData();
@@ -78,6 +82,7 @@ public class TimeTableParser {
 
         timeTable.source = source;
         timeTable.CounterValue = counter;
+        timeTable.isCacheStateConfirmed = isConfirmed;
         return timeTable;
     }
 
@@ -146,7 +151,10 @@ public class TimeTableParser {
                 timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], lessonsThisDay);
             }
 
-            applySubstitutions(timeTable, substitutionJson, week);
+            try {
+                applySubstitutions(timeTable, substitutionJson, week);
+            }catch (TimeTableLoadException ignored){
+            }
             return timeTable;
         } catch (Exception e) {
             throw new TimeTableLoadException(e);

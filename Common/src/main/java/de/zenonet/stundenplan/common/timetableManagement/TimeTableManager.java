@@ -7,6 +7,7 @@ import androidx.preference.PreferenceManager;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.NameLookup;
@@ -91,6 +92,7 @@ public class TimeTableManager implements TimeTableClient {
 
         // This is kind of the wrong name. It really is more like the currently best version of the timetable, we have
         AtomicReference<TimeTable> timeTableFromCache = new AtomicReference<>(null);
+        AtomicLong confirmedCounter = new AtomicLong(-1);
         // API fetch thread
         new Thread(() -> {
             try {
@@ -98,14 +100,20 @@ public class TimeTableManager implements TimeTableClient {
                     login();
 
                 long counter = apiClient.getLatestCounterValue();
-
+                confirmedCounter.set(apiClient.isCounterConfirmed ? counter : -1);
                 // If the data, the cache thread loaded is not up to date
-                if(cacheClient.getCounterForCacheEntry(week) < counter){
+                if(cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1){
                     // Load new data
                     TimeTable timeTable = parser.getTimetableForWeek(week);
+
                     stage.set(2);
+                    timeTableFromCache.set(timeTable);
                     callback.timeTableLoaded(timeTable);
                     cacheClient.cacheTimetableForWeek(week, timeTable);
+                }else if(stage.get() == 1) {
+                    // If the cache thread already returned a value, we want to re-return with the addition of it being confirmed
+                    timeTableFromCache.get().isCacheStateConfirmed = true;
+                    callback.timeTableLoaded(timeTableFromCache.get());
                 }
 
             } catch (DataNotAvailableException ignored) {
@@ -118,6 +126,8 @@ public class TimeTableManager implements TimeTableClient {
         new Thread(() -> {
             try {
                 TimeTable timeTable = cacheClient.getTimeTableForWeek(week);
+
+                timeTable.isCacheStateConfirmed = timeTable.CounterValue == confirmedCounter.get();
 
                 callback.timeTableLoaded(timeTable);
 

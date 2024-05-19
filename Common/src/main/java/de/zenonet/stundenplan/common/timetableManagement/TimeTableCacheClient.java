@@ -53,6 +53,7 @@ public class TimeTableCacheClient implements TimeTableClient {
 
             TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
             timeTable.source = TimeTableSource.Cache;
+            timeTable.isCacheStateConfirmed = false;
             // Re-add the uncached start- and end-times of the periods
             insertTimes(timeTable);
             return timeTable;
@@ -64,6 +65,8 @@ public class TimeTableCacheClient implements TimeTableClient {
 
     @Override
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
+        if(week < 1 || week > 52) throw new TimeTableLoadException();
+
         try {
             File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
 
@@ -76,6 +79,7 @@ public class TimeTableCacheClient implements TimeTableClient {
 
             TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
             timeTable.source = TimeTableSource.Cache;
+            timeTable.isCacheStateConfirmed = false;
             // Re-add the uncached start- and end-times of the periods
             insertTimes(timeTable);
             return timeTable;

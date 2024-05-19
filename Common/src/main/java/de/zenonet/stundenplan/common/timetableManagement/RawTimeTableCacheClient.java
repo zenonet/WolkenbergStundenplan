@@ -46,8 +46,11 @@ public class RawTimeTableCacheClient {
             String substitutions = Utils.readAllText(substitutionsFile);
             return new Pair<>(timetable, substitutions);
 
-        } catch (IOException ignored) {
+        } catch (IOException e) {
             return null;
         }
+    }
+    public boolean doesRawCacheExist(){
+        return new File(Utils.CachePath, "/raw/timetable.json").exists() && new File(Utils.CachePath, "/raw/substitutions.json").exists();
     }
 }

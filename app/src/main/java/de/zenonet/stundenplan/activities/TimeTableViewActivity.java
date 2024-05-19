@@ -51,6 +51,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
 
+    ImageButton previousWeekButton;
+    ImageButton nextWeekButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -83,13 +86,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
 
-        findViewById(R.id.nextWeekButton).setOnClickListener((sender) -> {
+        previousWeekButton = findViewById(R.id.previousWeekButton);
+        nextWeekButton = findViewById(R.id.nextWeekButton);
+
+        nextWeekButton.setOnClickListener((sender) -> {
             selectedWeek++;
+            nextWeekButton.setEnabled(selectedWeek != 52);
             loadTimeTableAsync();
         });
 
-        findViewById(R.id.previousWeekButton).setOnClickListener((sender) -> {
+        previousWeekButton.setOnClickListener((sender) -> {
             selectedWeek--;
+            previousWeekButton.setEnabled(selectedWeek != 0);
             loadTimeTableAsync();
         });
     }
@@ -172,11 +180,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
             default:
                 stateText = timeTable.source.toString();
         }
+        if(timeTable.isCacheStateConfirmed){
+            stateText += " (confirmed)";
+        }
         stateView.setText(stateText);
-
-        // Return if it's a confirmed timetable because cache is always there before it's being confirmed
-
-        if (timeTable.isCacheStateConfirmed) return;
 
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {

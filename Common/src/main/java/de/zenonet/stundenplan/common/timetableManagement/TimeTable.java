@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 
 import de.zenonet.stundenplan.common.TimeTableSource;
 
+@Keep
 public final class TimeTable {
     public Lesson[][] Lessons;
     public LocalDateTime lastConfirmedDate;

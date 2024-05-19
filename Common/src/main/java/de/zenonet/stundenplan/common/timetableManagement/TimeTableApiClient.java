@@ -276,6 +276,7 @@ public class TimeTableApiClient {
      * Get the latest currently available counter value from API or from storage
      */
     private long latestCounter = -1;
+    public boolean isCounterConfirmed;
     public long getLatestCounterValue() {
         // If the counter has already been fetched, just return it
         if(latestCounter != -1) // TODO: Add expiration and re-fetching
@@ -289,8 +290,10 @@ public class TimeTableApiClient {
             // Let's just assume this counter works like a big number with a few dashes between digits
             latestCounter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
             sharedPreferences.edit().putLong("counter", latestCounter).apply();
+            isCounterConfirmed = true;
             return latestCounter;
         } catch (IOException | JSONException e) {
+            isCounterConfirmed = false;
             return sharedPreferences.getLong("counter", -1);
         }
     }

@@ -3,7 +3,7 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import androidx.annotation.Keep;
 
 import java.time.LocalTime;
-
+@Keep
 public final class Lesson {
     public String Teacher;
     public String Subject;
