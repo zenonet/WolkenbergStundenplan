@@ -19,7 +19,9 @@ import androidx.preference.PreferenceManager;
 import android.os.Bundle;
 
 import com.google.android.material.color.MaterialColors;
+import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,9 +52,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
     boolean nonCrucialUiLoaded = false;
 
     int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
-
+    private TimeTable currentTimeTable;
     ImageButton previousWeekButton;
     ImageButton nextWeekButton;
+
+    private boolean isPreview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +69,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         initializeTimeTableManagement();
 
-        if (!getSharedPreferences().contains("onboardingCompleted")) {
+        isPreview = getSharedPreferences().getBoolean("showPreview", false);
+        if (!isPreview && !getSharedPreferences().getBoolean("onboardingCompleted", false)) {
             Intent intent = new Intent(this, OnboardingActivity.class);
             startActivity(intent);
             finish();
@@ -73,12 +78,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
 
         // Check if the application is set up
-        if (!getSharedPreferences().contains("refreshToken")) {
+        if (!isPreview && !getSharedPreferences().contains("refreshToken")) {
             startLoginProcess();
             return;
         }
 
-        loadTimeTableAsync();
+        if (!isPreview)
+            loadTimeTableAsync();
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
@@ -88,6 +94,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         previousWeekButton = findViewById(R.id.previousWeekButton);
         nextWeekButton = findViewById(R.id.nextWeekButton);
+
+        if(isPreview){
+            previousWeekButton.setEnabled(false);
+            nextWeekButton.setEnabled(false);
+        }
 
         nextWeekButton.setOnClickListener((sender) -> {
             selectedWeek++;
@@ -100,6 +111,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
             previousWeekButton.setEnabled(selectedWeek != 0);
             loadTimeTableAsync();
         });
+
+        if(isPreview)
+            loadPreviewTimeTable();
     }
 
     private void initializeTimeTableManagement() {
@@ -157,11 +171,22 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                             Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetched timetable received: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
                                         }
                                     timeTableLoaded = true;
-
+                                    currentTimeTable = timeTable;
                                     updateTimeTableView(timeTable);
                                 }
                         )
         );
+    }
+
+    private void loadPreviewTimeTable() {
+        try {
+            currentTimeTable = new Gson().fromJson(Utils.readAllFromStream(getResources().openRawResource(de.zenonet.stundenplan.common.R.raw.preview_timetable)), TimeTable.class);
+            currentTimeTable.source = TimeTableSource.Preview;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+            // TODO: Show error message here
+        }
+        updateTimeTableView(currentTimeTable);
     }
 
     private void updateTimeTableView(TimeTable timeTable) {
@@ -178,9 +203,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 stateText = "From raw cache";
                 break;
             default:
-                stateText = timeTable.source.toString();
+                stateText = "From " + timeTable.source;
         }
-        if(timeTable.isCacheStateConfirmed){
+        if (timeTable.isCacheStateConfirmed) {
             stateText += " (confirmed)";
         }
         stateView.setText(stateText);
@@ -218,8 +243,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
             loadNonCrucialUi();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Update so that formatting changes from the settings page are reflected
+        updateTimeTableView(currentTimeTable);
+    }
+
     @SuppressLint("SimpleDateFormat")
     private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.");
+
     private void updateDayDisplayForWeek(int week) {
         Calendar cal = Calendar.getInstance();
         int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);

@@ -6,5 +6,6 @@ import androidx.annotation.Keep;
 public enum TimeTableSource {
     Cache,
     RawCache,
-    Api
+    Api,
+    Preview
 }

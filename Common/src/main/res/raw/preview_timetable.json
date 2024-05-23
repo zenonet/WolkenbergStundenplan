@@ -1,0 +1,260 @@
+{
+  "CounterValue": 0,
+  "Lessons": [
+    [
+      {
+        "Room": "C10",
+        "Subject": "Physik",
+        "SubjectShortName": "Ph",
+        "Teacher": "B. Wolf",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D01",
+        "Subject": "Englisch",
+        "SubjectShortName": "En",
+        "Teacher": "A. Koch",
+        "Type": "Regular"
+      },
+      {
+        "Room": "TH2",
+        "Subject": "Sport",
+        "SubjectShortName": "Sp",
+        "Teacher": "D. Schulz",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Deutsch",
+        "SubjectShortName": "De",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "C08",
+        "Subject": "Mathematik",
+        "SubjectShortName": "Ma",
+        "Teacher": "F. Fischer",
+        "Type": "Substitution"
+      },
+      {
+        "Room": "C08",
+        "Subject": "Geschichte",
+        "SubjectShortName": "Ge",
+        "Teacher": "F. Fischer",
+        "Type": "Regular"
+      },
+      {
+        "Room": "B02",
+        "Subject": "Darstellendes Spiel",
+        "SubjectShortName": "DS2",
+        "Teacher": "B. Fink",
+        "Type": "Cancelled"
+      },
+      {
+        "Room": "B02",
+        "Subject": "Darstellendes Spiel",
+        "SubjectShortName": "DS2",
+        "Teacher": "B. Fink",
+        "Type": "Cancelled"
+      }
+    ],
+    [
+      {
+        "Room": "D03",
+        "Subject": "Informatik",
+        "SubjectShortName": "Inf2",
+        "Teacher": "J. Schröder",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Deutsch",
+        "SubjectShortName": "De",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "C10",
+        "Subject": "Mathematik",
+        "SubjectShortName": "Ma",
+        "Teacher": "H. Wagner",
+        "Type": "Regular"
+      },
+      {
+        "Room": "TH2",
+        "Subject": "Sport",
+        "SubjectShortName": "Sp",
+        "Teacher": "D. Schulz",
+        "Type": "Regular"
+      },
+      {
+        "Room": "TH2",
+        "Subject": "Sport",
+        "SubjectShortName": "Sp",
+        "Teacher": "D. Schulz",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Französisch",
+        "SubjectShortName": "Fr",
+        "Teacher": "K. Schmidt",
+        "Type": "Substitution"
+      },
+      {
+        "Room": "D01",
+        "Subject": "Englisch",
+        "SubjectShortName": "En",
+        "Teacher": "A. Koch",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D01",
+        "Subject": "Englisch",
+        "SubjectShortName": "En",
+        "Teacher": "A. Koch",
+        "Type": "Regular"
+      }
+    ],
+    [
+      {
+        "Room": "E01",
+        "Subject": "Biologie",
+        "SubjectShortName": "Bio",
+        "Teacher": "A. Kowalski",
+        "Type": "Regular"
+      },
+      {
+        "Room": "C08",
+        "Subject": "Mathematik",
+        "SubjectShortName": "Ma",
+        "Teacher": "H. Wagner",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D01",
+        "Subject": "Englisch",
+        "SubjectShortName": "En",
+        "Teacher": "A. Koch",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Deutsch",
+        "SubjectShortName": "De",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D12",
+        "Subject": "Chemie",
+        "SubjectShortName": "Ch",
+        "Teacher": "M. Dornbusch",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Französisch",
+        "SubjectShortName": "Fr",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      }
+    ],
+    [
+      {
+        "Room": "D03",
+        "Subject": "Informatik",
+        "SubjectShortName": "Inf2",
+        "Teacher": "J. Schröder",
+        "Type": "Regular"
+      },
+      {
+        "Room": "B07",
+        "Subject": "Politische Bildung",
+        "SubjectShortName": "PB",
+        "Teacher": "O. Köhler",
+        "Type": "Substitution"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Deutsch",
+        "SubjectShortName": "De",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Französisch",
+        "SubjectShortName": "Fr",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "E07",
+        "Subject": "Geografie",
+        "SubjectShortName": "Geo",
+        "Teacher": "I. Kranz",
+        "Type": "Regular"
+      },
+      {
+        "Room": "E07",
+        "Subject": "Geografie",
+        "SubjectShortName": "Geo",
+        "Teacher": "I. Kranz",
+        "Type": "Regular"
+      }
+    ],
+    [
+      {
+        "Room": "D10",
+        "Subject": "Biologie",
+        "SubjectShortName": "Bio",
+        "Teacher": "A. Kowalski",
+        "Type": "RoomSubstitution"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Französisch",
+        "SubjectShortName": "Fr",
+        "Teacher": "K. Schmidt",
+        "Type": "Regular"
+      },
+      {
+        "Room": "B07",
+        "Subject": "Politische Bildung",
+        "SubjectShortName": "PB",
+        "Teacher": "O. Köhler",
+        "Type": "Regular"
+      },
+      {
+        "Room": "B07",
+        "Subject": "Politische Bildung",
+        "SubjectShortName": "PB",
+        "Teacher": "O. Köhler",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D15",
+        "Subject": "Mathematik",
+        "SubjectShortName": "Ma",
+        "Teacher": "H. Wagner",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D15",
+        "Subject": "Mathematik",
+        "SubjectShortName": "Ma",
+        "Teacher": "H. Wagner",
+        "Type": "Regular"
+      },
+      {
+        "Room": "D07",
+        "Subject": "Chemie",
+        "SubjectShortName": "Ch",
+        "Teacher": "M. Dornbusch",
+        "Type": "RoomSubstitution"
+      }
+    ]
+  ]
+}

@@ -137,6 +137,20 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                             )
                         }
 
+                        Text("Wenn du die App nur ausprobieren willst, ohne dich einzuloggen, kannst du Dir auch einen vorgefertigten Stundenplan ansehen.")
+                        Button(onClick = {
+                            if(activity == null) return@Button
+
+                            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                                .putBoolean("showPreview", true).apply()
+
+                            val mainActivityIntent = Intent(activity, TimeTableViewActivity::class.java)
+                            activity.startActivity(mainActivityIntent)
+                            activity.finish()
+
+                        }) {
+                            Text("Weiter zur Vorschau")
+                        }
                     }
 
                     2 -> {
