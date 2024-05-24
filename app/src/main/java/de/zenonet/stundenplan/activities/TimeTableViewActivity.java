@@ -247,7 +247,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Update so that formatting changes from the settings page are reflected
-        updateTimeTableView(currentTimeTable);
+        if(currentTimeTable != null)
+            updateTimeTableView(currentTimeTable);
     }
 
     @SuppressLint("SimpleDateFormat")
