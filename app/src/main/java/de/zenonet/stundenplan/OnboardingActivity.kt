@@ -136,8 +136,10 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                         "Bei der Authentifizierung erhält der inoffizielle Stundenplan lediglich diese Tokens, NICHT DEIN PASSWORT."
                             )
                         }
+                        Spacer(Modifier.height(40.dp))
 
                         Text("Wenn du die App nur ausprobieren willst, ohne dich einzuloggen, kannst du Dir auch einen vorgefertigten Stundenplan ansehen.")
+                        Spacer(Modifier.height(10.dp))
                         Button(onClick = {
                             if(activity == null) return@Button
 
