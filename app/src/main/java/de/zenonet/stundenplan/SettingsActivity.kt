@@ -127,7 +127,9 @@ fun View(activity: SettingsActivity?) {
 
         if (permissionAlertNecessary) {
             AlertDialog(
-                onDismissRequest = { /* Do nothing */ },
+                onDismissRequest = {
+
+                },
                 title = { Text("Berechtigung benötigt") },
                 text = { Text("Die App benötigt eine Berechtigung, um Dir Benachrichtigungen zu senden.") },
                 confirmButton = {
@@ -192,7 +194,7 @@ fun View(activity: SettingsActivity?) {
                         }
                     }
 
-                    Text(if (it) (if (notificationPermission.status.isGranted) "Ja" else "Fehler: Benachrichtigungs-Berechtigung nicht erteilt") else "Nein")
+                    Text(if (it) (if (notificationPermission.status.isGranted) "Benachrichtigungen werden angezeigt." else "Fehler: Benachrichtigungs-Berechtigung nicht erteilt") else "Keine Benachrichtigungen werden angezeigt.")
                 }
             )
             preferenceCategory("jf", title = { Text("Formattierung") })
