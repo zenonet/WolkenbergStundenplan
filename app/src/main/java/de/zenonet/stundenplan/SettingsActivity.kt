@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +45,9 @@ import androidx.preference.PreferenceManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.material.R
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
+import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
 import me.zhanghai.compose.preference.switchPreference
 
@@ -79,27 +79,14 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
-    public fun closeActivity() {
+
+    fun closeActivity() {
         finish()
-    }
-
-
-    private fun showSettingDialog() {
-        MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialog_Material3)
-            .setTitle("Notification Permutation")
-            .setMessage("Hello, your computer has virus")
-            .setPositiveButton("Ok") { _, _ ->
-                val intent = Intent(ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = Uri.parse("package:$packageName")
-                startActivity(intent)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun View(activity: SettingsActivity?) {
     Scaffold(
@@ -168,6 +155,31 @@ fun View(activity: SettingsActivity?) {
 
         SettingsView(Modifier.padding(paddingValues)) {
 
+            if (activity != null && PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("showPreview", false)) {
+                preference(
+                    "unpreview",
+                    {
+                        Text("Demo-Modus verlassen")
+                    },
+                    summary = {
+                        Text("Um echte Stundenpläne zu sehen musst du dich einloggen.")
+                    },
+                    widgetContainer = {
+                        Button(onClick = {
+                            if (activity == null) return@Button
+
+                            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                                .putBoolean("showPreview", false).apply()
+                            val intent = Intent(activity, OnboardingActivity::class.java)
+                            activity.startActivity(intent)
+                            activity.finish()
+                        }) {
+                            Text("Einloggen")
+                        }
+                    }
+                )
+            }
+
             preferenceCategory("df", title = { Text("Benachrichtigungen") })
             switchPreference(
                 key = "showNotifications",
@@ -190,6 +202,18 @@ fun View(activity: SettingsActivity?) {
                 title = { Text(text = "Zeige den ersten Buchstaben von Lehrer-Vornamen") },
                 summary = { Text(text = if (it) "Bsp: M. Storch" else "Bsp: Storch") }
             )
+
+            /*
+                        // TODO:
+                        preferenceCategory("jg", title = { Text("Fach Vorwarnung") })
+                        switchPreference(
+                            key = "showSubjectWarning",
+                            defaultValue = false,
+                            title = { Text(text = "Zeige vor der Schule Benachrichtigungen für spezielle Fächer") },
+                            summary = { Text(text = if (it) "Bsp: M. Storch" else "Bsp: Storch") }
+                        )
+            */
+
         }
     }
 }
