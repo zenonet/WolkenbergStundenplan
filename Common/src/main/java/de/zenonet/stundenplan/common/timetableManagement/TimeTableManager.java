@@ -110,7 +110,7 @@ public class TimeTableManager implements TimeTableClient {
                     timeTableFromCache.set(timeTable);
                     callback.timeTableLoaded(timeTable);
                     cacheClient.cacheTimetableForWeek(week, timeTable);
-                }else if(stage.get() == 1) {
+                }else if(stage.get() == 1 && apiClient.isCounterConfirmed) {
                     // If the cache thread already returned a value, we want to re-return with the addition of it being confirmed
                     timeTableFromCache.get().isCacheStateConfirmed = true;
                     callback.timeTableLoaded(timeTableFromCache.get());
