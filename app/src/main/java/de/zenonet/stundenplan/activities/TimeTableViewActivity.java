@@ -312,7 +312,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             for (int dayI = 0; dayI < 5; dayI++) {
 
                 LinearLayout lessonLayout = new LinearLayout(this);
-                lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH, lessonTextPaddingV);
+                lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH/4, lessonTextPaddingV);
                 lessonLayout.setOrientation(LinearLayout.VERTICAL);
                 lessonLayout.setMinimumWidth(widthPerRow);
                 row.addView(lessonLayout);
