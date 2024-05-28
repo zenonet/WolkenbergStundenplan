@@ -1,8 +1,11 @@
 package de.zenonet.stundenplan.common.timetableManagement;
 
 import androidx.annotation.Keep;
+import androidx.annotation.Nullable;
 
 import java.time.LocalTime;
+import java.util.Objects;
+
 @Keep
 public final class Lesson {
     public String Teacher;
@@ -23,5 +26,13 @@ public final class Lesson {
 
     @Keep
     public Lesson() {
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        // Only handle comparison to other Lessons
+        if(obj == null || obj.getClass() != Lesson.class) return super.equals(obj);
+        Lesson other = (Lesson) obj;
+        return Objects.equals(other.Room, Room) && Objects.equals(other.SubjectShortName, SubjectShortName) && Objects.equals(other.Teacher, Teacher);
     }
 }
