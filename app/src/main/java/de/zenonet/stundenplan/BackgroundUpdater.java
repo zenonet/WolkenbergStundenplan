@@ -2,14 +2,22 @@ package de.zenonet.stundenplan;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.preference.PreferenceManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
+import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.Formatter;
@@ -62,7 +70,7 @@ public class BackgroundUpdater extends Worker {
             } catch (DataNotAvailableException e) {
                 return Result.failure();
             }
-
+            manageShortTermChanges(timeTable);
             //int dayOfWeek = 0;
 
             // Ensure it is school-time but more accurately
@@ -105,6 +113,43 @@ public class BackgroundUpdater extends Worker {
 
         } catch (UserLoadException e) {
             return Result.failure();
+        }
+    }
+
+    // This is not tested
+    private void manageShortTermChanges(TimeTable timeTable) {
+        Context context = getApplicationContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        long lastCounter = preferences.getLong("shortTermChanges_lastCounter", -1);
+
+        if (lastCounter == -1 || timeTable.CounterValue <= lastCounter) return;
+
+        File cacheFile = new File(context.getCacheDir(), "/shortTermChangeWatcherCache.json");
+        try {
+
+            TimeTable oldTimeTable = new Gson().fromJson(new FileReader(cacheFile), TimeTable.class);
+            Lesson[] oldDay = oldTimeTable.Lessons[Timing.getCurrentDayOfWeek()];
+            Lesson[] day = timeTable.Lessons[Timing.getCurrentDayOfWeek()];
+
+            for (int i = 0; i < 8; i++) {
+                if(oldDay[i].equals(day[i])) continue;
+                Lesson l = day[i];
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+                // Show notification
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID) // TODO: Add custom channel id
+                        .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
+                        .setContentTitle("Kurzfristige Stundenplanänderung!")
+                        .setContentText(String.format("Heute %d. Stunde: %s in %s mit %s", i, l.SubjectShortName, l.Room, l.Teacher))
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+                
+                notificationManager.notify(444+i, builder.build());
+            }
+
+            preferences.edit().putLong("shortTermChanges_lastHashCode", timeTable.CounterValue).apply();
+            Utils.writeAllText(cacheFile, new Gson().toJson(timeTable));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
