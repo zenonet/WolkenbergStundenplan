@@ -8,7 +8,7 @@ class Formatter(context: Context) {
 
     private var preference: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-    public fun formatTeacherName(name: String): String {
+    fun formatTeacherName(name: String): String {
         if (!preference
                 .getBoolean("showTeacherFirstNameInitial", false)
         ) {
@@ -19,10 +19,10 @@ class Formatter(context: Context) {
         return name
     }
 
-    public fun formatRoomName(room: String): String {
+    fun formatRoomName(room: String): String {
         if (!preference.getBoolean(
                 "showLeadingZerosInRooms",
-                false
+                true
             ) && !room.startsWith("TH") && room[1] == '0'
         ) {
             return room[0].toString() + room[2];

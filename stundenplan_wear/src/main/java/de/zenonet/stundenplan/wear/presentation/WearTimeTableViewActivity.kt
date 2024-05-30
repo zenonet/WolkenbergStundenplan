@@ -205,7 +205,10 @@ fun LessonView(lesson: Lesson, formatter: Formatter, isCurrent: Boolean = false,
         onClick = { },
         secondaryLabel = { Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}") },
         modifier = Modifier.fillMaxWidth(),
-        colors = chipColors
+        colors = chipColors,
+        border = if(isCurrent) outlinedChipBorder(
+            borderWidth = 2.dp,
+        ) else chipBorder()
     )
 }
 

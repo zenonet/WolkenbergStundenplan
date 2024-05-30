@@ -206,7 +206,7 @@ fun View(activity: SettingsActivity?) {
             )
             switchPreference(
                 key = "showLeadingZerosInRooms",
-                defaultValue = false,
+                defaultValue = true,
                 title = { Text(text = "Zeige führende Nullen in Raum-Bezeichnungen") },
                 summary = { Text(text = if (it) "Bsp: D7" else "D07") }
             )
