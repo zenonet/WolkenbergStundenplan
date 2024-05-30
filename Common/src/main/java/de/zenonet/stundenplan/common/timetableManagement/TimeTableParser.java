@@ -180,6 +180,12 @@ public class TimeTableParser {
                         JSONObject substitution = substitutionsArray.getJSONObject(i);
                         int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
 
+                        if(substitution.has("TEXT")) {
+                            String text = substitution.getString("TEXT");
+                            if (!text.isEmpty())
+                                timeTable.Lessons[dayI][period].Text = text;
+                        }
+
                         String type = substitution.getString("TYPE");
                         if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
                             timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
@@ -223,7 +229,6 @@ public class TimeTableParser {
                             timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
                             timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
                             timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                            // TODO: Add saving the text property as well (used for things like classtests)
                             continue;
                         }
 

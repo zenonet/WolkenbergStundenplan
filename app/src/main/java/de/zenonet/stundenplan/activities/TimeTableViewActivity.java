@@ -34,6 +34,7 @@ import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.TimeTableSource;
+import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.StundenplanApplication;
@@ -221,17 +222,20 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 TextView subjectView = (TextView) lessonView.getChildAt(0);
                 TextView roomView = (TextView) (lessonView.getChildAt(1));
                 TextView teacherView = (TextView) (lessonView.getChildAt(2));
+                TextView textView = (TextView) (lessonView.getChildAt(3));
 
-                subjectView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
-                roomView.setText(formatter.formatRoomName(timeTable.Lessons[dayI][periodI].Room));
-                teacherView.setText(formatter.formatTeacherName(timeTable.Lessons[dayI][periodI].Teacher));
+                Lesson lesson = timeTable.Lessons[dayI][periodI];
+                subjectView.setText(lesson.SubjectShortName);
+                roomView.setText(formatter.formatRoomName(lesson.Room));
+                teacherView.setText(formatter.formatTeacherName(lesson.Teacher));
+                textView.setText(lesson.Text != null ? lesson.Text : "");
+                textView.setVisibility(lesson.Text == null ? View.GONE : View.VISIBLE);
 
-                // TODO: Select better colors for this
-                if (!timeTable.Lessons[dayI][periodI].isTakingPlace())
+                if (!lesson.isTakingPlace())
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
-                else if (timeTable.Lessons[dayI][periodI].Type == LessonType.Substitution)
+                else if (lesson.Type == LessonType.Substitution)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.substituted_lesson));
-                else if (timeTable.Lessons[dayI][periodI].Type == LessonType.RoomSubstitution)
+                else if (lesson.Type == LessonType.RoomSubstitution)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.room_substituted_lesson));
                 else
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.regular_lesson));
@@ -340,6 +344,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 lessonLayout.addView(teacherView);
                 teacherView.setTextColor(MaterialColors.getColor(teacherView, R.attr.lessonForeground));
                 teacherView.setTextSize(11);
+
+                // Teacher view:
+                TextView textView = new TextView(this);
+                lessonLayout.addView(textView);
+                textView.setTextColor(MaterialColors.getColor(textView, R.attr.lessonForeground));
+                textView.setTextSize(8);
 
 
                 TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(widthPerRow,
