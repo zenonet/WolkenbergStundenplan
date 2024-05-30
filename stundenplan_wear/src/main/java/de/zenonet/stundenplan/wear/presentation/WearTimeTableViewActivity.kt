@@ -37,11 +37,14 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults.chipBorder
 import androidx.wear.compose.material.ChipDefaults.chipColors
+import androidx.wear.compose.material.ChipDefaults.outlinedChipBorder
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeSource
 import androidx.wear.compose.material.TimeText
+import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
@@ -119,7 +122,7 @@ fun TimeTable(context: Context) {
             TimeText(timeSource = WeekDayTimeSource(weekDays[pagerState.currentPage]))
 
             val dayOfWeek = Timing.getCurrentDayOfWeek()
-
+            val formatter = Formatter(context)
             HorizontalPager(
                 state = pagerState,
                 Modifier.fillMaxSize(),
@@ -143,7 +146,8 @@ fun TimeTable(context: Context) {
                     items(timeTable!!.Lessons[day].size) { period ->
                         LessonView(
                             lesson = timeTable!!.Lessons[day][period],
-                            currentPeriod == period,
+                            formatter = formatter,
+                            day == dayOfWeek && currentPeriod == period,
                             period + 1
                         )
 
@@ -185,7 +189,7 @@ fun getBackgroundColorForLesson(lesson: Lesson): Color {
 }
 
 @Composable
-fun LessonView(lesson: Lesson, isCurrent: Boolean = false, displayPeriod: Int) {
+fun LessonView(lesson: Lesson, formatter: Formatter, isCurrent: Boolean = false, displayPeriod: Int) {
     val chipColors = chipColors(
         backgroundColor = getBackgroundColorForLesson(lesson),
         contentColor = Color.Black
@@ -196,10 +200,10 @@ fun LessonView(lesson: Lesson, isCurrent: Boolean = false, displayPeriod: Int) {
             val subject = lesson.SubjectShortName
             Text("$displayPeriod. $subject")
             Spacer(Modifier.weight(1f))
-            Text(text = lesson.Room, textAlign = TextAlign.Right)
+            Text(text = formatter.formatRoomName(lesson.Room), textAlign = TextAlign.Right)
         },
         onClick = { },
-        secondaryLabel = { Text("Mit ${lesson.Teacher}") },
+        secondaryLabel = { Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}") },
         modifier = Modifier.fillMaxWidth(),
         colors = chipColors
     )

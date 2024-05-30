@@ -204,6 +204,12 @@ fun View(activity: SettingsActivity?) {
                 title = { Text(text = "Zeige den ersten Buchstaben von Lehrer-Vornamen") },
                 summary = { Text(text = if (it) "Bsp: M. Storch" else "Bsp: Storch") }
             )
+            switchPreference(
+                key = "showLeadingZerosInRooms",
+                defaultValue = false,
+                title = { Text(text = "Zeige führende Nullen in Raum-Bezeichnungen") },
+                summary = { Text(text = if (it) "Bsp: D7" else "D07") }
+            )
 
             /*
                         // TODO:

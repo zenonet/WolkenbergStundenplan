@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
+import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
@@ -57,6 +58,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     ImageButton nextWeekButton;
 
     private boolean isPreview;
+    private Formatter formatter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +90,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
+        formatter = new Formatter(this);
         createTableLayout();
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
@@ -220,8 +223,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 TextView teacherView = (TextView) (lessonView.getChildAt(2));
 
                 subjectView.setText(timeTable.Lessons[dayI][periodI].SubjectShortName);
-                roomView.setText(timeTable.Lessons[dayI][periodI].Room);
-                teacherView.setText(formatTeacherName(timeTable.Lessons[dayI][periodI].Teacher));
+                roomView.setText(formatter.formatRoomName(timeTable.Lessons[dayI][periodI].Room));
+                teacherView.setText(formatter.formatTeacherName(timeTable.Lessons[dayI][periodI].Teacher));
 
                 // TODO: Select better colors for this
                 if (!timeTable.Lessons[dayI][periodI].isTakingPlace())
@@ -360,17 +363,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
             updateTimeTableView(loadingTimeTableReference.get());
         }
     }
-
-    String formatTeacherName(String teacherName) {
-        if (!getSharedPreferences().getBoolean("showTeacherFirstNameInitial", false)) {
-            for (int i = 0; i < teacherName.length(); i++) {
-                if (teacherName.charAt(i) == '.')
-                    return teacherName.substring(i + 2);
-            }
-        }
-        return teacherName;
-    }
-
     private SharedPreferences getSharedPreferences() {
         return PreferenceManager.getDefaultSharedPreferences(this);
         //return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
