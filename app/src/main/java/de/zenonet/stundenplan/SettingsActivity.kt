@@ -50,6 +50,7 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
 import me.zhanghai.compose.preference.switchPreference
+import me.zhanghai.compose.preference.textFieldPreference
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -157,7 +158,9 @@ fun View(activity: SettingsActivity?) {
 
         SettingsView(Modifier.padding(paddingValues)) {
 
-            if (activity != null && PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("showPreview", false)) {
+            if (activity != null && PreferenceManager.getDefaultSharedPreferences(activity)
+                    .getBoolean("showPreview", false)
+            ) {
                 preference(
                     "unpreview",
                     {
@@ -208,7 +211,7 @@ fun View(activity: SettingsActivity?) {
                 key = "showLeadingZerosInRooms",
                 defaultValue = true,
                 title = { Text(text = "Zeige führende Nullen in Raum-Bezeichnungen") },
-                summary = { Text(text = if (it) "Bsp: D7" else "D07") }
+                summary = { Text(text = if (it) "Bsp: D07" else "Bsp: D7") }
             )
 
             /*
