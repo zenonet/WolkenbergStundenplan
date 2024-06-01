@@ -37,7 +37,7 @@ import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.NonCrucialUiFragment;
-import de.zenonet.stundenplan.StundenplanApplication;
+import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;

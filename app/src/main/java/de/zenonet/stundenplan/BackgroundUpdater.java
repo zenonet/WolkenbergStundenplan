@@ -90,7 +90,7 @@ public class BackgroundUpdater extends Worker {
                 return Result.failure(); // TODO: Make it create a notification here, that says when the next lesson starts
             }
             Formatter formatter = new Formatter(context);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.CHANNEL_ID)
                     .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                     .setContentTitle(String.format("%s %s mit %s bis %s",
                             formatter.formatRoomName(nextLesson.Room),

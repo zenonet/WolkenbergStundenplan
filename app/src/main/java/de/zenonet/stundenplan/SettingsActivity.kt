@@ -225,6 +225,19 @@ fun View(activity: SettingsActivity?) {
                         )
             */
 
+            preferenceCategory("devOpts", title = { Text("Entwickler-Einstellungen") })
+            switchPreference(
+                key = "overrideDayOfWeek",
+                defaultValue = false,
+                title = { Text(text = "Bestimmten Tag emulieren") },
+                summary = { Text(text = if (it) "Montag wird emuliert" else "Aktueller Tag wird nicht überschrieben") }
+            )
+            switchPreference(
+                key = "overrideTime",
+                defaultValue = false,
+                title = { Text(text = "Bestimmte Uhrzeit emulieren") },
+                summary = { Text(text = if (it) "9:36 wird emuliert" else "Uhrzeit wird nicht überschrieben") }
+            )
         }
     }
 }
