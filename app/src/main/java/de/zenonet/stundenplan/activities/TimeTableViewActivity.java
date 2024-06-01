@@ -60,6 +60,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private boolean isPreview;
     private Formatter formatter;
+    private final View.OnClickListener onClickListener = view -> {
+        // id = 666 + dayI*9 + periodI
+        int id = view.getId()-666;
+        int day = id / 9;
+        int period = id - 9*day;
+
+        // period > 7 is some weird stuff we don't want
+        if(period > 7) return;
+
+        onLessonClicked(day, period);
+        Log.d(Utils.LOG_TAG, String.format("Tapped on day %d at period %d", day, period));
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -286,6 +298,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
     }
 
+    private void onLessonClicked(int dayOfWeek, int period){
+
+    }
+
 
     private void createTableLayout() {
         final int width = table.getMeasuredWidth();
@@ -359,6 +375,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 layoutParams.setMargins(lessonMargin, lessonMargin, lessonMargin, lessonMargin);
 
                 lessonLayout.setId(666 + dayI * 9 + periodI);
+                lessonLayout.setOnClickListener(onClickListener);
                 lessonLayout.setLayoutParams(layoutParams);
             }
 
