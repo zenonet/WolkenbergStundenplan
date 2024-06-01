@@ -8,18 +8,14 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.StundenplanApplication;
 
-public class StundenplanApplication extends Application {
-    public static Instant applicationEntrypointInstant;
+public class StundenplanPhoneApplication extends StundenplanApplication {
     @Override
     public void onCreate() {
         super.onCreate();
-        applicationEntrypointInstant = Instant.now();
-        Utils.CachePath = this.getCacheDir().getPath();
 
         createNotificationChannel();
         scheduleUpdateRepeating();

@@ -90,7 +90,7 @@ public class BackgroundUpdater extends Worker {
                 return Result.failure(); // TODO: Make it create a notification here, that says when the next lesson starts
             }
             Formatter formatter = new Formatter(context);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.CHANNEL_ID)
                     .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                     .setContentTitle(String.format("%s %s mit %s bis %s",
                             formatter.formatRoomName(nextLesson.Room),
@@ -137,7 +137,7 @@ public class BackgroundUpdater extends Worker {
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
                 // Show notification
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanApplication.CHANNEL_ID) // TODO: Add custom channel id
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.CHANNEL_ID) // TODO: Add custom channel id
                         .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                         .setContentTitle("Kurzfristige Stundenplanänderung!")
                         .setContentText(String.format("Heute %d. Stunde: %s in %s mit %s", i, l.SubjectShortName, l.Room, l.Teacher))
