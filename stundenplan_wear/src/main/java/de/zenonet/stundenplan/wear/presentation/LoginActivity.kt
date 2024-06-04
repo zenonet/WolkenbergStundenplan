@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -29,9 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.activity.ConfirmationActivity
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
@@ -135,23 +139,38 @@ fun WearApp(activity: LoginActivity?) {
             contentAlignment = Alignment.Center
         ) {
 
-            Column(
+            ScalingLazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                state = rememberScalingLazyListState(),
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxSize(),
             ) {
-                Text(text = "Login", textAlign = TextAlign.Center, fontSize = 21.sp)
-                Text(text = "Logge dich mit deinem Smartphone ein", textAlign = TextAlign.Center)
 
-                Button(onClick = {
-                    if (activity == null) return@Button;
+                item {
+                    Text(text = "Login", textAlign = TextAlign.Center, fontSize = 21.sp)
 
-                    activity.startRemoteLogin();
-
-                    // TODO: Show feedback (eg. no phone is connected)
-
-                }, Modifier.fillMaxWidth()) {
-                    Text("Am Smartphone vortfahren", fontSize = 12.sp)
                 }
+                item {
+                    Text(
+                        text = "Logge dich mit deinem Smartphone ein",
+                        textAlign = TextAlign.Center
+                    )
+
+                }
+                item {
+                    Button(onClick = {
+                        if (activity == null) return@Button;
+
+                        activity.startRemoteLogin();
+
+                        // TODO: Show feedback (eg. no phone is connected)
+
+                    }, Modifier.fillMaxWidth()) {
+                        Text("Am Smartphone vortfahren", fontSize = 12.sp)
+                    }
+                }
+
             }
         }
     }
