@@ -46,16 +46,6 @@
             android:exported="true"
             android:taskAffinity=""
             android:theme="@style/MainActivityTheme.Starting">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="www.zenonet.de"
-                    android:scheme="stpl" />
-            </intent-filter>
         </activity>
         <activity android:name="androidx.wear.activity.ConfirmationActivity"/>
 
