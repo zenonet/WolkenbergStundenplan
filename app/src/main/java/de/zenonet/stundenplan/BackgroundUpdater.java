@@ -73,6 +73,9 @@ public class BackgroundUpdater extends Worker {
             manageShortTermChanges(timeTable);
             //int dayOfWeek = 0;
 
+            if (!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("showNotifications", false))
+                return Result.success();
+
             // Ensure it is school-time but more accurately
             if (nextPeriod >= timeTable.Lessons[dayOfWeek].length || timeTable.Lessons[dayOfWeek][nextPeriod] == null) {
                 notificationManager.cancel(666);
@@ -132,7 +135,7 @@ public class BackgroundUpdater extends Worker {
             Lesson[] day = timeTable.Lessons[Timing.getCurrentDayOfWeek()];
 
             for (int i = 0; i < 8; i++) {
-                if(oldDay[i].equals(day[i])) continue;
+                if (oldDay[i].equals(day[i])) continue;
                 Lesson l = day[i];
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
@@ -142,8 +145,8 @@ public class BackgroundUpdater extends Worker {
                         .setContentTitle("Kurzfristige Stundenplanänderung!")
                         .setContentText(String.format("Heute %d. Stunde: %s in %s mit %s", i, l.SubjectShortName, l.Room, l.Teacher))
                         .setPriority(NotificationCompat.PRIORITY_HIGH);
-                
-                notificationManager.notify(444+i, builder.build());
+
+                notificationManager.notify(444 + i, builder.build());
             }
 
             preferences.edit().putLong("shortTermChanges_lastHashCode", timeTable.CounterValue).apply();
