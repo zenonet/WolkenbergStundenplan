@@ -196,8 +196,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void loadPreviewTimeTable() {
         try {
-            currentTimeTable = new Gson().fromJson(Utils.readAllFromStream(getResources().openRawResource(de.zenonet.stundenplan.common.R.raw.preview_timetable)), TimeTable.class);
-            currentTimeTable.source = TimeTableSource.Preview;
+            currentTimeTable = Utils.getPreviewTimeTable(this);
         } catch (IOException e) {
             throw new RuntimeException(e);
             // TODO: Show error message here

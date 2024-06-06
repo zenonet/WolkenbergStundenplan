@@ -1,6 +1,9 @@
 package de.zenonet.stundenplan.common;
 
+import android.content.Context;
 import android.util.Pair;
+
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +17,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
+
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 
 public class Utils {
     public static final String LOG_TAG = "timeTableLoading";
@@ -102,5 +107,11 @@ public class Utils {
             in.read(bytes);
         }
         return new String(bytes);
+    }
+
+    public static TimeTable getPreviewTimeTable(Context context) throws IOException {
+        TimeTable t = new Gson().fromJson(Utils.readAllFromStream(context.getResources().openRawResource(de.zenonet.stundenplan.common.R.raw.preview_timetable)), TimeTable.class);
+        t.source = TimeTableSource.Preview;
+        return t;
     }
 }
