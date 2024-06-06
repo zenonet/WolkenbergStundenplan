@@ -62,7 +62,10 @@ class WearTimeTableViewActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        if (!PreferenceManager.getDefaultSharedPreferences(this).contains("refreshToken")) {
+        if (!PreferenceManager.getDefaultSharedPreferences(this)
+                .contains("refreshToken") && !PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean("showPreview", false)
+        ) {
             startActivity(Intent(this, LoginActivity::class.java))
         }
 
@@ -78,100 +81,100 @@ class WearTimeTableViewActivity : ComponentActivity() {
 @Composable
 fun TimeTable(context: Context) {
     StundenplanTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
 
 
-            var timeTableManager: TimeTableManager? by remember {
-                mutableStateOf(null)
-            }
+        var timeTableManager: TimeTableManager? by remember {
+            mutableStateOf(null)
+        }
 
-            val pagerState = rememberPagerState(pageCount = {
-                5
-            })
+        val pagerState = rememberPagerState(pageCount = {
+            5
+        })
 
-            var timeTable: TimeTable? by remember {
-                mutableStateOf(null)
-            }
+        var timeTable: TimeTable? by remember {
+            mutableStateOf(null)
+        }
 
-            LaunchedEffect(key1 = null) {
-                launch {
-                    Utils.CachePath = context.cacheDir.path
-                    timeTableManager = TimeTableManager();
-                    timeTableManager!!.init(context)
+        LaunchedEffect(key1 = null) {
+            launch {
+                if (PreferenceManager.getDefaultSharedPreferences(context)
+                        .getBoolean("showPreview", false)
+                ) {
+                    timeTable = Utils.getPreviewTimeTable(context)
+                    return@launch
+                }
+                Utils.CachePath = context.cacheDir.path
+                timeTableManager = TimeTableManager();
+                timeTableManager!!.init(context)
 
-                    // fetch time table
-                    timeTableManager?.getCurrentTimeTableAsyncWithAdjustments {
-                        timeTable = it;
-                    }
+                // fetch time table
+                timeTableManager?.getCurrentTimeTableAsyncWithAdjustments {
+                    timeTable = it;
                 }
             }
+        }
 
-            val weekDays = arrayOf(
-                "Montag",
-                "Dienstag",
-                "Mittwoch",
-                "Donnerstag",
-                "Freitag",
-            )
-            // Display the shown weekday using a TimeText with a fake TimeSource
-            TimeText(timeSource = WeekDayTimeSource(weekDays[pagerState.currentPage]))
+        val weekDays = arrayOf(
+            "Montag",
+            "Dienstag",
+            "Mittwoch",
+            "Donnerstag",
+            "Freitag",
+        )
+        // Display the shown weekday using a TimeText with a fake TimeSource
+        TimeText(timeSource = WeekDayTimeSource(weekDays[pagerState.currentPage]))
 
-            val dayOfWeek = Timing.getCurrentDayOfWeek()
-            val formatter = Formatter(context)
-            HorizontalPager(
-                state = pagerState,
-                Modifier.fillMaxSize(),
-            ) { day ->
+        val dayOfWeek = Timing.getCurrentDayOfWeek()
+        val formatter = Formatter(context)
+        HorizontalPager(
+            state = pagerState,
+            Modifier.fillMaxSize(),
+        ) { day ->
 
 
-                var hasScrolledToCurrentPeriod by remember{ mutableStateOf(false) }
+            var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
 
-                val listState = rememberScalingLazyListState()
-                ScalingLazyColumn(
-                    Modifier
-                        .padding(20.dp)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    state = listState,
-                ) {
-                    if (timeTable == null) return@ScalingLazyColumn;
+            val listState = rememberScalingLazyListState()
+            ScalingLazyColumn(
+                Modifier
+                    .padding(10.dp, 20.dp, 10.dp, 0.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                state = listState,
+            ) {
+                if (timeTable == null) return@ScalingLazyColumn;
 
-                    val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+                val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
-                    items(timeTable!!.Lessons[day].size) { period ->
-                        LessonView(
-                            lesson = timeTable!!.Lessons[day][period],
-                            formatter = formatter,
-                            day == dayOfWeek && currentPeriod == period,
-                            period + 1
-                        )
+                items(timeTable!!.Lessons[day].size) { period ->
+                    LessonView(
+                        lesson = timeTable!!.Lessons[day][period],
+                        formatter = formatter,
+                        day == dayOfWeek && currentPeriod == period,
+                        period + 1
+                    )
 
-                        // Scroll to the current period
-                        LaunchedEffect(null) {
-                            // Scroll if the school-day is not yet over, this column show the current day and
-                            // this lesson view shows the first lesson (to only scroll once)
-                            if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
-                                listState.scrollToItem(currentPeriod)
-                                hasScrolledToCurrentPeriod = true
-                            }
+                    // Scroll to the current period
+                    LaunchedEffect(null) {
+                        // Scroll if the school-day is not yet over, this column show the current day and
+                        // this lesson view shows the first lesson (to only scroll once)
+                        if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                            listState.scrollToItem(currentPeriod)
+                            hasScrolledToCurrentPeriod = true
                         }
                     }
                 }
-
             }
 
-            LaunchedEffect(null) {
-                // Scroll to the current day
-                if (dayOfWeek > 4) return@LaunchedEffect
-                pagerState.scrollToPage(dayOfWeek)
-            }
+        }
+
+        LaunchedEffect(null) {
+            // Scroll to the current day
+            if (dayOfWeek > 4) return@LaunchedEffect
+            pagerState.scrollToPage(dayOfWeek)
         }
     }
+
 }
 
 
@@ -189,7 +192,12 @@ fun getBackgroundColorForLesson(lesson: Lesson): Color {
 }
 
 @Composable
-fun LessonView(lesson: Lesson, formatter: Formatter, isCurrent: Boolean = false, displayPeriod: Int) {
+fun LessonView(
+    lesson: Lesson,
+    formatter: Formatter,
+    isCurrent: Boolean = false,
+    displayPeriod: Int
+) {
     val chipColors = chipColors(
         backgroundColor = getBackgroundColorForLesson(lesson),
         contentColor = Color.Black
@@ -206,7 +214,7 @@ fun LessonView(lesson: Lesson, formatter: Formatter, isCurrent: Boolean = false,
         secondaryLabel = { Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}") },
         modifier = Modifier.fillMaxWidth(),
         colors = chipColors,
-        border = if(isCurrent) outlinedChipBorder(
+        border = if (isCurrent) outlinedChipBorder(
             borderWidth = 2.dp,
         ) else chipBorder()
     )
