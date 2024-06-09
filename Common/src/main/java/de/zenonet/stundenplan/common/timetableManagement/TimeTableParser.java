@@ -89,8 +89,10 @@ public class TimeTableParser {
     private TimeTable parseWeek(String json, String substitutionJson, int week) throws TimeTableLoadException {
 
         Calendar time = Calendar.getInstance();
-        time.setFirstDayOfWeek(Calendar.MONDAY);
+        // Set the week of year
         time.set(Calendar.WEEK_OF_YEAR, week);
+        // Ensure the day of week is not a day on the weekend (which may not have a valid timetable)
+        time.set(Calendar.DAY_OF_WEEK, 2);
 
         try {
             // Interpret the data
