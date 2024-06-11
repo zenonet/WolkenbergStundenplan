@@ -14,12 +14,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
 
 import android.os.Bundle;
 
 import com.google.android.material.color.MaterialColors;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -29,6 +29,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
+
+import de.zenonet.stundenplan.NonCrucialComposeUiKt;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
@@ -36,7 +38,6 @@ import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
-import de.zenonet.stundenplan.NonCrucialUiFragment;
 import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
@@ -230,12 +231,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 int viewId = 666 + dayI * 9 + periodI;
                 ViewGroup lessonView = findViewById(viewId);
 
+                Lesson lesson = timeTable.Lessons[dayI][periodI];
+
+                if(lesson == null){
+                    lessonView.setVisibility(View.INVISIBLE);
+                    continue;
+                }
+
                 TextView subjectView = (TextView) lessonView.getChildAt(0);
                 TextView roomView = (TextView) (lessonView.getChildAt(1));
                 TextView teacherView = (TextView) (lessonView.getChildAt(2));
                 TextView textView = (TextView) (lessonView.getChildAt(3));
 
-                Lesson lesson = timeTable.Lessons[dayI][periodI];
                 subjectView.setText(lesson.SubjectShortName);
                 roomView.setText(formatter.formatRoomName(lesson.Room));
                 teacherView.setText(formatter.formatTeacherName(lesson.Teacher));
@@ -395,9 +402,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void loadNonCrucialUi() {
+        ComposeView composeView = findViewById(R.id.nonCrucialComposeContainer);
+        NonCrucialComposeUiKt.applyUiToComposeView(composeView);
+        /*
         getSupportFragmentManager().beginTransaction().add(R.id.fragmentContainer, NonCrucialUiFragment.class, null).commit();
         nonCrucialUiLoaded = true;
 
         Log.i(Utils.LOG_TAG, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+    */
     }
+
 }

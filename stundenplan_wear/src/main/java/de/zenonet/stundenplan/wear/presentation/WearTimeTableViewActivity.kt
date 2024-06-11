@@ -146,13 +146,18 @@ fun TimeTable(context: Context) {
 
                 val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
-                items(timeTable!!.Lessons[day].size) { period ->
-                    LessonView(
-                        lesson = timeTable!!.Lessons[day][period],
-                        formatter = formatter,
-                        day == dayOfWeek && currentPeriod == period,
-                        period + 1
-                    )
+                    items(timeTable!!.Lessons[day].size) { period ->
+                        if(timeTable!!.Lessons[day][period] == null) {
+                            Spacer(Modifier.height(15.dp))
+                            return@items
+                        }
+
+                        LessonView(
+                            lesson = timeTable!!.Lessons[day][period],
+                            formatter = formatter,
+                            day == dayOfWeek && currentPeriod == period,
+                            period + 1
+                        )
 
                     // Scroll to the current period
                     LaunchedEffect(null) {
@@ -166,6 +171,17 @@ fun TimeTable(context: Context) {
                 }
             }
 
+                        // Scroll to the current period
+                        LaunchedEffect(null) {
+                            // Scroll if the school-day is not yet over, this column show the current day and
+                            // this lesson view shows the first lesson (to only scroll once)
+                            if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                listState.scrollToItem(currentPeriod)
+                                hasScrolledToCurrentPeriod = true
+                            }
+                        }
+                    }
+                }
         }
 
         LaunchedEffect(null) {
