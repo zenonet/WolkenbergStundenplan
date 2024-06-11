@@ -13,11 +13,11 @@ import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -40,10 +40,8 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults.chipBorder
 import androidx.wear.compose.material.ChipDefaults.chipColors
 import androidx.wear.compose.material.ChipDefaults.outlinedChipBorder
-import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeSource
-import androidx.wear.compose.material.TimeText
 import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
@@ -122,7 +120,7 @@ fun TimeTable(context: Context) {
             "Freitag",
         )
         // Display the shown weekday using a TimeText with a fake TimeSource
-        TimeText(timeSource = WeekDayTimeSource(weekDays[pagerState.currentPage]))
+
 
         val dayOfWeek = Timing.getCurrentDayOfWeek()
         val formatter = Formatter(context)
@@ -130,21 +128,27 @@ fun TimeTable(context: Context) {
             state = pagerState,
             Modifier.fillMaxSize(),
         ) { day ->
+            Column {
 
+                Text(weekDays[day],
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(0.dp, 5.dp, 0.dp, 0.dp), textAlign = TextAlign.Center)
 
-            var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
+                var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
 
-            val listState = rememberScalingLazyListState()
-            ScalingLazyColumn(
-                Modifier
-                    .padding(10.dp, 20.dp, 10.dp, 0.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                state = listState,
-            ) {
-                if (timeTable == null) return@ScalingLazyColumn;
+                val listState = rememberScalingLazyListState()
+                ScalingLazyColumn(
+                    Modifier
+                        .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    state = listState,
+                ) {
 
-                val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+                    if (timeTable == null) return@ScalingLazyColumn;
+
+                    val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
                     items(timeTable!!.Lessons[day].size) { period ->
                         if(timeTable!!.Lessons[day][period] == null) {
@@ -159,18 +163,6 @@ fun TimeTable(context: Context) {
                             period + 1
                         )
 
-                    // Scroll to the current period
-                    LaunchedEffect(null) {
-                        // Scroll if the school-day is not yet over, this column show the current day and
-                        // this lesson view shows the first lesson (to only scroll once)
-                        if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
-                            listState.scrollToItem(currentPeriod)
-                            hasScrolledToCurrentPeriod = true
-                        }
-                    }
-                }
-            }
-
                         // Scroll to the current period
                         LaunchedEffect(null) {
                             // Scroll if the school-day is not yet over, this column show the current day and
@@ -182,6 +174,7 @@ fun TimeTable(context: Context) {
                         }
                     }
                 }
+            }
         }
 
         LaunchedEffect(null) {
