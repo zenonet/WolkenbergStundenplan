@@ -30,9 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -40,8 +42,9 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults.chipBorder
 import androidx.wear.compose.material.ChipDefaults.chipColors
 import androidx.wear.compose.material.ChipDefaults.outlinedChipBorder
+import androidx.wear.compose.material.PositionIndicator
+import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeSource
 import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
@@ -52,7 +55,6 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 import kotlinx.coroutines.launch
-import java.time.LocalTime
 
 class WearTimeTableViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -128,52 +130,66 @@ fun TimeTable(context: Context) {
             state = pagerState,
             Modifier.fillMaxSize(),
         ) { day ->
-            Column {
-
-                Text(weekDays[day],
+            val listState = rememberScalingLazyListState()
+            Scaffold(
+                positionIndicator = {
+                    PositionIndicator(scalingLazyListState = listState)
+                }
+            ) {
+                Column(
                     Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(0.dp, 5.dp, 0.dp, 0.dp), textAlign = TextAlign.Center)
-
-                var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
-
-                val listState = rememberScalingLazyListState()
-                ScalingLazyColumn(
-                    Modifier
-                        .padding(10.dp, 0.dp, 10.dp, 0.dp)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    state = listState,
+                        .fillMaxSize()
+                        .padding(0.dp, 10.dp, 0.dp, 0.dp)
                 ) {
 
-                    if (timeTable == null) return@ScalingLazyColumn;
+                    Text(
+                        weekDays[day],
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(0.dp, 2.dp, 0.dp, 0.dp), textAlign = TextAlign.Center
+                    )
 
-                    val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+                    var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
 
-                    items(timeTable!!.Lessons[day].size) { period ->
-                        if(timeTable!!.Lessons[day][period] == null) {
-                            Spacer(Modifier.height(15.dp))
-                            return@items
-                        }
 
-                        LessonView(
-                            lesson = timeTable!!.Lessons[day][period],
-                            formatter = formatter,
-                            day == dayOfWeek && currentPeriod == period,
-                            period + 1
-                        )
+                    ScalingLazyColumn(
+                        Modifier
+                            .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        state = listState,
+                    ) {
 
-                        // Scroll to the current period
-                        LaunchedEffect(null) {
-                            // Scroll if the school-day is not yet over, this column show the current day and
-                            // this lesson view shows the first lesson (to only scroll once)
-                            if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
-                                listState.scrollToItem(currentPeriod)
-                                hasScrolledToCurrentPeriod = true
+                        if (timeTable == null) return@ScalingLazyColumn;
+
+                        val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+
+                        items(timeTable!!.Lessons[day].size) { period ->
+                            if (timeTable!!.Lessons[day][period] == null) {
+                                Spacer(Modifier.height(15.dp))
+                                return@items
+                            }
+
+                            LessonView(
+                                lesson = timeTable!!.Lessons[day][period],
+                                formatter = formatter,
+                                day == dayOfWeek && currentPeriod == period,
+                                period + 1
+                            )
+
+                            // Scroll to the current period
+                            LaunchedEffect(null) {
+                                // Scroll if the school-day is not yet over, this column show the current day and
+                                // this lesson view shows the first lesson (to only scroll once)
+                                if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                    listState.scrollToItem(currentPeriod)
+                                    hasScrolledToCurrentPeriod = true
+                                }
                             }
                         }
                     }
                 }
+
             }
         }
 
@@ -217,17 +233,28 @@ fun LessonView(
             val subject = lesson.SubjectShortName
             Text("$displayPeriod. $subject")
             Spacer(Modifier.weight(1f))
-            Text(text = formatter.formatRoomName(lesson.Room), textAlign = TextAlign.Right)
+            Text(
+                text = formatter.formatRoomName(lesson.Room),
+                textAlign = TextAlign.Right,
+                fontSize = 14.nSp
+            )
         },
         onClick = { },
-        secondaryLabel = { Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}") },
+        secondaryLabel = {
+            Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}", fontSize = 12.nSp)
+        },
         modifier = Modifier.fillMaxWidth(),
         colors = chipColors,
         border = if (isCurrent) outlinedChipBorder(
             borderWidth = 2.dp,
-        ) else chipBorder()
+        ) else chipBorder(),
     )
 }
+
+
+val Int.nSp
+    @Composable
+    get() = (this / LocalDensity.current.fontScale).sp
 
 /*
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
@@ -235,11 +262,3 @@ fun LessonView(
 fun DefaultPreview2() {
     TimeTable(null)
 }*/
-
-class WeekDayTimeSource(weekDay: String) : TimeSource {
-    private val _weekDay = weekDay
-
-    override val currentTime: String
-        @Composable
-        get() = _weekDay;
-}
