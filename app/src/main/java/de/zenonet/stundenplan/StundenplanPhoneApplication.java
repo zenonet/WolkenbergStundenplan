@@ -1,14 +1,13 @@
 package de.zenonet.stundenplan;
 
 import android.app.*;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Calendar;
 
 import de.zenonet.stundenplan.common.StundenplanApplication;
 
@@ -41,11 +40,21 @@ public class StundenplanPhoneApplication extends StundenplanApplication {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if(!preferences.getBoolean("showNotifications", false) && !preferences.getBoolean("showChangeNotifications", false))
             return;
+/*
 
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 30, TimeUnit.MINUTES)
                 .build();
 
         WorkManager workManager = WorkManager.getInstance(this);
         workManager.enqueueUniquePeriodicWork("timetable_notification_update_worker", ExistingPeriodicWorkPolicy.KEEP, workRequest);
+*/
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, BackgroundUpdater.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        alarmManager.setRepeating(AlarmManager.RTC, Calendar.getInstance().getTimeInMillis()-1,
+                AlarmManager.INTERVAL_HALF_HOUR, pendingIntent);
     }
 }
