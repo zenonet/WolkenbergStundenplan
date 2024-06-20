@@ -7,7 +7,6 @@
 package de.zenonet.stundenplan.wear.presentation
 
 import android.content.Intent
-import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
@@ -40,6 +39,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -57,6 +57,7 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.LessonType
+import de.zenonet.stundenplan.wear.BuildConfig
 import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 
@@ -165,7 +166,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                             LessonView(
                                 lesson = viewModel.timeTable!!.Lessons[day][period],
                                 formatter = viewModel.formatter,
-                                day == dayOfWeek && currentPeriod == period,
+                                day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
                                 period + 1
                             )
 
@@ -212,7 +213,10 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
         ) {
 
             item{
-                Text("${viewModel.weekOfYear}. Woche", Modifier.fillMaxWidth().padding(5.dp), textAlign = TextAlign.Center)
+                Text("${viewModel.weekOfYear}. Woche",
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp), textAlign = TextAlign.Center)
             }
             item {
                 Row(
@@ -248,6 +252,9 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                 }
             }
             item {
+                Spacer(Modifier.height(30.dp))
+            }
+            item {
                 if (viewModel.isPreview) {
                     Button(
                         onClick = {
@@ -260,6 +267,10 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                         Text("Login")
                     }
                 }
+            }
+
+            item{
+                Text("v${BuildConfig.VERSION_NAME} (id: ${BuildConfig.VERSION_CODE})", fontSize = 8.sp)
             }
         }
     }
@@ -303,7 +314,7 @@ fun LessonView(
         onClick = { },
         secondaryLabel = {
             val fontScale = LocalDensity.current.fontScale;
-            val shouldShow = fontScale < 1.19;
+            val shouldShow = fontScale < 1.19
             if (shouldShow) {
                 Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}")
             }
