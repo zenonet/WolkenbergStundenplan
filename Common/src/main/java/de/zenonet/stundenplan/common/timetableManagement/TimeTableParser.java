@@ -159,6 +159,7 @@ public class TimeTableParser {
             }
             return timeTable;
         } catch (Exception e) {
+            Log.e(Utils.LOG_TAG, e.getMessage());
             throw new TimeTableLoadException(e);
         }
     }

@@ -18,7 +18,8 @@ class MyDataChangedListener(private val loginActivity: LoginActivity) : DataClie
 
                     PreferenceManager.getDefaultSharedPreferences(loginActivity).edit()
                         .putString("refreshToken", refreshToken).apply()
-
+                    PreferenceManager.getDefaultSharedPreferences(loginActivity).edit()
+                        .putBoolean("showPreview", false).apply()
                     loginActivity.loginSucceeded();
                 }
             }

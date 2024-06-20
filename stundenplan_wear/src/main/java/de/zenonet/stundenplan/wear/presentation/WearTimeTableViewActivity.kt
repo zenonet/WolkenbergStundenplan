@@ -6,14 +6,17 @@
 
 package de.zenonet.stundenplan.wear.presentation
 
-import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +24,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,14 +40,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults.chipBorder
 import androidx.wear.compose.material.ChipDefaults.chipColors
 import androidx.wear.compose.material.ChipDefaults.outlinedChipBorder
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
@@ -50,11 +57,8 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.LessonType
-import de.zenonet.stundenplan.common.timetableManagement.TimeTable
-import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
-import kotlinx.coroutines.launch
 
 class WearTimeTableViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,53 +70,36 @@ class WearTimeTableViewActivity : ComponentActivity() {
                 .contains("refreshToken") && !PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("showPreview", false)
         ) {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startLoginActivity()
         }
 
         setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
-            TimeTable(this)
+            TimeTable(WearTimeTableViewModel {
+                startLoginActivity()
+            })
         }
+    }
+
+    private fun startLoginActivity() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent)
+        finish()
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TimeTable(context: Context) {
+fun TimeTable(viewModel: WearTimeTableViewModel) {
     StundenplanTheme {
-
-
-        var timeTableManager: TimeTableManager? by remember {
-            mutableStateOf(null)
+        LaunchedEffect(null) {
+            viewModel.loadTimetable()
         }
-
         val pagerState = rememberPagerState(pageCount = {
-            5
+            6 // the menu + 5 weekdays
         })
-
-        var timeTable: TimeTable? by remember {
-            mutableStateOf(null)
-        }
-
-        LaunchedEffect(key1 = null) {
-            launch {
-                if (PreferenceManager.getDefaultSharedPreferences(context)
-                        .getBoolean("showPreview", false)
-                ) {
-                    timeTable = Utils.getPreviewTimeTable(context)
-                    return@launch
-                }
-                Utils.CachePath = context.cacheDir.path
-                timeTableManager = TimeTableManager();
-                timeTableManager!!.init(context)
-
-                // fetch time table
-                timeTableManager?.getCurrentTimeTableAsyncWithAdjustments {
-                    timeTable = it;
-                }
-            }
-        }
 
         val weekDays = arrayOf(
             "Montag",
@@ -121,16 +108,22 @@ fun TimeTable(context: Context) {
             "Donnerstag",
             "Freitag",
         )
-        // Display the shown weekday using a TimeText with a fake TimeSource
-
 
         val dayOfWeek = Timing.getCurrentDayOfWeek()
-        val formatter = Formatter(context)
+
         HorizontalPager(
             state = pagerState,
             Modifier.fillMaxSize(),
-        ) { day ->
+        ) { page ->
+
+            if (page == 0) {
+                Menu(viewModel);
+                return@HorizontalPager
+            }
+
+            val day = page - 1
             val listState = rememberScalingLazyListState()
+
             Scaffold(
                 positionIndicator = {
                     PositionIndicator(scalingLazyListState = listState)
@@ -151,7 +144,6 @@ fun TimeTable(context: Context) {
 
                     var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
 
-
                     ScalingLazyColumn(
                         Modifier
                             .padding(10.dp, 0.dp, 10.dp, 0.dp)
@@ -160,19 +152,19 @@ fun TimeTable(context: Context) {
                         state = listState,
                     ) {
 
-                        if (timeTable == null) return@ScalingLazyColumn;
+                        if (viewModel.timeTable == null) return@ScalingLazyColumn;
 
                         val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
-                        items(timeTable!!.Lessons[day].size) { period ->
-                            if (timeTable!!.Lessons[day][period] == null) {
+                        items(viewModel.timeTable!!.Lessons[day].size) { period ->
+                            if (viewModel.timeTable!!.Lessons[day][period] == null) {
                                 Spacer(Modifier.height(15.dp))
                                 return@items
                             }
 
                             LessonView(
-                                lesson = timeTable!!.Lessons[day][period],
-                                formatter = formatter,
+                                lesson = viewModel.timeTable!!.Lessons[day][period],
+                                formatter = viewModel.formatter,
                                 day == dayOfWeek && currentPeriod == period,
                                 period + 1
                             )
@@ -181,7 +173,7 @@ fun TimeTable(context: Context) {
                             LaunchedEffect(null) {
                                 // Scroll if the school-day is not yet over, this column show the current day and
                                 // this lesson view shows the first lesson (to only scroll once)
-                                if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                if (!hasScrolledToCurrentPeriod && currentPeriod < viewModel.timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
                                     listState.scrollToItem(currentPeriod)
                                     hasScrolledToCurrentPeriod = true
                                 }
@@ -202,6 +194,76 @@ fun TimeTable(context: Context) {
 
 }
 
+@Composable
+fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
+    val listState = rememberScalingLazyListState()
+
+    Scaffold(
+        positionIndicator = {
+            PositionIndicator(scalingLazyListState = listState)
+        }
+    ) {
+        ScalingLazyColumn(
+            Modifier
+                .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            state = listState,
+        ) {
+
+            item{
+                Text("${viewModel.weekOfYear}. Woche", Modifier.fillMaxWidth().padding(5.dp), textAlign = TextAlign.Center)
+            }
+            item {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp), horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(onClick = { viewModel.previousWeek() }, Modifier.padding(2.dp), enabled = viewModel.weekOfYear != 1) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Vorherige Woche anzeigen"
+                        )
+                    }
+
+                    Button(onClick = { viewModel.nextWeek() }, Modifier.padding(2.dp), enabled = viewModel.weekOfYear != 51) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowForward,
+                            contentDescription = "Nächste Woche anzeigen"
+                        )
+                    }
+                }
+            }
+            item {
+                AnimatedVisibility(viewModel.weekOfYear != viewModel.currentWeekOfYear) {
+                    Button(onClick = {
+                        viewModel.backToCurrentWeek()
+                    },
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp, 0.dp, 5.dp, 0.dp)) {
+                        Text("Aktuelle Woche")
+                    }
+                }
+            }
+            item {
+                if (viewModel.isPreview) {
+                    Button(
+                        onClick = {
+                            viewModel.startLoginActivity()
+                        },
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp, 0.dp, 5.dp, 0.dp)
+                    ) {
+                        Text("Login")
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun getBackgroundColorForLesson(lesson: Lesson): Color {
@@ -236,12 +298,15 @@ fun LessonView(
             Text(
                 text = formatter.formatRoomName(lesson.Room),
                 textAlign = TextAlign.Right,
-                fontSize = 14.nSp
             )
         },
         onClick = { },
         secondaryLabel = {
-            Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}", fontSize = 12.nSp)
+            val fontScale = LocalDensity.current.fontScale;
+            val shouldShow = fontScale < 1.19;
+            if (shouldShow) {
+                Text("Mit ${formatter.formatTeacherName(lesson.Teacher)}")
+            }
         },
         modifier = Modifier.fillMaxWidth(),
         colors = chipColors,
@@ -250,15 +315,3 @@ fun LessonView(
         ) else chipBorder(),
     )
 }
-
-
-val Int.nSp
-    @Composable
-    get() = (this / LocalDensity.current.fontScale).sp
-
-/*
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview2() {
-    TimeTable(null)
-}*/

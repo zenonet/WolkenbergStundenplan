@@ -10,35 +10,35 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
 import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.activity.ConfirmationActivity
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.PositionIndicator
+import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.SwipeToDismissBox
 import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.rememberSwipeToDismissBoxState
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.tasks.Tasks.await
@@ -53,8 +53,6 @@ class LoginActivity : ComponentActivity() {
     private val dataChangedListener by lazy { MyDataChangedListener(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-
         super.onCreate(savedInstanceState)
 
         //registerMessageListener();
@@ -69,18 +67,19 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-    fun startRemoteLogin() {
+    fun startRemoteLogin(callback: ((Int) -> Unit)? = null) {
 
         Thread {
             val nodeClient = Wearable.getNodeClient(this);
             val connectedNodes = Tasks.await(nodeClient.connectedNodes)
             if (connectedNodes.isEmpty()) {
+                callback?.invoke(1)
                 Log.i(Utils.LOG_TAG, "No connected nodes available")
                 return@Thread;
             }
 
             val localNodeId = await(nodeClient.localNode).id
-            Log.i(Utils.LOG_TAG, "Local node id is $localNodeId")
+            ///Log.i(Utils.LOG_TAG, "Local node id is $localNodeId")
 
             val remoteIntent = Intent(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_DEFAULT)
@@ -95,14 +94,19 @@ class LoginActivity : ComponentActivity() {
                 showContinueOnPhone()
                 isShowingContinueOnPhoneAnimation.value = true
             } catch (e: RemoteActivityHelper.RemoteIntentException) {
-
+                callback?.invoke(2)
+                return@Thread
             }
+            callback?.invoke(0)
 
         }.start();
     }
 
     fun loginSucceeded() {
-        startActivity(Intent(this, WearTimeTableViewActivity::class.java))
+        val intent = Intent(this, WearTimeTableViewActivity::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent)
+        finish()
     }
 
     override fun onResume() {
@@ -132,18 +136,18 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun WearApp(activity: LoginActivity?) {
     StundenplanTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
 
+        var status by remember {
+            mutableIntStateOf(-1)
+        }
+        val listState = rememberScalingLazyListState()
+        Scaffold(
+            positionIndicator = { PositionIndicator(scalingLazyListState = listState) }
+        ) {
             ScalingLazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                state = rememberScalingLazyListState(),
+                state = listState,
                 modifier = Modifier
-                    .padding(20.dp)
                     .fillMaxSize(),
             ) {
 
@@ -162,16 +166,59 @@ fun WearApp(activity: LoginActivity?) {
                     Button(onClick = {
                         if (activity == null) return@Button;
 
-                        activity.startRemoteLogin();
+                        activity.startRemoteLogin {
+                            status = it
+                        };
 
                         // TODO: Show feedback (eg. no phone is connected)
 
                     }, Modifier.fillMaxWidth()) {
-                        Text("Am Smartphone vortfahren", fontSize = 12.sp)
+                        Text(
+                            "Am Smartphone vortfahren", fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
 
+                item {
+                    Button(onClick = {
+                        if (activity == null) return@Button;
+
+                        PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                            .putBoolean("showPreview", true).apply()
+                        activity.loginSucceeded()
+                    }, Modifier.fillMaxWidth()) {
+                        Text(
+                            "Weiter zur Vorschau", fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
+
+            if (status > 0)
+                SwipeToDismissBox(state = rememberSwipeToDismissBoxState(), onDismissed = {
+                    status = -1
+                }) {
+                    ScalingLazyColumn(Modifier.fillMaxSize()) {
+                        when (status) {
+                            1 -> {
+                                item {
+                                    Text("Keine Smartphone verfügbar", textAlign = TextAlign.Center)
+                                }
+                            }
+
+                            2 -> {
+                                item {
+                                    Text(
+                                        "App konnte nicht gestartet werden. Ist sie wirklich auf dem Smartphone installiert?",
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
         }
     }
 }
