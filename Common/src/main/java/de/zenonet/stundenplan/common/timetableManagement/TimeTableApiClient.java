@@ -3,7 +3,6 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.preference.PreferenceManager;
 
@@ -259,7 +258,7 @@ public class TimeTableApiClient {
                 String body = Utils.readAllFromStream(httpCon.getInputStream());
                 JSONObject jObj = new JSONObject(body);
                 accessToken = jObj.getString("access_token");
-                isLoggedIn = true;
+                // isLoggedIn = true; This would stop the login method from doing anything meaning the masterdata wouldn't be fetched
 
                 String refreshToken = jObj.getString("refresh_token");
                 sharedPreferences.edit().putString("refreshToken", refreshToken).apply();

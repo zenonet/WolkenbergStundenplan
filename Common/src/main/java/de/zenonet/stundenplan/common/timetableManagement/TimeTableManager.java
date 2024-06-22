@@ -28,6 +28,12 @@ public class TimeTableManager implements TimeTableClient {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
+        if(lookup.isLookupDataAvailable()) {
+            try {
+                lookup.loadLookupData();
+            } catch (IOException e) {
+            }
+        }
 
         apiClient.lookup = lookup;
         apiClient.init(context);
@@ -46,14 +52,18 @@ public class TimeTableManager implements TimeTableClient {
 
             if (!lookup.isLookupDataAvailable())
                 apiClient.fetchMasterData();
-            else
-                lookup.loadLookupData();
         } catch (ApiLoginException e) {
             Log.i(Utils.LOG_TAG, "Unable to log into API");
-        } catch (DataNotAvailableException | IOException e) {
+        } catch (DataNotAvailableException e) {
             throw new RuntimeException(e);
         }
-
+        if (!lookup.isLookupDataAvailable()) {
+            try {
+                lookup.loadLookupData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         user = getUser();
     }
 

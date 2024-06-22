@@ -153,6 +153,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                             String code = data.getStringExtra("code");
                             manager.apiClient.redeemOAuthCodeAsync(code, () -> {
                                 try {
+                                    manager.login();
                                     manager.getUser();
                                 } catch (UserLoadException e) {
                                 }
