@@ -1,5 +1,6 @@
 package de.zenonet.stundenplan.activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.KeyEvent;
 import android.webkit.*;
@@ -16,6 +17,7 @@ import de.zenonet.stundenplan.R;
 
 public class LoginActivity extends AppCompatActivity {
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

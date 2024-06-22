@@ -75,9 +75,15 @@
 
         </TableLayout>
 
-        <androidx.fragment.app.FragmentContainerView
+<!--        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragmentContainer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content" />-->
+
+
+<!--        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/nonCrucialComposeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />-->
     </LinearLayout>
 </ScrollView>
