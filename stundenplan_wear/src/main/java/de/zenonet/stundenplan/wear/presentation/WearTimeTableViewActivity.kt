@@ -9,6 +9,7 @@ package de.zenonet.stundenplan.wear.presentation
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -53,6 +54,7 @@ import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import de.zenonet.stundenplan.common.Formatter
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
@@ -60,6 +62,8 @@ import de.zenonet.stundenplan.common.timetableManagement.LessonType
 import de.zenonet.stundenplan.wear.BuildConfig
 import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class WearTimeTableViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,11 +79,17 @@ class WearTimeTableViewActivity : ComponentActivity() {
         }
 
         setTheme(android.R.style.Theme_DeviceDefault)
-
-        setContent {
-            TimeTable(WearTimeTableViewModel {
+        var viewmodel: WearTimeTableViewModel? = null
+        val vmTime = measureTime {
+            viewmodel = WearTimeTableViewModel {
                 startLoginActivity()
-            })
+            }
+            viewmodel!!.loadTimetable()
+        }
+
+        Log.i(Utils.LOG_TAG, "Time to setting content ${StundenplanApplication.getMillisSinceAppStart()}ms")
+        setContent {
+            TimeTable(viewmodel!!)
         }
     }
 
@@ -95,9 +105,6 @@ class WearTimeTableViewActivity : ComponentActivity() {
 @Composable
 fun TimeTable(viewModel: WearTimeTableViewModel) {
     StundenplanTheme {
-        LaunchedEffect(null) {
-            viewModel.loadTimetable()
-        }
         val pagerState = rememberPagerState(pageCount = {
             6 // the menu + 5 weekdays
         })
@@ -152,19 +159,22 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         state = listState,
                     ) {
-
-                        if (viewModel.timeTable == null) return@ScalingLazyColumn;
+                        if (viewModel.timeTable.value == null) return@ScalingLazyColumn;
 
                         val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
-                        items(viewModel.timeTable!!.Lessons[day].size) { period ->
-                            if (viewModel.timeTable!!.Lessons[day][period] == null) {
+                        items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
+                            if (viewModel.timeTable.value!!.Lessons[day][period] == null) {
                                 Spacer(Modifier.height(15.dp))
                                 return@items
                             }
 
+                            if (period == 3) {
+                                Log.i(Utils.LOG_TAG, "Compositing lesson 3rd lesson for day $day. Time since app start: ${StundenplanApplication.getMillisSinceAppStart()}ms")
+                            }
+
                             LessonView(
-                                lesson = viewModel.timeTable!!.Lessons[day][period],
+                                lesson = viewModel.timeTable.value!!.Lessons[day][period],
                                 formatter = viewModel.formatter,
                                 day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
                                 period + 1
@@ -174,7 +184,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                             LaunchedEffect(null) {
                                 // Scroll if the school-day is not yet over, this column show the current day and
                                 // this lesson view shows the first lesson (to only scroll once)
-                                if (!hasScrolledToCurrentPeriod && currentPeriod < viewModel.timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                if (!hasScrolledToCurrentPeriod && currentPeriod < viewModel.timeTable.value!!.Lessons[day].size && dayOfWeek == day && period == 0) {
                                     listState.scrollToItem(currentPeriod)
                                     hasScrolledToCurrentPeriod = true
                                 }
@@ -212,11 +222,13 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
             state = listState,
         ) {
 
-            item{
-                Text("${viewModel.weekOfYear}. Woche",
+            item {
+                Text(
+                    "${viewModel.weekOfYear}. Woche",
                     Modifier
                         .fillMaxWidth()
-                        .padding(5.dp), textAlign = TextAlign.Center)
+                        .padding(5.dp), textAlign = TextAlign.Center
+                )
             }
             item {
                 Row(
@@ -224,14 +236,22 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .padding(5.dp), horizontalArrangement = Arrangement.Center
                 ) {
-                    Button(onClick = { viewModel.previousWeek() }, Modifier.padding(2.dp), enabled = viewModel.weekOfYear != 1) {
+                    Button(
+                        onClick = { viewModel.previousWeek() },
+                        Modifier.padding(2.dp),
+                        enabled = viewModel.weekOfYear != 1
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Vorherige Woche anzeigen"
                         )
                     }
 
-                    Button(onClick = { viewModel.nextWeek() }, Modifier.padding(2.dp), enabled = viewModel.weekOfYear != 51) {
+                    Button(
+                        onClick = { viewModel.nextWeek() },
+                        Modifier.padding(2.dp),
+                        enabled = viewModel.weekOfYear != 51
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
                             contentDescription = "Nächste Woche anzeigen"
@@ -241,12 +261,14 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
             }
             item {
                 AnimatedVisibility(viewModel.weekOfYear != viewModel.currentWeekOfYear) {
-                    Button(onClick = {
-                        viewModel.backToCurrentWeek()
-                    },
+                    Button(
+                        onClick = {
+                            viewModel.backToCurrentWeek()
+                        },
                         Modifier
                             .fillMaxWidth()
-                            .padding(5.dp, 0.dp, 5.dp, 0.dp)) {
+                            .padding(5.dp, 0.dp, 5.dp, 0.dp)
+                    ) {
                         Text("Aktuelle Woche")
                     }
                 }
@@ -328,4 +350,19 @@ fun LessonView(
             borderWidth = 2.dp,
         ) else chipBorder(),
     )
+}
+
+@Composable
+fun measureTimeComp(block: @Composable () -> Unit): Int {
+    val t0 = Instant.now();
+    block.invoke()
+    val t1 = Instant.now();
+    return ChronoUnit.MILLIS.between(t0, t1).toInt();
+}
+
+fun measureTime(block: () -> Unit): Int {
+    val t0 = Instant.now();
+    block.invoke()
+    val t1 = Instant.now();
+    return ChronoUnit.MILLIS.between(t0, t1).toInt();
 }
