@@ -1,9 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter and
- * https://github.com/android/wear-os-samples/tree/main/ComposeAdvanced to find the most up to date
- * changes to the libraries and their usages.
- */
-
 package de.zenonet.stundenplan.wear.presentation
 
 import android.content.Intent
@@ -54,16 +48,17 @@ import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import de.zenonet.stundenplan.common.Formatter
+import de.zenonet.stundenplan.common.StatisticsManager
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.LessonType
 import de.zenonet.stundenplan.wear.BuildConfig
-import de.zenonet.stundenplan.common.R as CommonR
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import de.zenonet.stundenplan.common.R as CommonR
 
 class WearTimeTableViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,9 +103,12 @@ class WearTimeTableViewActivity : ComponentActivity() {
 @Composable
 fun TimeTable(viewModel: WearTimeTableViewModel) {
     StundenplanTheme {
-        val pagerState = rememberPagerState(pageCount = {
-            6 // the menu + 5 weekdays
-        })
+        val pagerState = rememberPagerState(
+            pageCount = {
+                6 // the menu + 5 weekdays
+            },
+            initialPage = 1
+        )
 
         val weekDays = arrayOf(
             "Montag",
@@ -204,7 +202,6 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
             pagerState.scrollToPage(dayOfWeek)
         }
     }
-
 }
 
 @Composable
