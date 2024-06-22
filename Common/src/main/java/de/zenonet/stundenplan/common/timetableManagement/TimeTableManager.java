@@ -28,12 +28,13 @@ public class TimeTableManager implements TimeTableClient {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
+/*
         if(lookup.isLookupDataAvailable()) {
             try {
                 lookup.loadLookupData();
             } catch (IOException e) {
             }
-        }
+        }*/
 
         apiClient.lookup = lookup;
         apiClient.init(context);

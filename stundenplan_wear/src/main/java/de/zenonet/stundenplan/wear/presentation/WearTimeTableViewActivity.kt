@@ -87,7 +87,10 @@ class WearTimeTableViewActivity : ComponentActivity() {
             viewmodel!!.loadTimetable()
         }
 
-        Log.i(Utils.LOG_TAG, "Time to setting content ${StundenplanApplication.getMillisSinceAppStart()}ms")
+        Log.i(
+            Utils.LOG_TAG,
+            "Time to setting content ${StundenplanApplication.getMillisSinceAppStart()}ms"
+        )
         setContent {
             TimeTable(viewmodel!!)
         }
@@ -169,10 +172,6 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                                 return@items
                             }
 
-                            if (period == 3) {
-                                Log.i(Utils.LOG_TAG, "Compositing lesson 3rd lesson for day $day. Time since app start: ${StundenplanApplication.getMillisSinceAppStart()}ms")
-                            }
-
                             LessonView(
                                 lesson = viewModel.timeTable.value!!.Lessons[day][period],
                                 formatter = viewModel.formatter,
@@ -190,6 +189,9 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                                 }
                             }
                         }
+                    }
+                    if (viewModel.timeTable.value != null) {
+                        StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart())
                     }
                 }
 
