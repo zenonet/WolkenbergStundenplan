@@ -269,8 +269,11 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                 }
             }
 
-            item{
-                Text("v${BuildConfig.VERSION_NAME} (id: ${BuildConfig.VERSION_CODE})", fontSize = 8.sp)
+            item {
+                Text(
+                    "v${BuildConfig.VERSION_NAME} (id: ${BuildConfig.VERSION_CODE})",
+                    fontSize = 8.sp
+                )
             }
         }
     }
