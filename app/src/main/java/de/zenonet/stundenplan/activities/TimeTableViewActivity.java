@@ -30,11 +30,11 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-import de.zenonet.stundenplan.NonCrucialComposeUiKt;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.Formatter;
+import de.zenonet.stundenplan.common.StatisticsManager;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
@@ -51,8 +51,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TextView stateView;
 
     Instant activityCreatedInstant;
-
-    boolean nonCrucialUiLoaded = false;
 
     int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
     private TimeTable currentTimeTable;
@@ -76,12 +74,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         activityCreatedInstant = StundenplanApplication.applicationEntrypointInstant;
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
-
-        nonCrucialUiLoaded = savedInstanceState != null;
 
         initializeTimeTableManagement();
 
@@ -265,16 +260,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         updateDayDisplayForWeek(selectedWeek);
 
-        if (!nonCrucialUiLoaded)
-            loadNonCrucialUi();
+        //loadNonCrucialUi();
+
+        StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        /*
         // Update so that formatting changes from the settings page are reflected
         if(currentTimeTable != null)
-            updateTimeTableView(currentTimeTable);
+            updateTimeTableView(currentTimeTable);*/
     }
 
     @SuppressLint("SimpleDateFormat")
@@ -403,8 +400,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void loadNonCrucialUi() {
-        ComposeView composeView = findViewById(R.id.nonCrucialComposeContainer);
-        NonCrucialComposeUiKt.applyUiToComposeView(composeView);
+
+/*        ComposeView cv = findViewById(987);
+        if(cv == null) {
+            LinearLayout l = findViewById(R.id.mainViewGroup);
+            cv = new ComposeView(this);
+            cv.setId(987);
+            l.addView(cv);
+        }
+        NonCrucialComposeUiKt.applyUiToComposeView(cv, new NonCrucialViewModel());*/
         /*
         getSupportFragmentManager().beginTransaction().add(R.id.fragmentContainer, NonCrucialUiFragment.class, null).commit();
         nonCrucialUiLoaded = true;
