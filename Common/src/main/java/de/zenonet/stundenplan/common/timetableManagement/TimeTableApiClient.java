@@ -55,117 +55,6 @@ public class TimeTableApiClient {
         }
     }
 
-    private void applySubstitutions(TimeTable timeTable, Calendar time) throws TimeTableLoadException {
-        // Get substitution data from api
-        try {
-            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "substitution/student/" + user.id);
-            httpCon.connect();
-            if (httpCon.getResponseCode() != 200)
-                throw new TimeTableLoadException();
-
-            String rawSubstitutions = Utils.readAllFromStream(httpCon.getInputStream());
-
-            // Interpret substitution data
-            int year = time.get(Calendar.YEAR);
-
-            /* BUG: Because the current week is used here but getTimeTableForWeek() uses the data from the timetable in whose time span the current date is in,
-                it could happen that the substitution of week t-1 are shown as a modification of the timetable of the week t on weekends.
-                 */
-            JSONArray substitutions = new JSONObject(rawSubstitutions).getJSONObject("substitutions").getJSONArray(String.format("%s-%s", year, time.get(Calendar.WEEK_OF_YEAR)));
-            for (int dayI = 0; dayI < 5; dayI++) {
-
-                if (substitutions.isNull(dayI)) continue;
-
-                JSONObject substitutionsThatDay = substitutions.getJSONObject(dayI);
-
-                if (substitutionsThatDay.has("substitutions")) {
-                    JSONArray substitutionsArray = substitutionsThatDay.getJSONArray("substitutions");
-                    for (int i = 0; i < substitutionsArray.length(); i++) {
-                        JSONObject substitution = substitutionsArray.getJSONObject(i);
-                        int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
-
-                        String type = substitution.getString("TYPE");
-                        if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
-                            continue;
-                        }
-
-                        if (type.equals("SUBSTITUTION") || type.equals("SWAP") || type.equals("ROOM_SUBSTITUTION")) {
-                            // Update the timetable according to the substitutions
-                            if (substitution.has("SUBJECT_ID_NEW")) {
-                                timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                                timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                            }
-                            if (substitution.has("ROOM_ID_NEW")) {
-                                timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                            }
-                            if (substitution.has("TEACHER_ID_NEW")) {
-                                timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                            }
-                            if (type.equals("ROOM_SUBSTITUTION"))
-                                timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
-                            else
-                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-
-                            continue;
-                        }
-
-                        if (type.equals("EXTRA_LESSON")) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-
-                            // Determine if the period array needs to be resized (Hopefully this will never have to happen)
-                            if (period >= timeTable.Lessons[dayI].length) {
-                                // Resize the period array
-                                timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
-
-                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
-                            } else {
-                                // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
-                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                            }
-                            timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                            timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                            timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                            timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                            // TODO: Add saving the text property as well (used for things like classtests)
-                            continue;
-                        }
-
-                        if (type.equals("CLASS_SUBSTITUTION")) {
-                            // This is only interesting from a teachers perspective and I doubt a teacher will ever use this app.
-                            continue;
-                        }
-
-                        if (type.equals("REDUNDANCY")) {
-                            // Pretty funny that giving information about redundancies is actually completely redundant.
-                            continue;
-                        }
-
-                        Log.w("timetableloading", String.format("Unknown substitution type '%s'", type));
-
-                    }
-                }
-                if (substitutionsThatDay.has("absences")) {
-                    JSONArray absencesArray = substitutionsThatDay.getJSONArray("absences");
-                    for (int i = 0; i < absencesArray.length(); i++) {
-                        int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
-                        int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
-
-                        for (int p = periodFrom; p < periodTo; p++) {
-                            timeTable.Lessons[dayI][p].Type = LessonType.Absent;
-                        }
-                    }
-                } else if (substitutionsThatDay.has("holiday")) {
-                    for (int i = 0; i < timeTable.Lessons[dayI].length; i++) {
-                        timeTable.Lessons[dayI][i].Type = LessonType.Holiday;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new TimeTableLoadException(e);
-        }
-    }
-
     public void init(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
@@ -186,16 +75,6 @@ public class TimeTableApiClient {
         } catch (Exception e) {
             throw new UserLoadException();
         }
-    }
-
-    public boolean checkForChanges() throws DataNotAvailableException {
-        // Let's just assume this counter works like a big number with a few dashes between digits
-        long counter = getLatestCounterValue();
-        long lastCounter = sharedPreferences.getLong("counter", 0);
-
-        sharedPreferences.edit().putLong("counter", counter).apply();
-
-        return counter != lastCounter;
     }
 
     public void login() throws ApiLoginException {
