@@ -160,18 +160,21 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         state = listState,
                     ) {
-                        if (viewModel.timeTable.value == null) return@ScalingLazyColumn;
 
                         val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
 
-                        items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
-                            if (viewModel.timeTable.value!!.Lessons[day][period] == null) {
+                        //items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
+                        items(8) { period ->
+                            val timeTable = if(viewModel.timeTable.value == null) viewModel.timeTableDirect else viewModel.timeTable.value
+                            if (viewModel.timeTable.value == null && viewModel.timeTableDirect == null) return@items
+
+                            if (timeTable!!.Lessons[day][period] == null) {
                                 Spacer(Modifier.height(15.dp))
                                 return@items
                             }
 
                             LessonView(
-                                lesson = viewModel.timeTable.value!!.Lessons[day][period],
+                                lesson = timeTable.Lessons[day][period],
                                 formatter = viewModel.formatter,
                                 day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
                                 period + 1
@@ -181,14 +184,14 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                             LaunchedEffect(null) {
                                 // Scroll if the school-day is not yet over, this column show the current day and
                                 // this lesson view shows the first lesson (to only scroll once)
-                                if (!hasScrolledToCurrentPeriod && currentPeriod < viewModel.timeTable.value!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable.Lessons[day].size && dayOfWeek == day && period == 0) {
                                     listState.scrollToItem(currentPeriod)
                                     hasScrolledToCurrentPeriod = true
                                 }
                             }
                         }
                     }
-                    if (viewModel.timeTable.value != null) {
+                    if (viewModel.timeTable.value != null || viewModel.timeTableDirect != null) {
                         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart())
                     }
                 }
@@ -198,8 +201,8 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
 
         LaunchedEffect(null) {
             // Scroll to the current day
-            if (dayOfWeek > 4) return@LaunchedEffect
-            pagerState.scrollToPage(dayOfWeek)
+            if (dayOfWeek == -1 || dayOfWeek > 4) return@LaunchedEffect
+            pagerState.scrollToPage(dayOfWeek+1)
         }
     }
 }

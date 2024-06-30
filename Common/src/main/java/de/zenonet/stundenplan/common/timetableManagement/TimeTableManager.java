@@ -58,13 +58,7 @@ public class TimeTableManager implements TimeTableClient {
         } catch (DataNotAvailableException e) {
             throw new RuntimeException(e);
         }
-        if (!lookup.isLookupDataAvailable()) {
-            try {
-                lookup.loadLookupData();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+
         user = getUser();
     }
 

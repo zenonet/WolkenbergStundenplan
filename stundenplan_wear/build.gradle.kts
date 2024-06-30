@@ -12,8 +12,8 @@ android {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2012
-        versionName = "1.0.4wear"
+        versionCode = 2015
+        versionName = "1.1.2wear"
         vectorDrawables {
             useSupportLibrary = true
         }

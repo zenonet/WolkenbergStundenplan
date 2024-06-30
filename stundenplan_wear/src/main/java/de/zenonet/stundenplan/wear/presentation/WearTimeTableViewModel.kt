@@ -29,6 +29,7 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
 
     private val _timeTable: MutableLiveData<TimeTable?> = MutableLiveData<TimeTable?> (null)
     val timeTable: LiveData<TimeTable?> = _timeTable
+    var timeTableDirect: TimeTable? = null
 
     init {
         isPreview =
@@ -50,7 +51,6 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
         weekOfYear = currentWeekOfYear
         loadTimetable()
     }
-
     fun loadTimetable() {
         if (isPreview) {
             _timeTable.postValue(Utils.getPreviewTimeTable(StundenplanApplication.application))
@@ -73,6 +73,10 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
         )
 
         timeTableManager!!.getTimeTableAsyncWithAdjustments(weekOfYear) {
+            if(it == null) {
+                Log.i(Utils.LOG_TAG, "Got null timetable")
+                return@getTimeTableAsyncWithAdjustments
+            }
             Log.i(
                 Utils.LOG_TAG,
                 "Got timetable from ${it.source}${if (it.isCacheStateConfirmed) " (confirmed)" else ""} (${
@@ -82,6 +86,7 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
                     )
                 }ms after app start)"
             )
+            timeTableDirect = it
             _timeTable.postValue(it)
         }
     }
