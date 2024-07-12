@@ -253,7 +253,10 @@ public class TimeTableParser {
                         int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
                         int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
 
-                        for (int p = periodFrom; p < periodTo; p++) {
+                        for (int p = periodFrom; p <= periodTo; p++) {
+                            if(timeTable.Lessons[dayI].length <= p || timeTable.Lessons[dayI][p] == null)
+                                continue;
+
                             timeTable.Lessons[dayI][p].Type = LessonType.Absent;
                         }
                     }
