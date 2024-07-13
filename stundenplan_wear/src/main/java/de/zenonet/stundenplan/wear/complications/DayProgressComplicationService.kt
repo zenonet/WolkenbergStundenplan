@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan.wear.complications
 
 
+import android.preference.PreferenceManager
 import android.util.Log
 import androidx.wear.complications.ComplicationProviderService
 import androidx.wear.complications.data.ComplicationData
@@ -8,12 +9,12 @@ import androidx.wear.complications.data.ComplicationType
 import androidx.wear.complications.data.PlainComplicationText
 import androidx.wear.complications.data.RangedValueComplicationData
 import androidx.wear.complications.data.ShortTextComplicationData
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
-import java.time.temporal.ChronoUnit
-import java.util.Calendar
 import kotlin.math.roundToInt
 
 class DayProgressComplicationService : ComplicationProviderService() {
@@ -55,11 +56,21 @@ class DayProgressComplicationService : ComplicationProviderService() {
                 return@Thread
             }
 
-            val manager = TimeTableManager()
-            manager.init(this)
-            val day: Array<Lesson> = manager.getCurrentTimeTable().Lessons[dayOfWeek]
+            val isPreview =
+                PreferenceManager.getDefaultSharedPreferences(StundenplanApplication.application)
+                    .getBoolean("showPreview", false)
 
-            if (day == null || currentPeriod >= day.size) {
+            val timetable: TimeTable;
+            if (isPreview) {
+                timetable = Utils.getPreviewTimeTable(StundenplanApplication.application)
+            } else {
+                val manager = TimeTableManager()
+                manager.init(this)
+                timetable = manager.getCurrentTimeTable()
+            }
+            val day: Array<Lesson> = timetable.Lessons[dayOfWeek]
+
+            if (currentPeriod >= day.size) {
                 listener.onComplicationData(null)
                 return@Thread
             }
@@ -69,8 +80,9 @@ class DayProgressComplicationService : ComplicationProviderService() {
                 Utils.getStartAndEndTimeOfPeriod(day.size - 1).second.toSecondOfDay() -
                         firstLessonStart.toSecondOfDay()
 
-            val progressInSeconds = Timing.getCurrentTime().toSecondOfDay() - firstLessonStart.toSecondOfDay().toLong()
-            val progress = progressInSeconds.toFloat()/totalSchooltimeTodaySeconds
+            val progressInSeconds =
+                Timing.getCurrentTime().toSecondOfDay() - firstLessonStart.toSecondOfDay().toLong()
+            val progress = progressInSeconds.toFloat() / totalSchooltimeTodaySeconds
 
             val data = when (request.complicationType) {
 
@@ -80,6 +92,11 @@ class DayProgressComplicationService : ComplicationProviderService() {
                     value = currentPeriod.toFloat(),
                     contentDescription = PlainComplicationText
                         .Builder(text = "Schul-Fortschritt des Tages").build()
+                ).setText(
+                    PlainComplicationText.Builder(
+                        text = ((progress * 100).roundToInt()
+                            .toString() + "%")
+                    ).build()
                 ).build()
 
                 ComplicationType.SHORT_TEXT ->

@@ -1,14 +1,17 @@
 package de.zenonet.stundenplan.wear.complications
 
 
+import android.preference.PreferenceManager
 import android.util.Log
 import androidx.wear.complications.ComplicationProviderService
 import androidx.wear.complications.data.ComplicationData
 import androidx.wear.complications.data.ComplicationType
 import androidx.wear.complications.data.PlainComplicationText
 import androidx.wear.complications.data.ShortTextComplicationData
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 
 class RoomComplicationService : ComplicationProviderService() {
@@ -36,10 +39,18 @@ class RoomComplicationService : ComplicationProviderService() {
                 listener.onComplicationData(null)
                 return@Thread
             }
+            val isPreview = PreferenceManager.getDefaultSharedPreferences(StundenplanApplication.application)
+                .getBoolean("showPreview", false)
 
-            val manager = TimeTableManager()
-            manager.init(this)
-            val timetable = manager.getCurrentTimeTable()
+            val timetable: TimeTable;
+            if(isPreview) {
+                timetable = Utils.getPreviewTimeTable(StundenplanApplication.application)
+            }else{
+                val manager = TimeTableManager()
+                manager.init(this)
+                timetable = manager.getCurrentTimeTable()
+            }
+
             Log.i(Utils.LOG_TAG, "Successfully loaded current timetable for room complication")
             if (currentPeriod >= timetable.Lessons[dayOfWeek].size) {
                 listener.onComplicationData(null)
