@@ -49,15 +49,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TimeTableManager manager;
     TableLayout table;
     TextView stateView;
-
-    Instant activityCreatedInstant;
-
-    int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
-    private TimeTable currentTimeTable;
     ImageButton previousWeekButton;
     ImageButton nextWeekButton;
 
+    int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+    private TimeTable currentTimeTable;
+
     private boolean isPreview;
+    private boolean isInitialLoad = true;
     private Formatter formatter;
     private final View.OnClickListener onClickListener = view -> {
         // id = 666 + dayI*9 + periodI
@@ -69,12 +68,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         if(period > 7) return;
 
         onLessonClicked(day, period);
-        Log.d(Utils.LOG_TAG, String.format("Tapped on day %d at period %d", day, period));
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        activityCreatedInstant = StundenplanApplication.applicationEntrypointInstant;
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
 
@@ -177,11 +174,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                     }
                                     if (!timeTableLoaded)
                                         if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
-                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable received: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         else if (timeTable.isCacheStateConfirmed) {
-                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to cached timetable confirmed: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to cached timetable confirmed: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         } else {
-                                            Log.i(Utils.LOG_TAG, String.format("Time from activity start to fetched timetable received: %d ms", ChronoUnit.MILLIS.between(activityCreatedInstant, Instant.now())));
+                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         }
                                     timeTableLoaded = true;
                                     currentTimeTable = timeTable;
@@ -223,16 +220,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
         stateView.setText(stateText);
 
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
-            for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
+            for (int periodI = 0; periodI < 9; periodI++) {
                 int viewId = 666 + dayI * 9 + periodI;
                 ViewGroup lessonView = findViewById(viewId);
 
-                Lesson lesson = timeTable.Lessons[dayI][periodI];
+                Lesson lesson = periodI < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI] : null;
 
-                if(lesson == null){
-                    lessonView.setVisibility(View.INVISIBLE);
-                    continue;
-                }
+                lessonView.setVisibility(lesson == null ? View.INVISIBLE : View.VISIBLE);
+                if(lesson == null) continue;
+
 
                 TextView subjectView = (TextView) lessonView.getChildAt(0);
                 TextView roomView = (TextView) (lessonView.getChildAt(1));
@@ -255,9 +251,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.regular_lesson));
             }
         }
-        if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
+        if (isInitialLoad) {
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
-
+            isInitialLoad = false;
+        }
         updateDayDisplayForWeek(selectedWeek);
 
         //loadNonCrucialUi();
@@ -303,7 +300,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void onLessonClicked(int dayOfWeek, int period){
-
+        Log.d(Utils.LOG_TAG, String.format("Tapped on day %d at period %d", dayOfWeek, period));
     }
 
 
