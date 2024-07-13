@@ -35,10 +35,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.activities.LoginActivity
 import de.zenonet.stundenplan.common.Utils
-import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
@@ -50,7 +50,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 
 class RemoteLoginActivity : ComponentActivity() {
-    private lateinit var intentLauncher : ActivityResultLauncher<Intent>;
+    private lateinit var intentLauncher: ActivityResultLauncher<Intent>;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,23 +86,38 @@ class RemoteLoginActivity : ComponentActivity() {
             val dataClient = Wearable.getDataClient(this@RemoteLoginActivity);
 
             try {
-                val preferences = PreferenceManager.getDefaultSharedPreferences(this@RemoteLoginActivity);
-                val refreshToken =
-                    preferences.getString("refreshToken", "") ?: return@launch
+                val preferences =
+                    PreferenceManager.getDefaultSharedPreferences(this@RemoteLoginActivity);
 
-                if(refreshToken == ""){
-                    if(!preventRecursion)
-                        startLoginProcess()
-                    return@launch
+                val request: PutDataRequest
+
+                if (preferences.getBoolean("showPreview", false)) {
+                    request = PutDataMapRequest.create("/refreshtoken").apply {
+                        dataMap.putBoolean("showPreview", true)
+                        dataMap.putLong("time", Instant.now().epochSecond)
+                    }
+                        .asPutDataRequest()
+                        .setUrgent()
+                } else {
+                    val refreshToken =
+                        preferences.getString("refreshToken", "") ?: return@launch
+                    val showPreview =
+                        preferences.getBoolean("showPreview", false)
+
+                    if (refreshToken == "" && !showPreview) {
+                        if (!preventRecursion)
+                            startLoginProcess()
+                        return@launch
+                    }
+
+                    request = PutDataMapRequest.create("/refreshtoken").apply {
+                        dataMap.putString("refreshToken", refreshToken)
+                        dataMap.putBoolean("showPreview", false)
+                        dataMap.putLong("time", Instant.now().epochSecond)
+                    }
+                        .asPutDataRequest()
+                        .setUrgent()
                 }
-
-                val request = PutDataMapRequest.create("/refreshtoken").apply {
-                    dataMap.putString("refreshToken", refreshToken)
-                    dataMap.putLong("time", Instant.now().epochSecond)
-                }
-                    .asPutDataRequest()
-                    .setUrgent()
-
                 val result = dataClient.putDataItem(request).await()
 
                 Log.d(Utils.LOG_TAG, "DataItem saved: $result")

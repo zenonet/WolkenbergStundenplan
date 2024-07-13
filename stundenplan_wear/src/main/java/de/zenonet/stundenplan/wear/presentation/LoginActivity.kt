@@ -14,6 +14,7 @@ import android.preference.PreferenceManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -41,6 +42,8 @@ import androidx.wear.compose.material.Text
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.tasks.Tasks.await
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
@@ -50,6 +53,12 @@ class LoginActivity : ComponentActivity() {
     lateinit var isShowingContinueOnPhoneAnimation: MutableState<Boolean>;
     private val dataClient by lazy { Wearable.getDataClient(this) }
     private val dataChangedListener by lazy { MyDataChangedListener(this) }
+
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            Log.i(Utils.LOG_TAG, "Open on phone animation completed")
+            isShowingContinueOnPhoneAnimation.value = false
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +70,7 @@ class LoginActivity : ComponentActivity() {
             isShowingContinueOnPhoneAnimation = remember {
                 mutableStateOf(false)
             }
-            if (!isShowingContinueOnPhoneAnimation.value)
+            //if (!isShowingContinueOnPhoneAnimation.value)
                 WearApp(activity = this)
         }
     }
@@ -70,12 +79,22 @@ class LoginActivity : ComponentActivity() {
 
         Thread {
             val nodeClient = Wearable.getNodeClient(this);
+            val capabilityClient = Wearable.getCapabilityClient(this);
+
             val connectedNodes = Tasks.await(nodeClient.connectedNodes)
             if (connectedNodes.isEmpty()) {
                 callback?.invoke(1)
                 Log.i(Utils.LOG_TAG, "No connected nodes available")
                 return@Thread;
             }
+
+            val capableNodes = Tasks.await(capabilityClient.getCapability("verify_remote_wolkenberg_stundenplan_phone_app", CapabilityClient.FILTER_REACHABLE)).nodes
+            if(capableNodes.isEmpty()){
+                callback?.invoke(2)
+                return@Thread
+            }
+
+
 
             val localNodeId = await(nodeClient.localNode).id
             ///Log.i(Utils.LOG_TAG, "Local node id is $localNodeId")
@@ -88,8 +107,12 @@ class LoginActivity : ComponentActivity() {
             // Send the local node id
             //remoteIntent.putExtra("nodeId", await(nodeClient.localNode).id)
 
+
             try {
-                RemoteActivityHelper(this).startRemoteActivity(remoteIntent)
+                val remoteActivityHelper = RemoteActivityHelper(this)
+                val selectedNode = capableNodes.iterator().next()
+                Log.i(Utils.LOG_TAG, "Starting remote login activity on ${selectedNode.displayName}")
+                remoteActivityHelper.startRemoteActivity(remoteIntent, targetNodeId = selectedNode.id)
                 showContinueOnPhone()
                 isShowingContinueOnPhoneAnimation.value = true
             } catch (e: RemoteActivityHelper.RemoteIntentException) {
@@ -110,7 +133,7 @@ class LoginActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        dataClient.addListener(dataChangedListener);
+        dataClient.addListener(dataChangedListener)
     }
 
     override fun onPause() {
@@ -128,7 +151,7 @@ class LoginActivity : ComponentActivity() {
             putExtra(ConfirmationActivity.EXTRA_MESSAGE, "Auf Telefon fortsetzen")
             addFlags(FLAG_ACTIVITY_NO_HISTORY)
         }
-        startActivity(confirmation)
+        launcher.launch(confirmation)
     }
 }
 
@@ -143,81 +166,95 @@ fun WearApp(activity: LoginActivity?) {
         Scaffold(
             positionIndicator = { PositionIndicator(scalingLazyListState = listState) }
         ) {
-            ScalingLazyColumn(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize(),
-            ) {
+            val boxState = rememberSwipeToDismissBoxState();
+            SwipeToDismissBox(state = boxState, onDismissed = {
+                status = -1
+            }) { isBackground ->
+                val showBox = status != -1
+                if(isBackground || !showBox){
+                    ScalingLazyColumn(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                    ) {
 
-                item {
-                    Text(text = "Login", textAlign = TextAlign.Center, fontSize = 21.sp)
+                        item {
+                            Text(text = "Login", textAlign = TextAlign.Center, fontSize = 21.sp)
 
-                }
-                item {
-                    Text(
-                        text = "Logge dich mit deinem Smartphone ein",
-                        textAlign = TextAlign.Center
-                    )
+                        }
+                        item {
+                            Text(
+                                text = "Logge dich mit deinem Smartphone ein",
+                                textAlign = TextAlign.Center
+                            )
 
-                }
-                item {
-                    Button(onClick = {
-                        if (activity == null) return@Button;
+                        }
+                        item {
+                            Button(onClick = {
+                                if (activity == null) return@Button;
 
-                        activity.startRemoteLogin {
-                            status = it
-                        };
-
-                        // TODO: Show feedback (eg. no phone is connected)
-
-                    }, Modifier.fillMaxWidth()) {
-                        Text(
-                            "Am Smartphone vortfahren", fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                item {
-                    Button(onClick = {
-                        if (activity == null) return@Button;
-
-                        PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                            .putBoolean("showPreview", true).apply()
-                        activity.loginSucceeded()
-                    }, Modifier.fillMaxWidth()) {
-                        Text(
-                            "Weiter zur Vorschau", fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
-            if (status > 0)
-                SwipeToDismissBox(state = rememberSwipeToDismissBoxState(), onDismissed = {
-                    status = -1
-                }) {
-                    ScalingLazyColumn(Modifier.fillMaxSize()) {
-                        when (status) {
-                            1 -> {
-                                item {
-                                    Text("Keine Smartphone verfügbar", textAlign = TextAlign.Center)
+                                activity.startRemoteLogin {
+                                    status = it
                                 }
+
+                                // TODO: Show feedback (eg. no phone is connected)
+
+                            }, Modifier.fillMaxWidth()) {
+                                Text(
+                                    "Am Smartphone vortfahren", fontSize = 12.sp,
+                                    textAlign = TextAlign.Center
+                                )
                             }
+                        }
 
-                            2 -> {
-                                item {
-                                    Text(
-                                        "App konnte nicht gestartet werden. Ist sie wirklich auf dem Smartphone installiert?",
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
+                        item {
+                            Button(onClick = {
+                                if (activity == null) return@Button;
+
+                                PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                                    .putBoolean("showPreview", true).apply()
+                                activity.loginSucceeded()
+                            }, Modifier.fillMaxWidth()) {
+                                Text(
+                                    "Weiter zur Vorschau", fontSize = 12.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                    return@SwipeToDismissBox
+                }
+
+                if (status < 0) return@SwipeToDismissBox
+                ScalingLazyColumn(Modifier.fillMaxSize()) {
+                    when (status) {
+                        0 -> {
+                            item {
+                                Text(
+                                    "Warte auf Aktion auf Telefon...",
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+
+                        1 -> {
+                            item {
+                                Text("Kein Smartphone verfügbar", textAlign = TextAlign.Center)
+                            }
+                        }
+
+                        2 -> {
+                            item {
+                                Text(
+                                    "App konnte nicht gestartet werden. Ist sie wirklich auf dem Smartphone installiert?",
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }
                 }
+            }
         }
     }
 }
