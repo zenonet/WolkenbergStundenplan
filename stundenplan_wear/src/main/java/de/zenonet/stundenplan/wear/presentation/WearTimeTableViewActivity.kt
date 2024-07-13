@@ -168,7 +168,10 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                             val timeTable = if(viewModel.timeTable.value == null) viewModel.timeTableDirect else viewModel.timeTable.value
                             if (viewModel.timeTable.value == null && viewModel.timeTableDirect == null) return@items
 
-                            if (timeTable!!.Lessons[day][period] == null) {
+                            if(timeTable!!.Lessons[day].size <= period)
+                                return@items
+
+                            if (timeTable.Lessons[day][period] == null) {
                                 Spacer(Modifier.height(15.dp))
                                 return@items
                             }
