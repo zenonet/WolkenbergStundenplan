@@ -12,8 +12,8 @@ android {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2015
-        versionName = "1.1.2wear"
+        versionCode = 2019
+        versionName = "1.2.0wear"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -71,6 +71,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")
+
 /*
     implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")
 */
