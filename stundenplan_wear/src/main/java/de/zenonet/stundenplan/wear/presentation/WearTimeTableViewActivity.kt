@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.LessonType
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.wear.BuildConfig
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 import java.time.Instant
@@ -153,6 +155,8 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
 
                     var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
 
+                    val timeTable: TimeTable? by viewModel.timeTable.collectAsState(viewModel.timeTableDirect)
+
                     ScalingLazyColumn(
                         Modifier
                             .padding(10.dp, 0.dp, 10.dp, 0.dp)
@@ -161,42 +165,53 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         state = listState,
                     ) {
 
-                        val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+                        if (timeTable != null && !timeTable!!.Lessons[day].isEmpty()) {
 
-                        //items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
-                        items(8) { period ->
-                            val timeTable = if(viewModel.timeTable.value == null) viewModel.timeTableDirect else viewModel.timeTable.value
-                            if (viewModel.timeTable.value == null && viewModel.timeTableDirect == null) return@items
 
-                            if(timeTable!!.Lessons[day].size <= period)
-                                return@items
+                            val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
+                            //items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
+                            items(8) { period ->
+                                // val timeTable = if (viewModel.timeTable.value == null) viewModel.timeTableDirect else viewModel.timeTable.value
+                                if (timeTable == null && viewModel.timeTableDirect == null) return@items
 
-                            if (timeTable.Lessons[day][period] == null) {
-                                Spacer(Modifier.height(15.dp))
-                                return@items
-                            }
+                                if (timeTable!!.Lessons[day].size <= period)
+                                    return@items
 
-                            LessonView(
-                                lesson = timeTable.Lessons[day][period],
-                                formatter = viewModel.formatter,
-                                day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
-                                period + 1
-                            )
-
-                            // Scroll to the current period
-                            LaunchedEffect(null) {
-                                // Scroll if the school-day is not yet over, this column show the current day and
-                                // this lesson view shows the first lesson (to only scroll once)
-                                if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable.Lessons[day].size && dayOfWeek == day && period == 0) {
-                                    listState.scrollToItem(currentPeriod)
-                                    hasScrolledToCurrentPeriod = true
+                                if (timeTable!!.Lessons[day][period] == null) {
+                                    Spacer(Modifier.height(15.dp))
+                                    return@items
                                 }
+
+                                LessonView(
+                                    lesson = timeTable!!.Lessons[day][period],
+                                    formatter = viewModel.formatter,
+                                    day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
+                                    period + 1
+                                )
+
+                                // Scroll to the current period
+                                LaunchedEffect(null) {
+                                    // Scroll if the school-day is not yet over, this column show the current day and
+                                    // this lesson view shows the first lesson (to only scroll once)
+                                    if (!hasScrolledToCurrentPeriod && currentPeriod < timeTable!!.Lessons[day].size && dayOfWeek == day && period == 0) {
+                                        listState.scrollToItem(currentPeriod)
+                                        hasScrolledToCurrentPeriod = true
+                                    }
+                                }
+                            }
+                        } else {
+                            item {
+                                Text("Frei",
+                                    color = colorResource(id = CommonR.color.cancelled_lesson),
+                                    fontSize = 20.sp
+                                )
                             }
                         }
                     }
-                    if (viewModel.timeTable.value != null || viewModel.timeTableDirect != null) {
+                    if (timeTable != null || viewModel.timeTableDirect != null) {
                         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart())
                     }
+
                 }
 
             }
@@ -205,7 +220,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
         LaunchedEffect(null) {
             // Scroll to the current day
             if (dayOfWeek == -1 || dayOfWeek > 4) return@LaunchedEffect
-            pagerState.scrollToPage(dayOfWeek+1)
+            pagerState.scrollToPage(dayOfWeek + 1)
         }
     }
 }
@@ -219,6 +234,7 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
             PositionIndicator(scalingLazyListState = listState)
         }
     ) {
+        val timeTable by viewModel.timeTable.collectAsState(viewModel.timeTableDirect)
         ScalingLazyColumn(
             Modifier
                 .padding(10.dp, 0.dp, 10.dp, 0.dp)
@@ -234,6 +250,26 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .padding(5.dp), textAlign = TextAlign.Center
                 )
+            }
+            item {
+                val text: String
+                if (viewModel.isLoading)
+                    text = "Lädt..."
+                else if (timeTable == null)
+                    text = "Fehler beim Laden"
+                else
+                    text =
+                        "Quelle: ${timeTable!!.source} ${if (timeTable!!.isCacheStateConfirmed) "(confirmed)" else ""}"
+
+                if (timeTable != null)
+                    Text(
+                        text,
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 10.sp
+                    )
             }
             item {
                 Row(
