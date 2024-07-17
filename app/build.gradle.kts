@@ -10,8 +10,8 @@ android {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.1.0"
+        versionCode = 8
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -86,4 +86,8 @@ dependencies {
 
     implementation("me.zhanghai.compose.preference:library:1.0.0")
     implementation("com.google.accompanist:accompanist-permissions:0.31.0-alpha")
+
+    implementation( "androidx.glance:glance-appwidget:1.0.0" )
+    implementation( "androidx.glance:glance-material3:1.0.0" )
+
 }
