@@ -150,7 +150,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         weekDays[day],
                         Modifier
                             .align(Alignment.CenterHorizontally)
-                            .padding(0.dp, 2.dp, 0.dp, 0.dp), textAlign = TextAlign.Center
+                            .padding(0.dp, 3.dp, 0.dp, 0.dp), textAlign = TextAlign.Center
                     )
 
                     var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
@@ -159,7 +159,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
 
                     ScalingLazyColumn(
                         Modifier
-                            .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                            .padding(10.dp, 2.dp, 10.dp, 0.dp)
                             .fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         state = listState,
@@ -253,7 +253,9 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
             }
             item {
                 val text: String
-                if (viewModel.isLoading)
+                if(viewModel.isPreview)
+                    text = "Quelle: Vorschau"
+                else if (viewModel.isLoading)
                     text = "Lädt..."
                 else if (timeTable == null)
                     text = "Fehler beim Laden"
