@@ -50,9 +50,17 @@ import kotlin.coroutines.cancellation.CancellationException
 
 
 class RemoteLoginActivity : ComponentActivity() {
-    private lateinit var intentLauncher: ActivityResultLauncher<Intent>;
+    private lateinit var intentLauncher: ActivityResultLauncher<Intent>
+
+    var isPreview: Boolean = false;
+    var isOnboarded: Boolean = false;
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this@RemoteLoginActivity);
+        isOnboarded = preferences.getBoolean("onboardingCompleted", false)
+        isPreview = preferences.getBoolean("showPreview", false)
 
         intentLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -65,7 +73,7 @@ class RemoteLoginActivity : ComponentActivity() {
                     apiClient.init(this)
                     apiClient.redeemOAuthCodeAsync(code) {
                         try {
-                            sendRefreshToken(true)
+                            sendRefreshToken()
                         } catch (e: UserLoadException) {
                         }
                     }
@@ -81,7 +89,7 @@ class RemoteLoginActivity : ComponentActivity() {
         }
     }
 
-    fun sendRefreshToken(preventRecursion: Boolean = false) {
+    fun sendRefreshToken() {
         lifecycleScope.launch {
             val dataClient = Wearable.getDataClient(this@RemoteLoginActivity);
 
@@ -99,16 +107,7 @@ class RemoteLoginActivity : ComponentActivity() {
                         .asPutDataRequest()
                         .setUrgent()
                 } else {
-                    val refreshToken =
-                        preferences.getString("refreshToken", "") ?: return@launch
-                    val showPreview =
-                        preferences.getBoolean("showPreview", false)
-
-                    if (refreshToken == "" && !showPreview) {
-                        if (!preventRecursion)
-                            startLoginProcess()
-                        return@launch
-                    }
+                    val refreshToken = preferences.getString("refreshToken", "") ?: return@launch
 
                     request = PutDataMapRequest.create("/refreshtoken").apply {
                         dataMap.putString("refreshToken", refreshToken)
@@ -129,6 +128,26 @@ class RemoteLoginActivity : ComponentActivity() {
             Toast.makeText(this@RemoteLoginActivity, "Login sent!", Toast.LENGTH_SHORT).show()
             finish()
         }
+    }
+
+    fun usePreviewOnWatch() {
+        lifecycleScope.launch {
+
+            val dataClient = Wearable.getDataClient(this@RemoteLoginActivity);
+
+            val request = PutDataMapRequest.create("/refreshtoken").apply {
+                dataMap.putString("refreshToken", "")
+                dataMap.putBoolean("showPreview", true)
+                dataMap.putLong("time", Instant.now().epochSecond)
+            }
+                .asPutDataRequest()
+                .setUrgent()
+            dataClient.putDataItem(request).await()
+        }
+    }
+
+    fun loginOnWatch() {
+        startLoginProcess()
     }
 
     private fun startLoginProcess() {
@@ -156,7 +175,6 @@ fun App(activity: RemoteLoginActivity? = null) {
             launch(Dispatchers.IO) {
                 if (activity == null || activity.intent == null) return@launch;
 
-
                 nodeId = activity.intent.data?.path?.split('/')?.last().toString();
                 val connectedNodes = Tasks.await(Wearable.getNodeClient(activity).connectedNodes);
 
@@ -168,10 +186,18 @@ fun App(activity: RemoteLoginActivity? = null) {
         }
 
         Column {
-            Text(
-                "$deviceName versucht sich in deinen Stundenplan einzuloggen.\n" +
-                        "Möchtest du dein Login von diesem Smartphone auf alle deine Wearable-Geräte (Smartwatches) übernehmen?"
-            )
+            Text("$deviceName versucht sich in deinen Stundenplan einzuloggen.")
+            if (activity!!.isOnboarded) {
+                if (activity.isPreview) {
+                    Text("Möchtest du auf dem Smartwatch ebenfalls die Vorschau verwenden?")
+                } else {
+                    Text("Möchtest du dein Login von diesem Smartphone auf deine Smartwatch übernehmen?")
+                }
+
+            } else {
+                Text("Du bist allerdings noch nicht eingeloggt. Möchtest du dich auf deiner Smartwatch anmelden oder die Vorschau verwenden?")
+            }
+
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -179,54 +205,51 @@ fun App(activity: RemoteLoginActivity? = null) {
             )
 
             Row {
-                Button(onClick = {
-                    if (activity == null) return@Button;
+                if (!activity.isOnboarded || activity.isPreview) {
 
-                    // Send refresh token
-                    activity.sendRefreshToken()
+                    Button(onClick = {
+                        // Send refresh token
+                        activity.usePreviewOnWatch()
 
-                    /*
-                    Thread {
-                        val nodeClient = Wearable.getNodeClient(activity);
-                        val connectedNodes = Tasks.await(nodeClient.connectedNodes)
-                        if (connectedNodes.isEmpty()) {
-                            Log.i(Utils.LOG_TAG, "No connected nodes available")
-                            return@Thread;
-                        }
+                    }) {
+                        Text("Vorschau verwenden")
+                    }
 
-                        val encodedRefreshToken = URLEncoder.encode(refreshToken);
-                        val remoteIntent = Intent(Intent.ACTION_VIEW)
-                            .addCategory(Intent.CATEGORY_DEFAULT)
-                            .addCategory(Intent.CATEGORY_BROWSABLE)
-                            .setData(Uri.parse("https://www.zenonet.de/stundenplan/refreshToken/$encodedRefreshToken"));
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(10.dp)
+                    )
 
+                    Button(onClick = {
+                        activity.loginOnWatch()
+                    }) {
+                        Text("Auf Uhr einloggen")
+                    }
 
-                        RemoteActivityHelper(activity)
-                            .startRemoteActivity(
-                                targetIntent = remoteIntent,
-                                targetNodeId = nodeId                            )
-                        Log.i(Utils.LOG_TAG, "Remote activity started")
-                    }.start();*/
-
-                }) {
-                    Text("Zulassen")
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(10.dp)
+                    )
                 }
+                if (activity.isOnboarded && !activity.isPreview) {
+                    Button(onClick = {
+                        activity.sendRefreshToken()
 
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(10.dp)
-                )
+                    }) {
+                        Text("Login auf Uhr übernehmen")
+                    }
+                }
 
                 Button(onClick = {
                     activity?.finishAndRemoveTask();
                 }) {
-                    Text("Ablehnen")
+                    Text("Abbrechen")
                 }
             }
 
         }
-
     }
 }
 
