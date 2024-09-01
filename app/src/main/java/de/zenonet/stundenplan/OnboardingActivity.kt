@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -226,7 +227,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                             "ist sie bis jetzt auch nicht darauf ausgelegt. Es könnte zu Fehlern kommen.")
                                     Spacer(Modifier.height(10.dp))
                                 }
-                                Text("Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern")
+                                Text("Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern", textAlign = TextAlign.Center)
                             }
                         }
                     }
