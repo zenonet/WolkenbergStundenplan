@@ -214,6 +214,7 @@ public class TimeTableParser {
                     }
                 } else if (substitutionsThatDay.has("holiday")) {
                     for (int i = 0; i < timeTable.Lessons[dayI].length; i++) {
+                        if(timeTable.Lessons[dayI][i] == null) continue;
                         timeTable.Lessons[dayI][i].Type = LessonType.Holiday;
                     }
                 }
