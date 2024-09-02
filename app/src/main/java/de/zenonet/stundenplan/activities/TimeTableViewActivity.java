@@ -2,6 +2,7 @@ package de.zenonet.stundenplan.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -198,6 +199,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
         updateTimeTableView(currentTimeTable);
     }
 
+
+    private PopupWindow popupWindow;
     private void updateTimeTableView(TimeTable timeTable) {
 
         String stateText;
@@ -219,7 +222,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
         stateView.setText(stateText);
 
+        boolean hasData = false;
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
+            hasData |= timeTable.Lessons[dayI].length != 0;
+
             for (int periodI = 0; periodI < 9; periodI++) {
                 int viewId = 666 + dayI * 9 + periodI;
                 ViewGroup lessonView = findViewById(viewId);
@@ -251,6 +257,20 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.regular_lesson));
             }
         }
+
+        /*
+        // Show notice
+        if(!hasData ){
+            if(popupWindow == null) {
+                ViewGroup popUpView = new LinearLayout(this);
+                TextView textView = new TextView(popUpView);
+                textView.setText("Frei");
+                popUpView.addView(textView);
+                popupWindow = new PopupWindow(popUpView, 400, 400, false);
+            }
+            popupWindow.showAtLocation(findViewById(R.id.mainViewGroup), Gravity.CENTER, 50, 50);
+        }*/
+
         if (isInitialLoad) {
             Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
             isInitialLoad = false;
