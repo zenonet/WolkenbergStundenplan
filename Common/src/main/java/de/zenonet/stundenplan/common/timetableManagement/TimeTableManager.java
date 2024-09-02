@@ -3,14 +3,19 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.util.Pair;
+
 import androidx.preference.PreferenceManager;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.NameLookup;
+import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
@@ -21,12 +26,14 @@ public class TimeTableManager implements TimeTableClient {
     public User user;
     public TimeTableApiClient apiClient = new TimeTableApiClient();
     public TimeTableCacheClient cacheClient = new TimeTableCacheClient();
+    public RawTimeTableCacheClient rawCacheClient = new RawTimeTableCacheClient();
     public NameLookup lookup = new NameLookup();
     private TimeTableParser parser;
+    private SharedPreferences sharedPreferences;
 
     public void init(Context context) throws UserLoadException {
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
 
         if(lookup.isLookupDataAvailable()) {
@@ -42,7 +49,7 @@ public class TimeTableManager implements TimeTableClient {
         cacheClient.lookup = lookup;
         cacheClient.init(context);
 
-        parser = new TimeTableParser(apiClient, lookup, sharedPreferences);
+        parser = new TimeTableParser(lookup, sharedPreferences);
     }
 
     public void login() throws UserLoadException {
@@ -62,6 +69,57 @@ public class TimeTableManager implements TimeTableClient {
         user = getUser();
     }
 
+    public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
+        if(week < 1 || week > 52) throw new TimeTableLoadException();
+
+        long counter = apiClient.getLatestCounterValue();
+        long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
+
+        TimeTableSource source;
+        Pair<String, String> rawData;
+        boolean isConfirmed = apiClient.isCounterConfirmed;
+        if (counter > cacheCounter || !rawCacheClient.doesRawCacheExist()) {
+            // Fetch from api
+            try {
+                // We also need to check if the lookup data changed (there is no indicator for that, meaning we have to run the ~100ms request every time)
+                if(counter > cacheCounter){
+
+                }
+
+                rawData = new Pair<>(
+                        apiClient.getRawData(),
+                        apiClient.getRawSubstitutionData()
+                );
+
+                // OPTIMIZABLE: Do saving in a separate thread so that this method can return more quickly
+                rawCacheClient.saveRawData(rawData.first, rawData.second);
+                sharedPreferences.edit().putLong("rawCacheCounter", counter).apply();
+                source = TimeTableSource.Api;
+                isConfirmed = true;
+            } catch (IOException ignored) {
+                // Load older version from raw cache
+                rawData = rawCacheClient.loadRawData();
+                source = TimeTableSource.RawCache;
+            }
+
+        } else {
+            // Get data from raw cache
+            rawData = rawCacheClient.loadRawData();
+            source = TimeTableSource.RawCache;
+        }
+
+        Instant t0 = Instant.now();
+        TimeTable timeTable = parser.parseWeek(rawData.first, rawData.second, week);
+        Instant t1 = Instant.now();
+        long ms = ChronoUnit.MILLIS.between(t0, t1);
+        Log.i(Utils.LOG_TAG, "Parsing for week " + week + " took " + ms + "ms");
+
+        timeTable.source = source;
+        timeTable.CounterValue = counter;
+        timeTable.isCacheStateConfirmed = isConfirmed;
+        return timeTable;
+    }
+
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
         long counter = apiClient.getLatestCounterValue();
         try {
@@ -71,13 +129,13 @@ public class TimeTableManager implements TimeTableClient {
             // Check if it's up to date
             if (timeTable.CounterValue < counter) {
                 // If not, get the data from the parser
-                return parser.getTimetableForWeek(week);
+                return getTimetableForWeekFromRawCacheOrApi(week);
             }
 
             return timeTable;
         } catch (TimeTableLoadException ignored) {
             // Try parse from raw data cache or from api
-            return parser.getTimetableForWeek(week);
+            return getTimetableForWeekFromRawCacheOrApi(week);
         }
     }
 
@@ -105,7 +163,7 @@ public class TimeTableManager implements TimeTableClient {
                 // If the data, the cache thread loaded is not up to date
                 if(cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1){
                     // Load new data
-                    TimeTable timeTable = parser.getTimetableForWeek(week);
+                    TimeTable timeTable = getTimetableForWeekFromRawCacheOrApi(week);
 
                     stage.set(2);
                     timeTableFromCache.set(timeTable);

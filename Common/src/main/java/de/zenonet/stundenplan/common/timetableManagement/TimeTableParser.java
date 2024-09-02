@@ -28,65 +28,17 @@ import de.zenonet.stundenplan.common.Utils;
 public class TimeTableParser {
     public NameLookup lookup;
 
-    public TimeTableApiClient apiClient;
     public RawTimeTableCacheClient rawCacheClient;
     public SharedPreferences sharedPreferences;
 
 
-    public TimeTableParser(TimeTableApiClient apiClient, NameLookup lookup, SharedPreferences sharedPreferences) {
-        this.apiClient = apiClient;
+    public TimeTableParser(NameLookup lookup, SharedPreferences sharedPreferences) {
         this.lookup = lookup;
         this.sharedPreferences = sharedPreferences;
         this.rawCacheClient = new RawTimeTableCacheClient();
     }
 
-    public TimeTable getTimetableForWeek(int week) throws TimeTableLoadException {
-        if(week < 1 || week > 52) throw new TimeTableLoadException();
-
-        long counter = apiClient.getLatestCounterValue();
-        long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
-
-        TimeTableSource source;
-        Pair<String, String> rawData;
-        boolean isConfirmed = apiClient.isCounterConfirmed;
-        if (counter > cacheCounter || !rawCacheClient.doesRawCacheExist()) {
-            // Fetch from api
-            try {
-                rawData = new Pair<>(
-                        apiClient.getRawData(),
-                        apiClient.getRawSubstitutionData()
-                );
-
-                // OPTIMIZABLE: Do saving in a separate thread so that this method can return more quickly
-                rawCacheClient.saveRawData(rawData.first, rawData.second);
-                sharedPreferences.edit().putLong("rawCacheCounter", counter).apply();
-                source = TimeTableSource.Api;
-                isConfirmed = true;
-            } catch (IOException ignored) {
-                // Load older version from raw cache
-                rawData = rawCacheClient.loadRawData();
-                source = TimeTableSource.RawCache;
-            }
-
-        } else {
-            // Get data from raw cache
-            rawData = rawCacheClient.loadRawData();
-            source = TimeTableSource.RawCache;
-        }
-
-        Instant t0 = Instant.now();
-        TimeTable timeTable = parseWeek(rawData.first, rawData.second, week);
-        Instant t1 = Instant.now();
-        long ms = ChronoUnit.MILLIS.between(t0, t1);
-        Log.i(Utils.LOG_TAG, "Parsing for week " + week + " took " + ms + "ms");
-
-        timeTable.source = source;
-        timeTable.CounterValue = counter;
-        timeTable.isCacheStateConfirmed = isConfirmed;
-        return timeTable;
-    }
-
-    private TimeTable parseWeek(String json, String substitutionJson, int week) throws TimeTableLoadException {
+    public TimeTable parseWeek(String json, String substitutionJson, int week) throws TimeTableLoadException {
 
         Calendar time = Calendar.getInstance();
         // Set the week of year
