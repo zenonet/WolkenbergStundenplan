@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -52,6 +51,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TextView stateView;
     ImageButton previousWeekButton;
     ImageButton nextWeekButton;
+    ImageButton currentWeekButton;
 
     int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
     private TimeTable currentTimeTable;
@@ -104,6 +104,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         previousWeekButton = findViewById(R.id.previousWeekButton);
         nextWeekButton = findViewById(R.id.nextWeekButton);
+        currentWeekButton = findViewById(R.id.currentWeekButton);
 
         if(isPreview){
             previousWeekButton.setEnabled(false);
@@ -119,6 +120,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         previousWeekButton.setOnClickListener((sender) -> {
             selectedWeek--;
             previousWeekButton.setEnabled(selectedWeek != 0);
+            loadTimeTableAsync();
+        });
+
+        currentWeekButton.setOnClickListener((sender) -> {
+            selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+            previousWeekButton.setEnabled(selectedWeek != 0);
+            nextWeekButton.setEnabled(selectedWeek != 52);
             loadTimeTableAsync();
         });
 
