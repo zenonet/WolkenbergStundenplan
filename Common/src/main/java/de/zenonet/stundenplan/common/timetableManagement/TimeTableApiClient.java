@@ -3,6 +3,7 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.preference.PreferenceManager;
 
@@ -36,7 +37,12 @@ public class TimeTableApiClient {
     public SharedPreferences sharedPreferences;
     public boolean isLoggedIn;
 
-    public void fetchMasterData() throws DataNotAvailableException {
+    /**
+     * Fetches "masterdata"/lookup data from the API
+     * @return whether the data changed since the last time fetching
+     * @throws DataNotAvailableException when the data can't be fetched
+     */
+    public boolean fetchMasterData() throws DataNotAvailableException {
 
         try {
             // Get raw json data
@@ -46,10 +52,7 @@ public class TimeTableApiClient {
             if (respCode != 200)
                 throw new DataNotAvailableException();
             String raw = Utils.readAllFromStream(httpCon.getInputStream());
-            lookup.saveLookupFile(raw);
-            //File lookupFile = new File()
-
-            // Save
+            return lookup.saveLookupFile(raw);
         } catch (Exception e) {
             throw new DataNotAvailableException();
         }
@@ -206,5 +209,40 @@ public class TimeTableApiClient {
             throw new IOException();
 
         return Utils.readAllFromStream(httpCon.getInputStream());
+    }
+
+    /**
+     * Simultaneously fetches timetable and substitution data from the API
+     * @return A Pair containing the raw timetable data and raw substitution data (in that order)
+     */
+    Pair<String, String> getRawDataFromApi() {
+        final String[] rawDataArray = {null, null};
+
+        // fetch timetable and substitutions simultaneously
+        Thread timeTableFetchThread = new Thread(() -> {
+            try {
+                rawDataArray[0] = (getRawData());
+            } catch (IOException ignored) {
+            }
+        });
+        timeTableFetchThread.start();
+        Thread substitutionFetchThread = new Thread(() -> {
+            try {
+                rawDataArray[1] = getRawSubstitutionData();
+            } catch (IOException ignored) {
+            }
+        });
+        substitutionFetchThread.start();
+
+        try {
+            timeTableFetchThread.join();
+            substitutionFetchThread.join();
+        }catch (InterruptedException ignored){
+
+        }
+        return new Pair<>(
+                rawDataArray[0],
+                rawDataArray[1]
+        );
     }
 }

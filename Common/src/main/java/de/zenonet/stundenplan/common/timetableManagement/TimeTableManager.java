@@ -5,7 +5,9 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +15,7 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.TimeTableSource;
@@ -36,7 +39,7 @@ public class TimeTableManager implements TimeTableClient {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         lookup.lookupDirectory = context.getCacheDir().getAbsolutePath();
 
-        if(lookup.isLookupDataAvailable()) {
+        if (lookup.isLookupDataAvailable()) {
             try {
                 lookup.loadLookupData();
             } catch (IOException e) {
@@ -70,7 +73,7 @@ public class TimeTableManager implements TimeTableClient {
     }
 
     public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
-        if(week < 1 || week > 52) throw new TimeTableLoadException();
+        if (week < 1 || week > 52) throw new TimeTableLoadException();
 
         long counter = apiClient.getLatestCounterValue();
         long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
@@ -81,25 +84,44 @@ public class TimeTableManager implements TimeTableClient {
         if (counter > cacheCounter || !rawCacheClient.doesRawCacheExist()) {
             // Fetch from api
             try {
-                // We also need to check if the lookup data changed (there is no indicator for that, meaning we have to run the ~100ms request every time)
-                if(counter > cacheCounter){
+                // Simultaneously fetch masterdata and raw timetable data:
 
+                final byte[] masterDataChanged = {-2};
+                Thread masterDataFetchThread = getMasterDataFetchThread(masterDataChanged);
+
+                rawData = apiClient.getRawDataFromApi();
+                Log.i(Utils.LOG_TAG, "Fetched raw timetable data");
+                masterDataFetchThread.join();
+
+                // If master data changed, re-fetch user data since it might have changed
+                if (masterDataChanged[0] == 1) {
+                    Log.i(Utils.LOG_TAG, "Detected change in master data");
+                    int oldUserId = user.id;
+                    fetchUser();
+
+                    // If the user id changed (yeah, that actually happens)
+                    if(oldUserId != user.id){
+                        Log.i(Utils.LOG_TAG, "Detected change in user id, re-fetching...");
+                        // We need to re-fetch raw timetable data
+                        rawData = apiClient.getRawDataFromApi();
+                    }
                 }
 
-                rawData = new Pair<>(
-                        apiClient.getRawData(),
-                        apiClient.getRawSubstitutionData()
-                );
 
-                // OPTIMIZABLE: Do saving in a separate thread so that this method can return more quickly
-                rawCacheClient.saveRawData(rawData.first, rawData.second);
-                sharedPreferences.edit().putLong("rawCacheCounter", counter).apply();
-                source = TimeTableSource.Api;
-                isConfirmed = true;
-            } catch (IOException ignored) {
-                // Load older version from raw cache
-                rawData = rawCacheClient.loadRawData();
-                source = TimeTableSource.RawCache;
+                if (rawData.first != null && rawData.second != null) {
+                    // OPTIMIZABLE: Do saving in a separate thread so that this method can return more quickly
+                    rawCacheClient.saveRawData(rawData.first, rawData.second);
+                    sharedPreferences.edit().putLong("rawCacheCounter", counter).apply();
+                    isConfirmed = true;
+                    source = TimeTableSource.Api;
+                } else {
+                    // Load older version from raw cache
+                    rawData = rawCacheClient.loadRawData();
+                    source = TimeTableSource.RawCache;
+                }
+
+            } catch (DataNotAvailableException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
 
         } else {
@@ -118,6 +140,21 @@ public class TimeTableManager implements TimeTableClient {
         timeTable.CounterValue = counter;
         timeTable.isCacheStateConfirmed = isConfirmed;
         return timeTable;
+    }
+
+    private @NonNull Thread getMasterDataFetchThread(byte[] masterDataChanged) {
+        Thread masterDataFetchThread = new Thread(() -> {
+            // We also need to check if the lookup data changed (there is no indicator for that, meaning we have to run the ~100ms request every time)
+            try {
+                masterDataChanged[0] = apiClient.fetchMasterData() ? (byte)1 : 0;
+                Log.i(Utils.LOG_TAG, "Re-fetched master data");
+            } catch (DataNotAvailableException e) {
+                masterDataChanged[0] = (byte)-1;
+            }
+
+        });
+        masterDataFetchThread.start();
+        return masterDataFetchThread;
     }
 
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
@@ -161,7 +198,7 @@ public class TimeTableManager implements TimeTableClient {
                 long counter = apiClient.getLatestCounterValue();
                 confirmedCounter.set(apiClient.isCounterConfirmed ? counter : -1);
                 // If the data, the cache thread loaded is not up to date
-                if(cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1){
+                if (cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1) {
                     // Load new data
                     TimeTable timeTable = getTimetableForWeekFromRawCacheOrApi(week);
 
@@ -169,7 +206,7 @@ public class TimeTableManager implements TimeTableClient {
                     timeTableFromCache.set(timeTable);
                     callback.timeTableLoaded(timeTable);
                     cacheClient.cacheTimetableForWeek(week, timeTable);
-                }else if(stage.get() == 1 && apiClient.isCounterConfirmed) {
+                } else if (stage.get() == 1 && apiClient.isCounterConfirmed) {
                     // If the cache thread already returned a value, we want to re-return with the addition of it being confirmed
                     timeTableFromCache.get().isCacheStateConfirmed = true;
                     callback.timeTableLoaded(timeTableFromCache.get());
@@ -219,10 +256,15 @@ public class TimeTableManager implements TimeTableClient {
         try {
             user = cacheClient.getUser();
         } catch (UserLoadException exception) {
-            user = apiClient.getUser();
-            cacheClient.saveUser(user);
+            fetchUser();
         }
         apiClient.user = user;
         return user;
+    }
+
+    private void fetchUser() throws UserLoadException {
+        user = apiClient.getUser();
+        cacheClient.saveUser(user);
+        apiClient.user = user;
     }
 }

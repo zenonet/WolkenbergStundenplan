@@ -41,14 +41,19 @@ public class NameLookup {
         return new File(lookupDirectory, "lookup.json").exists();
     }
 
-    public void saveLookupFile(String lookupData) {
+    /**
+     * Saves json lookup data
+     * @param lookupData the json lookup data to save
+     * @return whether the data changed since the last time saving
+     */
+    public boolean saveLookupFile(String lookupData) {
         try {
             // Check if anything changed
             File hashFile = new File(lookupDirectory, "lookup.hash");
             int localHash = hashFile.exists() ? Integer.parseInt(Utils.readAllText(hashFile)) : -1;
             int newHash = lookupData.hashCode();
             if(localHash == newHash){
-                return;
+                return false;
             }
 
             LookupData = new JSONObject(lookupData);
@@ -56,6 +61,7 @@ public class NameLookup {
             Utils.writeAllText(file, lookupData);
 
             Utils.writeAllText(hashFile, String.valueOf(newHash));
+            return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
