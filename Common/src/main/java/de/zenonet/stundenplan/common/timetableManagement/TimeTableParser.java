@@ -7,18 +7,14 @@ import android.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
 import de.zenonet.stundenplan.common.NameLookup;
-import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Utils;
 
 /**
@@ -61,14 +57,15 @@ public class TimeTableParser {
                 int lessonsThisDay = 0;
 
                 // Don't blame me, It was not me who decided to TWO-INDEX THIS!!!!!
-                for (int periodI = 2; periodI < timeTable.Lessons[dayI].length + 2; periodI++) {
+                // Update 02.09.2024: Wow, they actually fixed two-indexing (except they forgot to remove it in the official client as well for day), I am so proud of them! Next up they hopefully fix user-id's changing once a year
+                // Back to the technical part: it's one indexing but I accept that because there is technically support for a 0th period (maybe I should support that too (TODO))
+                for (int periodI = 1; periodI < timeTable.Lessons[dayI].length + 1; periodI++) {
 
                     // Skip periods that aren't used in any version of the timetable completely
                     if (!weekDay.has(String.valueOf(periodI)))
                         continue;
 
                     JSONArray timeTables = weekDay.getJSONArray(String.valueOf(periodI));
-
 
                     // OPTIMIZABLE: Instead of iterating here, you could use binary search to improve performance
                     // find the current timetable version for this lesson
@@ -89,14 +86,14 @@ public class TimeTableParser {
                         lesson.Teacher = lookup.lookupTeacher(tt.getInt("TEACHER_ID"));
                         lesson.Room = lookup.lookupRoom(tt.getInt("ROOM_ID"));
 
-                        Pair<LocalTime, LocalTime> startAndEndTime = Utils.getStartAndEndTimeOfPeriod(periodI - 2);
+                        Pair<LocalTime, LocalTime> startAndEndTime = Utils.getStartAndEndTimeOfPeriod(periodI - 1);
                         lesson.StartTime = startAndEndTime.first;
                         lesson.EndTime = startAndEndTime.second;
 
                         // Add it to the timetable
-                        timeTable.Lessons[dayI][periodI - 2] = lesson;
+                        timeTable.Lessons[dayI][periodI - 1] = lesson;
 
-                        lessonsThisDay = periodI - 1;
+                        lessonsThisDay = periodI;
                         break;
                     }
 
@@ -132,7 +129,7 @@ public class TimeTableParser {
                     JSONArray substitutionsArray = substitutionsThatDay.getJSONArray("substitutions");
                     for (int i = 0; i < substitutionsArray.length(); i++) {
                         JSONObject substitution = substitutionsArray.getJSONObject(i);
-                        int period = substitution.getInt("PERIOD") - 2; // Two-indexing again
+                        int period = substitution.getInt("PERIOD") - 1; // Two-indexing again (except not anymore, yay)
 
                         if(substitution.has("TEXT")) {
                             String text = substitution.getString("TEXT");
