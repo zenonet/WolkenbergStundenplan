@@ -34,6 +34,6 @@ public final class Lesson {
         // Only handle comparison to other Lessons
         if(obj == null || obj.getClass() != Lesson.class) return super.equals(obj);
         Lesson other = (Lesson) obj;
-        return Objects.equals(other.Room, Room) && Objects.equals(other.SubjectShortName, SubjectShortName) && Objects.equals(other.Teacher, Teacher);
+        return Objects.equals(other.Room, Room) && Objects.equals(other.SubjectShortName, SubjectShortName) && Objects.equals(other.Teacher, Teacher) && other.Type == Type;
     }
 }

@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,7 +20,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Objects;
 
+import de.zenonet.stundenplan.activities.TimeTableViewActivity;
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.Timing;
@@ -48,16 +51,29 @@ public class BackgroundUpdater extends BroadcastReceiver {
             Lesson[] day = timeTable.Lessons[Timing.getCurrentDayOfWeek()];
 
             for (int i = 0; i < 8; i++) {
-                if (oldDay[i].equals(day[i])) continue;
+                if (Objects.equals(oldDay[i], day[i])) continue;
                 Lesson l = day[i];
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+                PendingIntent onClickIntent = PendingIntent.getActivity(context, 0,
+                        new Intent(context, TimeTableViewActivity.class), PendingIntent.FLAG_IMMUTABLE);
 
                 // Show notification
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.SHORT_TERM_CHANGES_CHANNEL_ID)
                         .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
-                        .setContentTitle("Kurzfristige Stundenplanänderung!")
-                        .setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: %s in %s mit %s", i, l.SubjectShortName, l.Room, l.Teacher))
+                        .setContentTitle("Kurzfristige Stundenplan-Änderung!")
+                        .setContentIntent(onClickIntent)
                         .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+                // Check if the lesson is cancelled
+                if((oldDay[i] != null && oldDay[i].isTakingPlace() && (l == null || !l.isTakingPlace())))
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Entfall", i+1));
+                // Check if the new lesson is an extra lesson
+                else if ((oldDay[i] == null || !oldDay[i].isTakingPlace() && (l != null && l.isTakingPlace()))) {
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Zusatzstunde %s in %s mit %s", i+1, l.SubjectShortName, l.Room, l.Teacher));
+                }else{
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: %s in %s mit %s", i+1, l.SubjectShortName, l.Room, l.Teacher));
+                }
 
                 notificationManager.notify(444 + i, builder.build());
             }
