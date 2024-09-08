@@ -8,13 +8,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.preference.PreferenceManager;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
 
 import com.google.gson.Gson;
 
@@ -56,7 +53,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
                 // Show notification
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.CHANNEL_ID) // TODO: Add custom channel id
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.SHORT_TERM_CHANGES_CHANNEL_ID)
                         .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                         .setContentTitle("Kurzfristige Stundenplanänderung!")
                         .setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: %s in %s mit %s", i, l.SubjectShortName, l.Room, l.Teacher))
@@ -129,7 +126,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
                 return; // TODO: Make it create a notification here, that says when the next lesson starts
             }
             Formatter formatter = new Formatter(context);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.CHANNEL_ID)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.STATUS_CHANNEL_ID)
                     .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                     .setContentTitle(String.format("%s %s mit %s bis %s",
                             formatter.formatRoomName(nextLesson.Room),

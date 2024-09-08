@@ -20,20 +20,19 @@ public class StundenplanPhoneApplication extends StundenplanApplication {
         scheduleUpdateRepeating();
     }
 
-    public static final String CHANNEL_ID = "STUNDENPLANINFO";
+    public static final String STATUS_CHANNEL_ID = "STUNDENPLANSTATUS";
+    public static final String SHORT_TERM_CHANGES_CHANNEL_ID = "STUNDENPLANSHORTTERMCHANGES";
 
     private void createNotificationChannel() {
-        int importance = NotificationManager.IMPORTANCE_DEFAULT;
-
-        CharSequence name = "Stundenplan Informationen";
-        String description = "Zeigt die nächste Stunde als Benachrichtigung an.";
-        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-        channel.setDescription(description);
-        // Register the channel with the system. You can't change the importance
-        // or other notification behaviors after this.
+        NotificationChannel channel = new NotificationChannel(STATUS_CHANNEL_ID, "Stundenplan Informationen", NotificationManager.IMPORTANCE_LOW);
+        channel.setDescription("Zeigt die nächste Stunde als Benachrichtigung an.");
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
 
+
+        channel = new NotificationChannel(SHORT_TERM_CHANGES_CHANNEL_ID, "Kurzfristige Stundenplan-Änderungen", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("Zeigt Benachrichtigungen, wenn der Stundenplan sich kurzfristig verändert.");
+        notificationManager.createNotificationChannel(channel);
     }
 
     public void scheduleUpdateRepeating() {
