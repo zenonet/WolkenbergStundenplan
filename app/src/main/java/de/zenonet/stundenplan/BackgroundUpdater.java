@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -66,13 +67,13 @@ public class BackgroundUpdater extends BroadcastReceiver {
                         .setPriority(NotificationCompat.PRIORITY_HIGH);
 
                 // Check if the lesson is cancelled
-                if((oldDay[i] != null && oldDay[i].isTakingPlace() && (l == null || !l.isTakingPlace())))
-                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Entfall", i+1));
-                // Check if the new lesson is an extra lesson
+                if ((oldDay[i] != null && oldDay[i].isTakingPlace() && (l == null || !l.isTakingPlace())))
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Entfall", i + 1));
+                    // Check if the new lesson is an extra lesson
                 else if ((oldDay[i] == null || !oldDay[i].isTakingPlace() && (l != null && l.isTakingPlace()))) {
-                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Zusatzstunde %s in %s mit %s", i+1, l.SubjectShortName, l.Room, l.Teacher));
-                }else{
-                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: %s in %s mit %s", i+1, l.SubjectShortName, l.Room, l.Teacher));
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: Zusatzstunde %s in %s mit %s", i + 1, l.SubjectShortName, l.Room, l.Teacher));
+                } else {
+                    builder.setContentText(String.format(Locale.GERMANY, "Heute %d. Stunde: %s in %s mit %s", i + 1, l.SubjectShortName, l.Room, l.Teacher));
                 }
 
                 notificationManager.notify(444 + i, builder.build());
@@ -108,62 +109,64 @@ public class BackgroundUpdater extends BroadcastReceiver {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             return;
 
-        // Init the TimeTable client
-        TimeTableManager client = new TimeTableManager();
-        try {
-            client.init(context);
-
-            TimeTable timeTable;
+        new Thread(() -> {
+            // Init the TimeTable client
+            TimeTableManager client = new TimeTableManager();
             try {
-                client.login();
-                timeTable = client.getCurrentTimeTable();
-            } catch (DataNotAvailableException e) {
-                return;
+                client.init(context);
+
+                TimeTable timeTable;
+                try {
+                    client.login();
+                    timeTable = client.getCurrentTimeTable();
+                } catch (DataNotAvailableException e) {
+                    return;
+                }
+                manageShortTermChanges(timeTable);
+                //int dayOfWeek = 0;
+
+                if (!PreferenceManager.getDefaultSharedPreferences(context).getBoolean("showNotifications", false))
+                    return;
+
+                // Ensure it is school-time but more accurately
+                if (nextPeriod >= timeTable.Lessons[dayOfWeek].length || timeTable.Lessons[dayOfWeek][nextPeriod] == null) {
+                    notificationManager.cancel(666);
+                    return;
+                }
+
+                Lesson nextLesson = timeTable.Lessons[dayOfWeek][nextPeriod];
+                Lesson lessonAfterThat = timeTable.Lessons[dayOfWeek].length > nextPeriod + 1 ? timeTable.Lessons[dayOfWeek][nextPeriod + 1] : null;
+
+
+                // Just don't show a notification if the next lesson is not taking place
+                if (!nextLesson.isTakingPlace()) {
+                    notificationManager.cancel(666);
+                    return; // TODO: Make it create a notification here, that says when the next lesson starts
+                }
+                Formatter formatter = new Formatter(context);
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.STATUS_CHANNEL_ID)
+                        .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
+                        .setContentTitle(String.format("%s %s mit %s bis %s",
+                                formatter.formatRoomName(nextLesson.Room),
+                                nextLesson.Subject,
+                                formatter.formatTeacherName(nextLesson.Teacher),
+                                nextLesson.EndTime))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setSilent(true);
+
+                if (lessonAfterThat != null && lessonAfterThat.isTakingPlace()) {
+                    builder.setContentText(String.format("Danach: %s %s mit %s",
+                            formatter.formatRoomName(lessonAfterThat.Room),
+                            lessonAfterThat.Subject,
+                            formatter.formatTeacherName(lessonAfterThat.Teacher)
+                    ));
+                }
+
+                notificationManager.notify(666, builder.build());
+
+            } catch (UserLoadException e) {
             }
-            manageShortTermChanges(timeTable);
-            //int dayOfWeek = 0;
-
-            if (!PreferenceManager.getDefaultSharedPreferences(context).getBoolean("showNotifications", false))
-                return;
-
-            // Ensure it is school-time but more accurately
-            if (nextPeriod >= timeTable.Lessons[dayOfWeek].length || timeTable.Lessons[dayOfWeek][nextPeriod] == null) {
-                notificationManager.cancel(666);
-                return;
-            }
-
-            Lesson nextLesson = timeTable.Lessons[dayOfWeek][nextPeriod];
-            Lesson lessonAfterThat = timeTable.Lessons[dayOfWeek].length > nextPeriod + 1 ? timeTable.Lessons[dayOfWeek][nextPeriod + 1] : null;
-
-
-            // Just don't show a notification if the next lesson is not taking place
-            if (!nextLesson.isTakingPlace()) {
-                notificationManager.cancel(666);
-                return; // TODO: Make it create a notification here, that says when the next lesson starts
-            }
-            Formatter formatter = new Formatter(context);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.STATUS_CHANNEL_ID)
-                    .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
-                    .setContentTitle(String.format("%s %s mit %s bis %s",
-                            formatter.formatRoomName(nextLesson.Room),
-                            nextLesson.Subject,
-                            formatter.formatTeacherName(nextLesson.Teacher),
-                            nextLesson.EndTime))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setSilent(true);
-
-            if (lessonAfterThat != null && lessonAfterThat.isTakingPlace()) {
-                builder.setContentText(String.format("Danach: %s %s mit %s",
-                        formatter.formatRoomName(lessonAfterThat.Room),
-                        lessonAfterThat.Subject,
-                        formatter.formatTeacherName(lessonAfterThat.Teacher)
-                ));
-            }
-
-            notificationManager.notify(666, builder.build());
-
-        } catch (UserLoadException e) {
-        }
+        }).start();
     }
 }
 
