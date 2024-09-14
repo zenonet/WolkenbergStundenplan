@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,12 +87,14 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
     Column(
         modifier.fillMaxSize(),
     ) {
-        val pagerState = rememberPagerState(0) {
+        val pagerState = rememberPagerState(1) {
             4
         }
         var isNextButtonEnabled by rememberSaveable {
             mutableStateOf(true)
         }
+
+        val coroutineScope = rememberCoroutineScope()
 
         HorizontalPager(
             state = pagerState,
@@ -106,14 +109,14 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                 when (it) {
                     0 -> {
                         Header("Willkommen!")
-                        Spacer(Modifier.height(10.dp))
                         Text("Diese App ist ein inoffizieller Client für den Stundenplan des Wolkenberg Gymnasiums in Michendorf.")
                         Spacer(Modifier.height(10.dp))
 
-                        ExpandableCard(header = { Text("Datenschutz") }) {
+                        ExpandableCard(header = { Text("Datenschutz-Informationen") }) {
                             Text(
                                 "Diese App sammelt keine persönlichen Daten von Dir. Allerdings muss sie, um Deinen Stundenplan abzurufen, mit Microsoft und der Stundenplan API kommunizieren." +
-                                        "Welche Daten bei der Nutzung der Stundenplan API erhoben werden ist jedoch unbekannt, da der offizielle Stundenplan-Client die Notwendigkeit einer Datenschutzerklärung gänzlich ingoriert."
+                                        "Welche Daten bei der Nutzung der Stundenplan API erhoben werden ist jedoch unbekannt, " +
+                                        "da der offizielle Stundenplan-Client die Notwendigkeit einer Datenschutzerklärung gänzlich ingoriert."
                             )
                         }
 
@@ -121,14 +124,22 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                     1 -> {
                         Header("Login")
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            "Um dich anzumelden, musst Du dich, innerhalb dieser App, bei der offiziellen WebApp anmelden." +
-                                    "Um dies zu tun, tippe auf 'Weiter'"
-                        )
-                        Spacer(Modifier.height(10.dp))
+                        Text("Damit die App deine Stundenplan-Daten laden kann, musst du dich mit deinem Schul-Microsoft-Account einloggen.")
 
-                        ExpandableCard(header = { Text("Funktionsweise") }) {
+                        Spacer(Modifier.height(15.dp))
+
+                        Text("Deine Login-Daten werden nicht gespeichert.\nDer Entwickler dieser App keinen Zugriff darauf.", fontSize = 10.sp, lineHeight = 15.sp)
+                        Spacer(Modifier.height(10.dp))
+                        Button(onClick = {
+                            // Go to the next page since that auto-triggers the login process
+                            coroutineScope.launch {
+                                pagerState.scrollToPage(pagerState.currentPage+1)
+                            }
+                        }) {
+                            Text("Login")
+                        }
+
+/*                        ExpandableCard(header = { Text("Wie funktioniert das?") }) {
                             Text(
                                 "Beim Login in der offiziellen WebApp (via Microsoft) entsteht ein OAuth Code. " +
                                         "Dies ist ein einmaliges Token, das der inoffizielle Client abfängt. " +
@@ -137,8 +148,10 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                         "Bei der Authentifizierung erhält der inoffizielle Stundenplan lediglich diese Tokens, NICHT DEIN PASSWORT."
                             )
                         }
-                        Spacer(Modifier.height(40.dp))
+ */
+                        Spacer(Modifier.height(80.dp))
 
+                        Header("Vorschau-Version")
                         Text("Wenn du die App nur ausprobieren willst, ohne dich einzuloggen, kannst du Dir auch einen vorgefertigten Stundenplan ansehen.")
                         Spacer(Modifier.height(10.dp))
                         Button(onClick = {
@@ -251,9 +264,8 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                 }
             }
         }
-
+/*
         Row(Modifier.padding(15.dp)) {
-            val coroutineScope = rememberCoroutineScope()
 
             Spacer(modifier = Modifier.weight(1f))
             Button(
@@ -266,7 +278,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
             ) {
                 Text("Weiter")
             }
-        }
+        }*/
 
     }
 }
@@ -274,6 +286,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 @Composable
 fun Header(text: String) {
     Text(text, fontSize = 22.sp)
+    Spacer(Modifier.height(10.dp))
 }
 
 @Composable
