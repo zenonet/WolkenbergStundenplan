@@ -30,6 +30,11 @@ import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.models.User;
 
 public class TimeTableApiClient {
+    /**
+     * Offset applied to counter values to allow re-fetching when the app version changed
+     */
+    private final int CounterOffset = 1;
+
     private String accessToken;
     public User user;
 
@@ -170,6 +175,7 @@ public class TimeTableApiClient {
 
             // Let's just assume this counter works like a big number with a few dashes between digits
             latestCounter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
+            latestCounter += CounterOffset;
             sharedPreferences.edit().putLong("counter", latestCounter).apply();
             isCounterConfirmed = true;
             return latestCounter;
