@@ -2,7 +2,6 @@ package de.zenonet.stundenplan.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -15,7 +14,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
 
 import android.os.Bundle;
@@ -255,7 +253,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 textView.setText(lesson.Text != null ? lesson.Text : "");
                 textView.setVisibility(lesson.Text == null ? View.GONE : View.VISIBLE);
 
-                if (!lesson.isTakingPlace())
+                if(lesson.Type == LessonType.Assignment)
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.assignment_substituted_lesson));
+                else if (!lesson.isTakingPlace())
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
                 else if (lesson.Type == LessonType.Substitution)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.substituted_lesson));

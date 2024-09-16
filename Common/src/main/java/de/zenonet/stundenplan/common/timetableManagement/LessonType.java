@@ -6,6 +6,7 @@ import androidx.annotation.Keep;
 public enum LessonType {
     Regular,
     Cancelled,
+    Assignment,
     Substitution,
     RoomSubstitution,
     Absent,

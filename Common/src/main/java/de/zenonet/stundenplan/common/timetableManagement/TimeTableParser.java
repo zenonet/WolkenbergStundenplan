@@ -138,6 +138,14 @@ public class TimeTableParser {
                         }
 
                         String type = substitution.getString("TYPE");
+
+                        if(type.equals("ASSIGNMENT"))
+                        {
+                            timeTable.Lessons[dayI][period].Text = "Aufgaben";
+                            timeTable.Lessons[dayI][period].Type = LessonType.Assignment;
+                            continue;
+                        }
+
                         if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
                             timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
                             continue;

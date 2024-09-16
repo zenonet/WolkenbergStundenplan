@@ -11,6 +11,7 @@
     <color name="gray_400">#FFBDBDBD</color>
     <color name="gray_600">#FF757575</color>
     <color name="cancelled_lesson">#8BC34A</color>
+    <color name="assignment_substituted_lesson">#FFC43B</color>
     <color name="substituted_lesson">#F44336</color>
     <color name="room_substituted_lesson">#FF29B6F6</color>
     <color name="regular_lesson">#ffffff</color>
