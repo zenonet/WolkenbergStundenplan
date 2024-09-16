@@ -13,7 +13,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -88,7 +86,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
         modifier.fillMaxSize(),
     ) {
         val pagerState = rememberPagerState(1) {
-            4
+            3
         }
         var isNextButtonEnabled by rememberSaveable {
             mutableStateOf(true)
@@ -173,7 +171,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                         var username by rememberSaveable {
                             mutableStateOf("")
                         }
-                        var state by remember {
+                        var loginState by remember {
                             mutableIntStateOf(0)
                         }
 
@@ -191,15 +189,14 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                                 try {
                                                     activity.userData = apiClient.getUser()
                                                     username = activity.userData!!.fullName
-                                                    state = 2
-                                                    isNextButtonEnabled = true
+                                                    loginState = 2
                                                 } catch (e: UserLoadException) {
-                                                    state = -2
+                                                    loginState = -2
                                                 }
                                             }
-                                            state = 1
+                                            loginState = 1
                                         } else {
-                                            state = -1
+                                            loginState = -1
                                         }
                                     }
                                 }
@@ -215,7 +212,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                         Header("Login")
 
-                        when (state) {
+                        when (loginState) {
                             0 -> {
                                 Text("Du wirst angemeldet...")
                             }
@@ -236,50 +233,33 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                 Text("Wilkommen $username!")
                                 Spacer(Modifier.height(10.dp))
                                 if(activity?.userData?.type == UserType.teacher){
-                                    Text("Ups, Sie sind ein Lehrer, aufgrund der Annahme es würde niemals ein Lehrer diese Anwendung benutzen, " +
+                                    Text("Ups, Sie sind ein Lehrer, aufgrund der Annahme, es würde niemals ein Lehrer diese Anwendung benutzen, " +
                                             "ist sie bis jetzt auch nicht darauf ausgelegt. Es könnte zu Fehlern kommen.")
-                                    Spacer(Modifier.height(10.dp))
+                                    Spacer(Modifier.height(15.dp))
                                 }
                                 Text("Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern", textAlign = TextAlign.Center)
+
+                                Spacer(Modifier.height(30.dp))
+                                Button(onClick = {
+                                    if(activity == null) return@Button
+
+                                    PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                                        .putBoolean("onboardingCompleted", true).apply()
+
+                                    // Open timetable view activity
+                                    val mainActivityIntent =
+                                        Intent(activity, TimeTableViewActivity::class.java)
+                                    activity.startActivity(mainActivityIntent)
+                                    activity.finish()
+                                }){
+                                    Text("Weiter")
+                                }
                             }
                         }
-                    }
-
-                    3 -> {
-                        Header("Fertig!")
-                        Text("Du solltest gleich zur Stundenplan-Anzeige weitergeleitet werden...")
-                        if (activity != null)
-                            LaunchedEffect(key1 = null) {
-                                isNextButtonEnabled = false;
-
-                                PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                                    .putBoolean("onboardingCompleted", true).apply()
-
-                                val mainActivityIntent =
-                                    Intent(activity, TimeTableViewActivity::class.java)
-                                activity.startActivity(mainActivityIntent)
-                                activity.finish()
-                            }
                     }
                 }
             }
         }
-/*
-        Row(Modifier.padding(15.dp)) {
-
-            Spacer(modifier = Modifier.weight(1f))
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.scrollToPage(pagerState.currentPage+1)
-                    }
-                },
-                enabled = isNextButtonEnabled
-            ) {
-                Text("Weiter")
-            }
-        }*/
-
     }
 }
 
