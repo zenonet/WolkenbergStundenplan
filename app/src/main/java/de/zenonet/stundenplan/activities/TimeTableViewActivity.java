@@ -1,5 +1,7 @@
 package de.zenonet.stundenplan.activities;
 
+import static com.google.common.collect.ComparisonChain.start;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -14,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
 
 import android.os.Bundle;
@@ -28,6 +31,8 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
+import de.zenonet.stundenplan.NonCrucialComposeUiKt;
+import de.zenonet.stundenplan.NonCrucialViewModel;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
@@ -42,6 +47,7 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.common.Utils;
+import kotlinx.coroutines.Dispatchers;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
@@ -60,12 +66,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private Formatter formatter;
     private final View.OnClickListener onClickListener = view -> {
         // id = 666 + dayI*9 + periodI
-        int id = view.getId()-666;
+        int id = view.getId() - 666;
         int day = id / 9;
-        int period = id - 9*day;
+        int period = id - 9 * day;
 
         // period > 7 is some weird stuff we don't want
-        if(period > 7) return;
+        if (period > 7) return;
 
         onLessonClicked(day, period);
     };
@@ -105,7 +111,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         nextWeekButton = findViewById(R.id.nextWeekButton);
         currentWeekButton = findViewById(R.id.currentWeekButton);
 
-        if(isPreview){
+        if (isPreview) {
             previousWeekButton.setEnabled(false);
             nextWeekButton.setEnabled(false);
         }
@@ -129,7 +135,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             loadTimeTableAsync();
         });
 
-        if(isPreview)
+        if (isPreview)
             loadPreviewTimeTable();
     }
 
@@ -208,6 +214,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
 
     private PopupWindow popupWindow;
+
     private void updateTimeTableView(TimeTable timeTable) {
 
         String stateText;
@@ -240,7 +247,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 Lesson lesson = periodI < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI] : null;
 
                 lessonView.setVisibility(lesson == null ? View.INVISIBLE : View.VISIBLE);
-                if(lesson == null) continue;
+                if (lesson == null) continue;
 
 
                 TextView subjectView = (TextView) lessonView.getChildAt(0);
@@ -254,7 +261,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 textView.setText(lesson.Text != null ? lesson.Text : "");
                 textView.setVisibility(lesson.Text == null ? View.GONE : View.VISIBLE);
 
-                if(lesson.Type == LessonType.Assignment)
+                if (lesson.Type == LessonType.Assignment)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.assignment_substituted_lesson));
                 else if (!lesson.isTakingPlace())
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
@@ -286,7 +293,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
         updateDayDisplayForWeek(selectedWeek);
 
-        //loadNonCrucialUi();
+        if (!nonCrucialUiLoaded && !isLoadingNonCrucialUi) {
+            isLoadingNonCrucialUi = true;
+            // Ensure non-crucial-ui is not loaded synchronously here
+            new Thread(() -> runOnUiThread(this::loadNonCrucialUi)).start();
+        }
 
         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart());
     }
@@ -328,7 +339,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
     }
 
-    private void onLessonClicked(int dayOfWeek, int period){
+    private void onLessonClicked(int dayOfWeek, int period) {
         Log.d(LogTags.Debug, String.format("Tapped on day %d at period %d", dayOfWeek, period));
     }
 
@@ -365,7 +376,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             for (int dayI = 0; dayI < 5; dayI++) {
 
                 LinearLayout lessonLayout = new LinearLayout(this);
-                lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH/4, lessonTextPaddingV);
+                lessonLayout.setPadding(lessonTextPaddingH, lessonTextPaddingV, lessonTextPaddingH / 4, lessonTextPaddingV);
                 lessonLayout.setOrientation(LinearLayout.VERTICAL);
                 lessonLayout.setMinimumWidth(widthPerRow);
                 row.addView(lessonLayout);
@@ -420,27 +431,32 @@ public class TimeTableViewActivity extends AppCompatActivity {
             updateTimeTableView(loadingTimeTableReference.get());
         }
     }
+
     private SharedPreferences getSharedPreferences() {
         return PreferenceManager.getDefaultSharedPreferences(this);
         //return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
     }
 
+    private boolean nonCrucialUiLoaded = false;
+
+    private boolean isLoadingNonCrucialUi = false;
     private void loadNonCrucialUi() {
 
-/*        ComposeView cv = findViewById(987);
-        if(cv == null) {
+        Log.i(LogTags.Timing, String.format("Time from application start to started loading non-crucial-ui : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+
+        ComposeView cv = findViewById(987);
+        if (cv == null) {
             LinearLayout l = findViewById(R.id.mainViewGroup);
             cv = new ComposeView(this);
             cv.setId(987);
             l.addView(cv);
         }
-        NonCrucialComposeUiKt.applyUiToComposeView(cv, new NonCrucialViewModel());*/
-        /*
-        getSupportFragmentManager().beginTransaction().add(R.id.fragmentContainer, NonCrucialUiFragment.class, null).commit();
+        NonCrucialComposeUiKt.applyUiToComposeView(cv, new NonCrucialViewModel());
         nonCrucialUiLoaded = true;
 
         Log.i(LogTags.Timing, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
-    */
+
+
     }
 
 }

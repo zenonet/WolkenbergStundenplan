@@ -70,6 +70,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
     implementation("androidx.wear:wear-remote-interactions:1.0.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose-android:2.8.5")
     // implementation ("com.android.support:appcompat-v7:23.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
