@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.Utils;
 
 public class RawTimeTableCacheClient {
@@ -21,14 +22,14 @@ public class RawTimeTableCacheClient {
 
             File timetableFile = new File(Utils.CachePath, "/raw/timetable.json");
 
-            Log.v(Utils.LOG_TAG, "saving raw timetable data...");
+            Log.v(LogTags.Caching, "saving raw timetable data...");
             try (FileOutputStream out = new FileOutputStream(timetableFile)) {
                 out.write(json.getBytes(StandardCharsets.UTF_8));
             }
 
             File substitutionsFile = new File(Utils.CachePath, "/raw/substitutions.json");
 
-            Log.v(Utils.LOG_TAG, "saving raw substitutions data...");
+            Log.v(LogTags.Caching, "saving raw substitutions data...");
             try (FileOutputStream out = new FileOutputStream(substitutionsFile)) {
                 out.write(substitutionsJson.getBytes(StandardCharsets.UTF_8));
             }

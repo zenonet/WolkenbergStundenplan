@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.QuoteLoadedCallback;
 
@@ -120,7 +121,7 @@ public class QuoteProvider {
             }
 
         } catch (IOException e) {
-            Log.e(Utils.LOG_TAG, e.toString());
+            Log.e(LogTags.Debug, e.toString());
         }
 
     }

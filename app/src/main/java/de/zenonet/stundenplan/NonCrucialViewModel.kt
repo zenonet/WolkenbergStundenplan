@@ -3,6 +3,7 @@ package de.zenonet.stundenplan
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
@@ -36,7 +37,7 @@ class NonCrucialViewModel(private val quote: Quote? = null) : ViewModel() {
             }
             withContext(Dispatchers.Main){
                 _quoteOfTheDay.value = q
-                Log.i(Utils.LOG_TAG, "Assigned quote to state")
+                Log.i(LogTags.Debug, "Assigned quote to state")
             }
         }
 

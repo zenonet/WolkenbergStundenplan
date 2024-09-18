@@ -8,6 +8,7 @@ import androidx.wear.complications.data.ComplicationData
 import androidx.wear.complications.data.ComplicationType
 import androidx.wear.complications.data.PlainComplicationText
 import androidx.wear.complications.data.ShortTextComplicationData
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
@@ -52,7 +53,7 @@ class SubjectShortnameComplicationService : ComplicationProviderService() {
                 timetable = manager.getCurrentTimeTable()
             }
 
-            Log.i(Utils.LOG_TAG, "Successfully loaded current timetable for subject complication")
+            Log.i(LogTags.Complications, "Successfully loaded current timetable for subject complication")
 
             if (currentPeriod >= timetable.Lessons[dayOfWeek].size) {
                 listener.onComplicationData(null)
@@ -61,7 +62,7 @@ class SubjectShortnameComplicationService : ComplicationProviderService() {
 
             val text = timetable.Lessons[dayOfWeek][currentPeriod].SubjectShortName
 
-            Log.i(Utils.LOG_TAG, "Setting complication value '$text'")
+            Log.i(LogTags.Complications, "Setting complication value '$text'")
             val data = when (request.complicationType) {
 
                 ComplicationType.SHORT_TEXT -> ShortTextComplicationData.Builder(

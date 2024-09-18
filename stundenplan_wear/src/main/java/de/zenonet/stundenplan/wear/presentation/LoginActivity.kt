@@ -45,6 +45,7 @@ import com.google.android.gms.tasks.Tasks.await
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
 
@@ -56,7 +57,6 @@ class LoginActivity : ComponentActivity() {
 
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            Log.i(Utils.LOG_TAG, "Open on phone animation completed")
             isShowingContinueOnPhoneAnimation.value = false
         }
 
@@ -84,7 +84,7 @@ class LoginActivity : ComponentActivity() {
             val connectedNodes = Tasks.await(nodeClient.connectedNodes)
             if (connectedNodes.isEmpty()) {
                 callback?.invoke(1)
-                Log.i(Utils.LOG_TAG, "No connected nodes available")
+                Log.i(LogTags.Login, "No connected nodes available")
                 return@Thread;
             }
 
@@ -97,7 +97,6 @@ class LoginActivity : ComponentActivity() {
 
 
             val localNodeId = await(nodeClient.localNode).id
-            ///Log.i(Utils.LOG_TAG, "Local node id is $localNodeId")
 
             val remoteIntent = Intent(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_DEFAULT)
@@ -111,7 +110,7 @@ class LoginActivity : ComponentActivity() {
             try {
                 val remoteActivityHelper = RemoteActivityHelper(this)
                 val selectedNode = capableNodes.iterator().next()
-                Log.i(Utils.LOG_TAG, "Starting remote login activity on ${selectedNode.displayName}")
+                Log.i(LogTags.Login, "Starting remote login activity on ${selectedNode.displayName}")
                 remoteActivityHelper.startRemoteActivity(remoteIntent, targetNodeId = selectedNode.id)
                 showContinueOnPhone()
                 isShowingContinueOnPhoneAnimation.value = true

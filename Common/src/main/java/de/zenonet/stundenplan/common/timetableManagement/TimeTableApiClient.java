@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
@@ -75,7 +76,7 @@ public class TimeTableApiClient {
 
             int respCode = httpCon.getResponseCode();
             if (respCode != 200) {
-                Log.e(Utils.LOG_TAG, String.format("Unable to load personal data: Response code %d", respCode));
+                Log.e(LogTags.Api, String.format("Unable to load personal data: Response code %d", respCode));
             }
 
             user = new Gson().fromJson(new InputStreamReader(httpCon.getInputStream()), User.class);
@@ -103,7 +104,7 @@ public class TimeTableApiClient {
             int respCode = httpCon.getResponseCode();
 
             if (respCode != 200) {
-                Log.e(Utils.LOG_TAG, "Login unsuccessful:" + httpCon.getResponseMessage());
+                Log.e(LogTags.Api, "Login unsuccessful:" + httpCon.getResponseMessage());
                 throw new ApiLoginException();
             }
 
@@ -115,7 +116,7 @@ public class TimeTableApiClient {
             sharedPreferences.edit().putString("refreshToken", jObj.getString("refresh_token")).apply();
             accessToken = jObj.getString("access_token");
             isLoggedIn = true;
-            Log.i(Utils.LOG_TAG, "Logged in successfully");
+            Log.i(LogTags.Login, "Logged in successfully");
         } catch (IOException | JSONException e) {
             throw new ApiLoginException();
         }
@@ -140,7 +141,7 @@ public class TimeTableApiClient {
                 os.close();
 
                 int respCode = httpCon.getResponseCode();
-                Log.i(Utils.LOG_TAG, "Get response code " + respCode + " while redeeming OAuth code");
+                Log.i(LogTags.Api, "Get response code " + respCode + " while redeeming OAuth code");
 
                 String body = Utils.readAllFromStream(httpCon.getInputStream());
                 JSONObject jObj = new JSONObject(body);

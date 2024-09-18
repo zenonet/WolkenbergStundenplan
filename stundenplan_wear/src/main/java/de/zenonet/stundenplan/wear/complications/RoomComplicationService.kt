@@ -8,6 +8,7 @@ import androidx.wear.complications.data.ComplicationData
 import androidx.wear.complications.data.ComplicationType
 import androidx.wear.complications.data.PlainComplicationText
 import androidx.wear.complications.data.ShortTextComplicationData
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
@@ -51,7 +52,7 @@ class RoomComplicationService : ComplicationProviderService() {
                 timetable = manager.getCurrentTimeTable()
             }
 
-            Log.i(Utils.LOG_TAG, "Successfully loaded current timetable for room complication")
+            Log.i(LogTags.Complications, "Successfully loaded current timetable for room complication")
             if (currentPeriod >= timetable.Lessons[dayOfWeek].size) {
                 listener.onComplicationData(null)
                 return@Thread
@@ -59,7 +60,7 @@ class RoomComplicationService : ComplicationProviderService() {
 
             val text = timetable.Lessons[dayOfWeek][currentPeriod].Room
 
-            Log.i(Utils.LOG_TAG, "Setting complication value '$text'")
+            Log.i(LogTags.Complications, "Setting complication value '$text'")
             val data = when (request.complicationType) {
 
                 ComplicationType.SHORT_TEXT -> ShortTextComplicationData.Builder(
@@ -70,18 +71,13 @@ class RoomComplicationService : ComplicationProviderService() {
                     .build()
 
                 else -> {
-                    if (Log.isLoggable(TAG, Log.WARN)) {
-                        Log.w(TAG, "Unexpected complication type ${request.complicationType}")
+                    if (Log.isLoggable(LogTags.Complications, Log.WARN)) {
+                        Log.w(LogTags.Complications, "Unexpected complication type ${request.complicationType}")
                     }
                     null
                 }
             }
             listener.onComplicationData(data)
         }.start()
-    }
-
-
-    companion object {
-        private const val TAG = "MyComplications"
     }
 }

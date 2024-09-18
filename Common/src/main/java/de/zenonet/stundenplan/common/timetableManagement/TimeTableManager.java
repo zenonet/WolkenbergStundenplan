@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
@@ -64,7 +65,7 @@ public class TimeTableManager implements TimeTableClient {
             if (!lookup.isLookupDataAvailable())
                 apiClient.fetchMasterData();
         } catch (ApiLoginException e) {
-            Log.i(Utils.LOG_TAG, "Unable to log into API");
+            Log.i(LogTags.Api, "Unable to log into API");
         } catch (DataNotAvailableException e) {
             throw new RuntimeException(e);
         }
@@ -90,18 +91,18 @@ public class TimeTableManager implements TimeTableClient {
                 Thread masterDataFetchThread = getMasterDataFetchThread(masterDataChanged);
 
                 rawData = apiClient.getRawDataFromApi();
-                Log.i(Utils.LOG_TAG, "Fetched raw timetable data");
+                Log.i(LogTags.Api, "Fetched raw timetable data");
                 masterDataFetchThread.join();
 
                 // If master data changed, re-fetch user data since it might have changed
                 if (masterDataChanged[0] == 1) {
-                    Log.i(Utils.LOG_TAG, "Detected change in master data");
+                    Log.i(LogTags.Api, "Detected change in master data");
                     int oldUserId = user.id;
                     fetchUser();
 
                     // If the user id changed (yeah, that actually happens)
                     if(oldUserId != user.id){
-                        Log.i(Utils.LOG_TAG, "Detected change in user id, re-fetching...");
+                        Log.i(LogTags.Api, "Detected change in user id, re-fetching...");
                         // We need to re-fetch raw timetable data
                         rawData = apiClient.getRawDataFromApi();
                     }
@@ -134,7 +135,7 @@ public class TimeTableManager implements TimeTableClient {
         TimeTable timeTable = parser.parseWeek(rawData.first, rawData.second, week);
         Instant t1 = Instant.now();
         long ms = ChronoUnit.MILLIS.between(t0, t1);
-        Log.i(Utils.LOG_TAG, "Parsing for week " + week + " took " + ms + "ms");
+        Log.i(LogTags.Timing, "Parsing for week " + week + " took " + ms + "ms");
 
         timeTable.source = source;
         timeTable.CounterValue = counter;
@@ -147,7 +148,7 @@ public class TimeTableManager implements TimeTableClient {
             // We also need to check if the lookup data changed (there is no indicator for that, meaning we have to run the ~100ms request every time)
             try {
                 masterDataChanged[0] = apiClient.fetchMasterData() ? (byte)1 : 0;
-                Log.i(Utils.LOG_TAG, "Re-fetched master data");
+                Log.i(LogTags.Api, "Re-fetched master data");
             } catch (DataNotAvailableException e) {
                 masterDataChanged[0] = (byte)-1;
             }

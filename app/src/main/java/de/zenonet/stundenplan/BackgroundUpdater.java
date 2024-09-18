@@ -26,6 +26,7 @@ import java.util.Objects;
 import de.zenonet.stundenplan.activities.TimeTableViewActivity;
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.Formatter;
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
@@ -82,7 +83,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
             preferences.edit().putLong("shortTermChanges_lastHashCode", timeTable.CounterValue).apply();
             Utils.writeAllText(cacheFile, new Gson().toJson(timeTable));
         } catch (IOException | SecurityException e) {
-            Log.e(Utils.LOG_TAG, e.getMessage());
+            Log.e(LogTags.BackgroundWork, e.getMessage());
         }
     }
 

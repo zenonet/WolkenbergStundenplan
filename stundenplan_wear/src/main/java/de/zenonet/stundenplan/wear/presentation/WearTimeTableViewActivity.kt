@@ -49,6 +49,7 @@ import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import de.zenonet.stundenplan.common.Formatter
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StatisticsManager
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
@@ -85,7 +86,7 @@ class WearTimeTableViewActivity : ComponentActivity() {
         }
 
         Log.i(
-            Utils.LOG_TAG,
+            LogTags.UI,
             "Time to setting content ${StundenplanApplication.getMillisSinceAppStart()}ms"
         )
         setContent {

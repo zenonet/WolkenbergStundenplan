@@ -32,6 +32,7 @@ import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.Formatter;
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.StatisticsManager;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
@@ -181,11 +182,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                     }
                                     if (!timeTableLoaded)
                                         if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
-                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                            Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         else if (timeTable.isCacheStateConfirmed) {
-                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to cached timetable confirmed: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                            Log.i(LogTags.Timing, String.format("Time from app start to cached timetable confirmed: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         } else {
-                                            Log.i(Utils.LOG_TAG, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                            Log.i(LogTags.Timing, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                         }
                                     timeTableLoaded = true;
                                     currentTimeTable = timeTable;
@@ -280,7 +281,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }*/
 
         if (isInitialLoad) {
-            Log.i(Utils.LOG_TAG, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+            Log.i(LogTags.Timing, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
             isInitialLoad = false;
         }
         updateDayDisplayForWeek(selectedWeek);
@@ -328,7 +329,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void onLessonClicked(int dayOfWeek, int period){
-        Log.d(Utils.LOG_TAG, String.format("Tapped on day %d at period %d", dayOfWeek, period));
+        Log.d(LogTags.Debug, String.format("Tapped on day %d at period %d", dayOfWeek, period));
     }
 
 
@@ -411,11 +412,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
             table.addView(row);
         }
 
-        Log.i(Utils.LOG_TAG, String.format("Time from application start to timetable view generated: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+        Log.i(LogTags.Timing, String.format("Time from application start to timetable view generated: %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
         // If the cached version is available already, update the view directly
         if (loadingTimeTableReference != null && loadingTimeTableReference.get() != null) {
-            Log.i(Utils.LOG_TAG, "Updating view directly after creating it.");
+            Log.i(LogTags.UI, "Updating view directly after creating it.");
             updateTimeTableView(loadingTimeTableReference.get());
         }
     }
@@ -438,7 +439,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().add(R.id.fragmentContainer, NonCrucialUiFragment.class, null).commit();
         nonCrucialUiLoaded = true;
 
-        Log.i(Utils.LOG_TAG, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+        Log.i(LogTags.Timing, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
     */
     }
 

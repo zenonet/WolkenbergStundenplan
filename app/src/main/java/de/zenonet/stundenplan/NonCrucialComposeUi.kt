@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 
@@ -38,7 +39,7 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                 viewModel.loadQuoteOfTheDay()
             }
 
-            Log.i(Utils.LOG_TAG, "Recompositon")
+            Log.i(LogTags.Debug, "Recompositon")
             val state: Quote? = viewModel.quoteOfTheDay.collectAsState().value
 
             if (state == null)

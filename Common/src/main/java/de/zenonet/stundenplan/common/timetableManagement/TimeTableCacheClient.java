@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Hashtable;
 
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Utils;
@@ -58,7 +59,7 @@ public class TimeTableCacheClient implements TimeTableClient {
             insertTimes(timeTable);
             return timeTable;
         } catch (Exception e) {
-            Log.e(Utils.LOG_TAG, e.getMessage());
+            Log.e(LogTags.Caching, e.getMessage());
             throw new TimeTableLoadException(e);
         }
     }
@@ -110,7 +111,7 @@ public class TimeTableCacheClient implements TimeTableClient {
     public void cacheCurrentTimetable(TimeTable timeTable) {
         try {
 
-            Log.i(Utils.LOG_TAG, "Caching timetable...");
+            Log.i(LogTags.Caching, "Caching timetable...");
             String json = new Gson().toJson(timeTable);
             File cacheFile = new File(Utils.CachePath, "/timetable.json");
 
@@ -129,7 +130,7 @@ public class TimeTableCacheClient implements TimeTableClient {
     public void cacheTimetableForWeek(int week, TimeTable timetable) {
         try {
 
-            Log.i(Utils.LOG_TAG, "Caching timetable for week " + week + "...");
+            Log.i(LogTags.Caching, "Caching timetable for week " + week + "...");
             String json = new Gson().toJson(timetable);
             File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
 
@@ -188,7 +189,7 @@ public class TimeTableCacheClient implements TimeTableClient {
         try {
             File userFile = new File(dataPath, "/user.json");
 
-            Log.v(Utils.LOG_TAG, "saving user data...");
+            Log.v(LogTags.Caching, "saving user data...");
             try (FileOutputStream out = new FileOutputStream(userFile)) {
                 out.write(new Gson().toJson(user).getBytes(StandardCharsets.UTF_8));
             }

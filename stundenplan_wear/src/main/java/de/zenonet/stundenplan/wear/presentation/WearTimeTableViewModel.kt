@@ -14,6 +14,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import de.zenonet.stundenplan.common.Formatter
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
@@ -71,7 +72,7 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
         }
 
         Log.i(
-            Utils.LOG_TAG,
+            LogTags.Timing,
             "Time from app start to timetable load start: ${
                 ChronoUnit.MILLIS.between(
                     StundenplanApplication.applicationEntrypointInstant!!,
@@ -82,11 +83,11 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
 
         timeTableManager!!.getTimeTableAsyncWithAdjustments(weekOfYear) {
             if(it == null) {
-                Log.i(Utils.LOG_TAG, "Got null timetable")
+                Log.i(LogTags.Debug, "Got null timetable")
                 return@getTimeTableAsyncWithAdjustments
             }
             Log.i(
-                Utils.LOG_TAG,
+                LogTags.Timing,
                 "Got timetable from ${it.source}${if (it.isCacheStateConfirmed) " (confirmed)" else ""} (${
                     ChronoUnit.MILLIS.between(
                         StundenplanApplication.applicationEntrypointInstant!!,

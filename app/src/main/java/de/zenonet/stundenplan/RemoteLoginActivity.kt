@@ -38,6 +38,7 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.activities.LoginActivity
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
@@ -119,11 +120,11 @@ class RemoteLoginActivity : ComponentActivity() {
                 }
                 val result = dataClient.putDataItem(request).await()
 
-                Log.d(Utils.LOG_TAG, "DataItem saved: $result")
+                Log.d(LogTags.Login, "DataItem saved: $result")
             } catch (cancellationException: CancellationException) {
                 throw cancellationException
             } catch (exception: Exception) {
-                Log.d(Utils.LOG_TAG, "Saving DataItem failed: $exception")
+                Log.d(LogTags.Login, "Saving DataItem failed: $exception")
             }
             Toast.makeText(this@RemoteLoginActivity, "Login sent!", Toast.LENGTH_SHORT).show()
             finish()
