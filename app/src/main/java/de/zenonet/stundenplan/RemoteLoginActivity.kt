@@ -40,6 +40,7 @@ import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.activities.LoginActivity
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
@@ -72,12 +73,19 @@ class RemoteLoginActivity : ComponentActivity() {
                     val code = data.getStringExtra("code")
                     val apiClient = TimeTableApiClient()
                     apiClient.init(this)
-                    apiClient.redeemOAuthCodeAsync(code) {
-                        try {
-                            sendRefreshToken()
-                        } catch (e: UserLoadException) {
+                    apiClient.redeemOAuthCodeAsync(code, object:AuthCodeRedeemedCallback {
+
+
+                        override fun authCodeRedeemed() {
+                            try {
+                                sendRefreshToken()
+                            } catch (e: UserLoadException) {
+                            }                        }
+
+                        override fun errorOccurred(message: String?) {
+                            TODO("Not yet implemented")
                         }
-                    }
+                    })
                 }
             }
         }

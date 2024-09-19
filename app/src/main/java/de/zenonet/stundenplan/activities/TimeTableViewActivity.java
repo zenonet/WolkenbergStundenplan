@@ -1,7 +1,5 @@
 package de.zenonet.stundenplan.activities;
 
-import static com.google.common.collect.ComparisonChain.start;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -31,7 +29,7 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-import de.zenonet.stundenplan.NonCrucialComposeUiKt;
+import de.zenonet.stundenplan.NonCrucialUiKt;
 import de.zenonet.stundenplan.NonCrucialViewModel;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
@@ -48,7 +46,6 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.common.Utils;
-import kotlinx.coroutines.Dispatchers;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
@@ -460,7 +457,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             cv.setId(987);
             l.addView(cv);
         }
-        NonCrucialComposeUiKt.applyUiToComposeView(cv, new NonCrucialViewModel(manager, null));
+        NonCrucialUiKt.applyUiToComposeView(cv, new NonCrucialViewModel(manager, null));
         nonCrucialUiLoaded = true;
 
         Log.i(LogTags.Timing, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
