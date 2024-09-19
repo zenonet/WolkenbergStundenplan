@@ -180,6 +180,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                         var loginState by remember {
                             mutableIntStateOf(0)
                         }
+                        var errorMsg by remember { mutableStateOf("") }
 
                         if (activity != null)
                             LaunchedEffect(null) {
@@ -204,7 +205,8 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                                 }
 
                                                 override fun errorOccurred(message: String?) {
-                                                    TODO("Not yet implemented")
+                                                    loginState = -1
+                                                    if(message != null) errorMsg = message
                                                 }
 
                                             })
@@ -232,7 +234,8 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                             }
 
                             -1 -> {
-                                Text("Es ist ein Fehler beim Login aufgetreten")
+                                Text("Es ist ein Fehler beim Login aufgetreten:")
+                                Text(errorMsg)
                             }
 
                             -2 -> {
