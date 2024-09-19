@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.preference.PreferenceManager
 import de.zenonet.stundenplan.activities.LoginActivity
 import de.zenonet.stundenplan.activities.TimeTableViewActivity
+import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback
 import de.zenonet.stundenplan.common.models.User
 import de.zenonet.stundenplan.common.models.UserType
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient
@@ -126,39 +127,44 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                         Spacer(Modifier.height(15.dp))
 
-                        Text("Deine Login-Daten werden nicht gespeichert.\nDer Entwickler dieser App keinen Zugriff darauf.", fontSize = 10.sp, lineHeight = 15.sp)
+                        Text(
+                            "Deine Login-Daten werden nicht gespeichert.\nDer Entwickler dieser App keinen Zugriff darauf.",
+                            fontSize = 10.sp,
+                            lineHeight = 15.sp
+                        )
                         Spacer(Modifier.height(10.dp))
                         Button(onClick = {
                             // Go to the next page since that auto-triggers the login process
                             coroutineScope.launch {
-                                pagerState.scrollToPage(pagerState.currentPage+1)
+                                pagerState.scrollToPage(pagerState.currentPage + 1)
                             }
                         }) {
                             Text("Login")
                         }
 
-/*                        ExpandableCard(header = { Text("Wie funktioniert das?") }) {
-                            Text(
-                                "Beim Login in der offiziellen WebApp (via Microsoft) entsteht ein OAuth Code. " +
-                                        "Dies ist ein einmaliges Token, das der inoffizielle Client abfängt. " +
-                                        "Damit kann er dann ein refreshToken generieren, aus dem er immer wieder neue accessTokens " +
-                                        "generieren kann.\nDiese accessTokens ermöglichen es, den Stundenplan einzusehen.\n" +
-                                        "Bei der Authentifizierung erhält der inoffizielle Stundenplan lediglich diese Tokens, NICHT DEIN PASSWORT."
-                            )
-                        }
- */
+                        /*                        ExpandableCard(header = { Text("Wie funktioniert das?") }) {
+                                                    Text(
+                                                        "Beim Login in der offiziellen WebApp (via Microsoft) entsteht ein OAuth Code. " +
+                                                                "Dies ist ein einmaliges Token, das der inoffizielle Client abfängt. " +
+                                                                "Damit kann er dann ein refreshToken generieren, aus dem er immer wieder neue accessTokens " +
+                                                                "generieren kann.\nDiese accessTokens ermöglichen es, den Stundenplan einzusehen.\n" +
+                                                                "Bei der Authentifizierung erhält der inoffizielle Stundenplan lediglich diese Tokens, NICHT DEIN PASSWORT."
+                                                    )
+                                                }
+                         */
                         Spacer(Modifier.height(80.dp))
 
                         Header("Vorschau-Version")
                         Text("Wenn du die App nur ausprobieren willst, ohne dich einzuloggen, kannst du Dir auch einen vorgefertigten Stundenplan ansehen.")
                         Spacer(Modifier.height(10.dp))
                         Button(onClick = {
-                            if(activity == null) return@Button
+                            if (activity == null) return@Button
 
                             PreferenceManager.getDefaultSharedPreferences(activity).edit()
                                 .putBoolean("showPreview", true).apply()
 
-                            val mainActivityIntent = Intent(activity, TimeTableViewActivity::class.java)
+                            val mainActivityIntent =
+                                Intent(activity, TimeTableViewActivity::class.java)
                             activity.startActivity(mainActivityIntent)
                             activity.finish()
 
@@ -185,15 +191,23 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                             val apiClient = TimeTableApiClient()
                                             apiClient.init(activity)
                                             val code = data.getStringExtra("code")
-                                            apiClient.redeemOAuthCodeAsync(code) {
-                                                try {
-                                                    activity.userData = apiClient.getUser()
-                                                    username = activity.userData!!.fullName
-                                                    loginState = 2
-                                                } catch (e: UserLoadException) {
-                                                    loginState = -2
+                                            apiClient.redeemOAuthCodeAsync(code, object :
+                                                AuthCodeRedeemedCallback {
+                                                override fun authCodeRedeemed() {
+                                                    try {
+                                                        activity.userData = apiClient.getUser()
+                                                        username = activity.userData!!.fullName
+                                                        loginState = 2
+                                                    } catch (e: UserLoadException) {
+                                                        loginState = -2
+                                                    }
                                                 }
-                                            }
+
+                                                override fun errorOccurred(message: String?) {
+                                                    TODO("Not yet implemented")
+                                                }
+
+                                            })
                                             loginState = 1
                                         } else {
                                             loginState = -1
@@ -232,16 +246,21 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                             2 -> {
                                 Text("Wilkommen $username!")
                                 Spacer(Modifier.height(10.dp))
-                                if(activity?.userData?.type == UserType.teacher){
-                                    Text("Ups, Sie sind ein Lehrer, aufgrund der Annahme, es würde niemals ein Lehrer diese Anwendung benutzen, " +
-                                            "ist sie bis jetzt auch nicht darauf ausgelegt. Es könnte zu Fehlern kommen.")
+                                if (activity?.userData?.type == UserType.teacher) {
+                                    Text(
+                                        "Ups, Sie sind ein Lehrer, aufgrund der Annahme, es würde niemals ein Lehrer diese Anwendung benutzen, " +
+                                                "ist sie bis jetzt auch nicht darauf ausgelegt. Es könnte zu Fehlern kommen."
+                                    )
                                     Spacer(Modifier.height(15.dp))
                                 }
-                                Text("Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern", textAlign = TextAlign.Center)
+                                Text(
+                                    "Beim ersten Mal kann das Laden des Stundenplans etwas länger dauern",
+                                    textAlign = TextAlign.Center
+                                )
 
                                 Spacer(Modifier.height(30.dp))
                                 Button(onClick = {
-                                    if(activity == null) return@Button
+                                    if (activity == null) return@Button
 
                                     PreferenceManager.getDefaultSharedPreferences(activity).edit()
                                         .putBoolean("onboardingCompleted", true).apply()
@@ -251,7 +270,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                         Intent(activity, TimeTableViewActivity::class.java)
                                     activity.startActivity(mainActivityIntent)
                                     activity.finish()
-                                }){
+                                }) {
                                     Text("Weiter")
                                 }
                             }

@@ -40,6 +40,7 @@ import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.StatisticsManager;
 import de.zenonet.stundenplan.common.TimeTableSource;
+import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
 import de.zenonet.stundenplan.common.StundenplanApplication;
@@ -157,13 +158,21 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         if (data != null) {
                             initializeTimeTableManagement();
                             String code = data.getStringExtra("code");
-                            manager.apiClient.redeemOAuthCodeAsync(code, () -> {
-                                try {
-                                    manager.login();
-                                    manager.getUser();
-                                } catch (UserLoadException e) {
+                            manager.apiClient.redeemOAuthCodeAsync(code, new AuthCodeRedeemedCallback() {
+                                @Override
+                                public void authCodeRedeemed() {
+                                    try {
+                                        manager.login();
+                                        manager.getUser();
+                                    } catch (UserLoadException e) {
+                                    }
+                                    loadTimeTableAsync();
                                 }
-                                loadTimeTableAsync();
+
+                                @Override
+                                public void errorOccurred(String message) {
+                                    // TODO
+                                }
                             });
                         }
                     }

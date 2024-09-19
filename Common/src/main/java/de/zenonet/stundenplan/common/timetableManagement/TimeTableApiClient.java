@@ -22,6 +22,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Locale;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.LogTags;
@@ -122,12 +123,13 @@ public class TimeTableApiClient {
         }
     }
 
-    public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback) {
+    public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback){
         new Thread(() -> {
             HttpURLConnection httpCon;
             try {
                 URL url = new URL("https://www.wolkenberg-gymnasium.de/wolkenberg-app/api/token");
                 httpCon = (HttpURLConnection) url.openConnection();
+                httpCon.setRequestMethod("POST");
                 httpCon.setRequestProperty("Content-Type", "application/json");
                 httpCon.setRequestProperty("referer", "https://www.wolkenberg-gymnasium.de/wolkenberg-app/stundenplan-web-app/");
                 httpCon.setDoOutput(true);
@@ -143,6 +145,11 @@ public class TimeTableApiClient {
                 int respCode = httpCon.getResponseCode();
                 Log.i(LogTags.Api, "Get response code " + respCode + " while redeeming OAuth code");
 
+                if(respCode != 200){
+                    callback.errorOccurred(String.format(Locale.GERMAN, "Der Server hat mit Antwort-Code %d geantwortet", respCode));
+                    return;
+                }
+
                 String body = Utils.readAllFromStream(httpCon.getInputStream());
                 JSONObject jObj = new JSONObject(body);
                 accessToken = jObj.getString("access_token");
@@ -153,8 +160,8 @@ public class TimeTableApiClient {
 
                 if (callback != null) callback.authCodeRedeemed();
 
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            } catch (IOException | JSONException e) {
+                callback.errorOccurred(e.getMessage());
             }
         }).start();
     }
