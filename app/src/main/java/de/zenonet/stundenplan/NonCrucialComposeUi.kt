@@ -84,7 +84,7 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
 fun CurrentLessonInfo(vm:NonCrucialViewModel, modifier: Modifier = Modifier) {
     val currentTime = Timing.getCurrentTime()
 
-    val period = 4//remember { Utils.getCurrentPeriod(currentTime) }
+    val period = remember { Utils.getCurrentPeriod(currentTime) }
     if (period == -1) return
 
     val pair = remember { Utils.getStartAndEndTimeOfPeriod(period) }
