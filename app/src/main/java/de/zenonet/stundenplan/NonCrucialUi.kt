@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
+import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlin.math.roundToInt
 
@@ -81,7 +83,7 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CurrentLessonInfo(vm:NonCrucialViewModel, modifier: Modifier = Modifier) {
+fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     val currentTime = Timing.getCurrentTime()
 
     val period = remember { Utils.getCurrentPeriod(currentTime) }
@@ -92,32 +94,50 @@ fun CurrentLessonInfo(vm:NonCrucialViewModel, modifier: Modifier = Modifier) {
 
     val lessonStart = pair.first
     val totalLessonSeconds = pair.second.toSecondOfDay() - lessonStart.toSecondOfDay()
-    val progressInSeconds = currentTime.toSecondOfDay().toLong() - lessonStart.toSecondOfDay().toLong()
+    val progressInSeconds =
+        currentTime.toSecondOfDay().toLong() - lessonStart.toSecondOfDay().toLong()
     val progress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
-    Box(modifier.padding(15.dp)){
+    Box(modifier.padding(15.dp)) {
         Column {
             Heading("Aktuelle Stunde: ${period + 1}.")
-            if(timeTable != null){
-                val lesson = timeTable!!.Lessons[Timing.getCurrentDayOfWeek()][period]
-                if(lesson != null) {
+            val day: Array<Lesson>? = if(timeTable != null) timeTable!!.Lessons[Timing.getCurrentDayOfWeek()] else null
+
+            if (day != null) {
+                val lesson = day[period]
+                if (lesson != null) {
                     Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
                 }
             }
-            Text("Von ${pair.first} bis ${pair.second} ($progress%)")
+            Text("Von ${pair.first} bis ${pair.second} ${if (progress > 0) " ($progress%)" else ""}")
+            if (day != null) {
+                val lesson = day[period]
+
+                var nextPeriod = period + 1
+                while (nextPeriod < day.size && (day[nextPeriod] == null || !day[nextPeriod].isTakingPlace)) nextPeriod++
+                val nextLesson = day[nextPeriod]
+
+                if (nextPeriod < day.size) {
+
+                    if (lesson == null || !lesson.isTakingPlace) {
+                        Text("Freistunde", fontWeight = FontWeight.Bold)
+                        Text("Nächste Stunde (${nextLesson.Subject} in ${nextLesson.Room}) beginnt um ${nextLesson.StartTime}")
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun DailyStaircaseAnalysis(vm:NonCrucialViewModel,modifier: Modifier = Modifier) {
+fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     vm.analyzeStaircaseUsage()
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle()
 
-    if(timeTable == null) return
+    if (timeTable == null) return
 
-    Box(modifier.padding(15.dp)){
+    Box(modifier.padding(15.dp)) {
         Column {
             Heading("Treppensteig-Analyse")
             Text("Du hast laut deinem Stundenplan heute ${vm.stairCasesUsed} Treppen verwendet ")
@@ -126,7 +146,7 @@ fun DailyStaircaseAnalysis(vm:NonCrucialViewModel,modifier: Modifier = Modifier)
 }
 
 @Composable
-fun Heading(text:String) {
+fun Heading(text: String) {
     Text(
         text = text,
         fontSize = 20.sp,
