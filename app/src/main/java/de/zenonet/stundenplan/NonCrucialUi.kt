@@ -83,6 +83,10 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
 
 @Composable
 fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    val day = Timing.getCurrentDayOfWeek()
+    // Don't show this on week-ends
+    if(day > 4) return
+
     val currentTime = Timing.getCurrentTime()
 
     val period = remember { Utils.getCurrentPeriod(currentTime) }
@@ -100,10 +104,12 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
     Box(modifier.padding(15.dp)) {
         Column {
+
             Heading("Aktuelle Stunde: ${period + 1}.")
             Spacer(Modifier.height(10.dp))
 
-            val day: Array<Lesson>? = if(timeTable != null) timeTable!!.Lessons[Timing.getCurrentDayOfWeek()] else null
+            val day: Array<Lesson>? =
+                if (timeTable != null) timeTable!!.Lessons[Timing.getCurrentDayOfWeek()] else null
 
             if (day != null) {
                 val lesson = day[period]
@@ -127,7 +133,9 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
                     }
                 }
             }
+
         }
+
     }
 }
 
