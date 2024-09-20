@@ -68,7 +68,8 @@ class NonCrucialViewModel(
         var lastHeight = 0
         var stairCases = 0
         for (lesson in tt.Lessons[dayOfWeek]) {
-            val c: Char = lesson.Room[0]
+
+            val c: Char = if(lesson != null) lesson.Room[0] else 'B'
 
             val height = when(c){
                 'A' -> -1
