@@ -31,7 +31,8 @@ class NonCrucialViewModel(
     private val _currentTimeTable = MutableStateFlow<TimeTable?>(null)
     val currentTimeTable: StateFlow<TimeTable?> = _currentTimeTable.asStateFlow()
 
-    var stairCasesUsed by mutableIntStateOf(-1)
+    var stairCasesUsedToday by mutableIntStateOf(-1)
+    var stairCasesUsedThisWeek by mutableIntStateOf(-1)
 
     private val quoteProvider: QuoteProvider = QuoteProvider()
 
@@ -57,17 +58,27 @@ class NonCrucialViewModel(
         loadingTimeTable = false
     }
 
-    fun analyzeStaircaseUsage() {
+    fun analyzeStaircaseUsage(){
         loadTimeTable()
         if (currentTimeTable.value == null) return
 
+        stairCasesUsedToday = calculateStaircasesUsedOnDay(Timing.getCurrentDayOfWeek())
+
+        // calculate for week
+        stairCasesUsedThisWeek = 0
+        for (day in 0..4) {
+            stairCasesUsedThisWeek += calculateStaircasesUsedOnDay(day)
+        }
+    }
+
+    private fun calculateStaircasesUsedOnDay(dayOfWeek:Int):Int {
         val tt: TimeTable = currentTimeTable.value!!
 
-        val dayOfWeek = Timing.getCurrentDayOfWeek()
+
         // Analyze the current day
         var lastHeight = 0
         var stairCases = 0
-        for (lesson in tt.Lessons[dayOfWeek]) {
+        for ((period, lesson) in tt.Lessons[dayOfWeek].withIndex()) {
 
             val c: Char = if(lesson != null) lesson.Room[0] else 'B'
 
@@ -80,11 +91,18 @@ class NonCrucialViewModel(
                 'T' -> 0
                 else -> throw Exception("Unknown room ${lesson.Room}")
             }
+
+            // Assume the user goes to 0th floor after the second and the fourth period (breaks)
+            if(period == 2 || period == 4){
+                stairCases += abs(lastHeight)
+                lastHeight = 0
+            }
+
             stairCases += abs(height-lastHeight)
             lastHeight = height
         }
         stairCases += abs(lastHeight) // Go to ground level to leave the building
-        stairCasesUsed = stairCases
+         return stairCases
     }
 
     fun loadQuoteOfTheDay() {

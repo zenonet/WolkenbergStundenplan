@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
@@ -102,6 +101,8 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     Box(modifier.padding(15.dp)) {
         Column {
             Heading("Aktuelle Stunde: ${period + 1}.")
+            Spacer(Modifier.height(10.dp))
+
             val day: Array<Lesson>? = if(timeTable != null) timeTable!!.Lessons[Timing.getCurrentDayOfWeek()] else null
 
             if (day != null) {
@@ -140,7 +141,10 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
     Box(modifier.padding(15.dp)) {
         Column {
             Heading("Treppensteig-Analyse")
-            Text("Du hast laut deinem Stundenplan heute ${vm.stairCasesUsed} Treppen verwendet ")
+            Spacer(Modifier.height(10.dp))
+
+            Text("Treppen heute: ${vm.stairCasesUsedToday}")
+            Text("Treppen diese Woche: ${vm.stairCasesUsedThisWeek}")
         }
     }
 }
