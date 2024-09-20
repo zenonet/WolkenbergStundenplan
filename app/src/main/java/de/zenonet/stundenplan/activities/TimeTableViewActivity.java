@@ -267,9 +267,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 textView.setText(lesson.Text != null ? lesson.Text : "");
                 textView.setVisibility(lesson.Text == null ? View.GONE : View.VISIBLE);
 
-                if (lesson.Type == LessonType.Assignment)
+                /*if (lesson.Type == LessonType.Assignment)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.assignment_substituted_lesson));
-                else if (!lesson.isTakingPlace())
+                else */
+                if (!lesson.isTakingPlace())
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
                 else if (lesson.Type == LessonType.Substitution)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.substituted_lesson));

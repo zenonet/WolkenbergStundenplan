@@ -347,7 +347,7 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun getBackgroundColorForLesson(lesson: Lesson): Color {
-    if (!lesson.isTakingPlace && lesson.Type != LessonType.Assignment) return colorResource(CommonR.color.cancelled_lesson)
+    if (!lesson.isTakingPlace/* && lesson.Type != LessonType.Assignment*/) return colorResource(CommonR.color.cancelled_lesson)
 
     return when (lesson.Type) {
         LessonType.Substitution -> colorResource(CommonR.color.substituted_lesson)
