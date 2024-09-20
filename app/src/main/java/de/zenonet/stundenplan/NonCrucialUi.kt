@@ -116,10 +116,10 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
                 var nextPeriod = period + 1
                 while (nextPeriod < day.size && (day[nextPeriod] == null || !day[nextPeriod].isTakingPlace)) nextPeriod++
-                val nextLesson = day[nextPeriod]
 
                 if (nextPeriod < day.size) {
 
+                    val nextLesson = day[nextPeriod]
                     if (lesson == null || !lesson.isTakingPlace) {
                         Text("Freistunde", fontWeight = FontWeight.Bold)
                         Text("Nächste Stunde (${nextLesson.Subject} in ${nextLesson.Room}) beginnt um ${nextLesson.StartTime}")
