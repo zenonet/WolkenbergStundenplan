@@ -8,6 +8,7 @@ import android.util.Pair;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -258,5 +259,47 @@ public class TimeTableApiClient {
                 rawDataArray[0],
                 rawDataArray[1]
         );
+    }
+
+    public Post[] getPosts(){
+        try {
+            HttpURLConnection connection = getAuthenticatedUrlConnection("GET", "posts/");
+            connection.connect();
+            if (connection.getResponseCode() != 200)
+                return null;
+            String rawJson = Utils.readAllFromStream(connection.getInputStream());
+            JSONArray array = new JSONArray(rawJson);
+            Post[] posts = new Post[array.length()];
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject p = array.getJSONObject(i);
+                posts[i] = new Post();
+                posts[i].PostId = p.getInt("POST_ID");
+                posts[i].Creator = p.getString("CREATOR");
+                posts[i].Title = p.getString("TITLE");
+
+                // Load image URLs
+                JSONArray jImages = p.getJSONArray("IMAGES");
+                String[] images = new String[jImages.length()];
+                for (int im = 0; im < jImages.length(); im++) {
+                    images[im] = jImages.getString(im);
+                }
+                posts[i].Images = images;
+
+                // Load text
+                StringBuilder textBuilder = new StringBuilder();
+                JSONArray textBlocks = new JSONObject(p.getString("TEXT")).getJSONArray("blocks");
+                for (int j = 0; j < textBlocks.length(); j++) {
+                    JSONObject block = textBlocks.getJSONObject(j);
+                    textBuilder.append(block.getString("text"));
+                    textBuilder.append('\n');
+                }
+                posts[i].Text = textBuilder.toString();
+            }
+
+            return posts;
+        } catch (IOException | JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
