@@ -3,6 +3,7 @@ package de.zenonet.stundenplan
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -213,6 +214,11 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                             loginState = 1
                                         } else {
                                             loginState = -1
+                                        }
+                                    }else{
+                                        Toast.makeText(activity, "Login konnte nicht durchgeführt werden", Toast.LENGTH_SHORT).show()
+                                        coroutineScope.launch {
+                                             pagerState.scrollToPage(pagerState.currentPage-1)
                                         }
                                     }
                                 }
