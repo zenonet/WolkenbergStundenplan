@@ -75,6 +75,7 @@ class NonCrucialViewModel(
         val tt: TimeTable = currentTimeTable.value!!
 
 
+        if(dayOfWeek > 4) return 0
         // Analyze the current day
         var lastHeight = 0
         var stairCases = 0

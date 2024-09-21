@@ -109,7 +109,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(10.dp))
 
             val day: Array<Lesson>? =
-                if (timeTable != null) timeTable!!.Lessons[Timing.getCurrentDayOfWeek()] else null
+                if (timeTable != null) timeTable!!.Lessons[day] else null
 
             if (day != null) {
                 val lesson = day[period]
@@ -151,7 +151,8 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
             Heading("Treppensteig-Analyse")
             Spacer(Modifier.height(10.dp))
 
-            Text("Treppen heute: ${vm.stairCasesUsedToday}")
+            if(vm.stairCasesUsedToday > 0)
+                Text("Treppen heute: ${vm.stairCasesUsedToday}")
             Text("Treppen diese Woche: ${vm.stairCasesUsedThisWeek}")
         }
     }
