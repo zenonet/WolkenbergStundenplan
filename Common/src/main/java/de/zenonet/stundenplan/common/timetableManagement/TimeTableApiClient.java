@@ -20,9 +20,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Locale;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
@@ -44,6 +43,7 @@ public class TimeTableApiClient {
     public NameLookup lookup;
     public SharedPreferences sharedPreferences;
     public boolean isLoggedIn;
+    public boolean isOffline;
 
     /**
      * Fetches "masterdata"/lookup data from the API
@@ -120,6 +120,8 @@ public class TimeTableApiClient {
             isLoggedIn = true;
             Log.i(LogTags.Login, "Logged in successfully");
         } catch (IOException | JSONException e) {
+            if(e instanceof UnknownHostException)
+                isOffline = true;
             throw new ApiLoginException();
         }
     }
