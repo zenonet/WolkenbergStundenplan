@@ -140,6 +140,7 @@ public class TimeTableManager implements TimeTableClient {
         timeTable.source = source;
         timeTable.CounterValue = counter;
         timeTable.isCacheStateConfirmed = isConfirmed;
+        cacheClient.cacheTimetableForWeek(week, timeTable);
         return timeTable;
     }
 
