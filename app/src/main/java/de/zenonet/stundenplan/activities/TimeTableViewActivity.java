@@ -189,7 +189,17 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
 
                                     if (timeTable == null) {
-                                        // Show some kind of message here
+/*
+                                        // If authentication failed but not due to lack of internet
+                                        // NOTE: This would only work if the callback would return null (based on the API response) even if a cache entry was returned already
+                                        // it does not, so rn, this is completely useless. I really gotta implement proper error management
+                                        if (!manager.apiClient.isLoggedIn && !manager.apiClient.isOffline) {
+                                            Toast.makeText(TimeTableViewActivity.this, "Dein Login ist abgelaufen. Du musst dich erneut anmelden", Toast.LENGTH_LONG).show();
+                                            startLoginProcess();
+                                        }
+*/
+
+                                        // TODO: Show some kind of message here
                                         return;
                                     }
                                     if (!timeTableLoaded)
@@ -447,6 +457,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private boolean nonCrucialUiLoaded = false;
 
     private boolean isLoadingNonCrucialUi = false;
+
     private void loadNonCrucialUi() {
 
         Log.i(LogTags.Timing, String.format("Time from application start to started loading non-crucial-ui : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
