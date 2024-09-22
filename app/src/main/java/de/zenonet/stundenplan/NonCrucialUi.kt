@@ -44,16 +44,16 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
         Surface {
             Column {
+
+                CurrentLessonInfo(viewModel)
+
                 LaunchedEffect(key1 = null) {
                     viewModel.loadQuoteOfTheDay()
                 }
-
                 val quote by viewModel.quoteOfTheDay.collectAsStateWithLifecycle(null)
-
                 if (quote != null && quote!!.text != null)
                     QuoteView(quote!!)
 
-                CurrentLessonInfo(viewModel)
 
                 DailyStaircaseAnalysis(viewModel)
             }
@@ -105,7 +105,10 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     Box(modifier.padding(15.dp)) {
         Column {
 
-            Heading("Aktuelle Stunde: ${period + 1}.")
+            if(progress > 0)
+                Heading("${period + 1}. Stunde")
+            else
+                Heading("Pause vor der ${period + 1}. Stunde")
             Spacer(Modifier.height(10.dp))
 
             val day: Array<Lesson>? =
