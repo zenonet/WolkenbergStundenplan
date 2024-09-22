@@ -26,6 +26,7 @@ import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import java.time.LocalTime
 import kotlin.math.roundToInt
 
 fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
@@ -90,7 +91,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     val currentTime = Timing.getCurrentTime()
 
     val period = remember { Utils.getCurrentPeriod(currentTime) }
-    if (period == -1) return
+    if (period == -1 || currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val pair = remember { Utils.getStartAndEndTimeOfPeriod(period) }
 
