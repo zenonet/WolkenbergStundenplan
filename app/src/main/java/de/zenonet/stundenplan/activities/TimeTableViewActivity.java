@@ -36,6 +36,7 @@ import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.LogTags;
+import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.StatisticsManager;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
@@ -89,6 +90,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             return;
         }
 
+        registerIntentLauncher();
         // Check if the application is set up
         if (!isPreview && !getSharedPreferences().contains("refreshToken")) {
             startLoginProcess();
@@ -146,8 +148,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
     }
 
-    private void startLoginProcess() {
-        ActivityResultLauncher<Intent> intentLauncher = registerForActivityResult(
+    private ActivityResultLauncher<Intent> intentLauncher;
+
+    private void registerIntentLauncher(){
+        intentLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
@@ -175,6 +179,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+    private void startLoginProcess() {
+        if(intentLauncher == null) throw new IllegalStateException("TimeTableViewActivity.startLoginProcess() before TimeTableViewActivity.registerIntentLauncher() was called.");
         intentLauncher.launch(new Intent(this, LoginActivity.class));
 
     }
@@ -188,20 +195,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 (timeTable) ->
                         runOnUiThread(() -> {
 
-                                    if (timeTable == null) {
-/*
-                                        // If authentication failed but not due to lack of internet
-                                        // NOTE: This would only work if the callback would return null (based on the API response) even if a cache entry was returned already
-                                        // it does not, so rn, this is completely useless. I really gotta implement proper error management
-                                        if (!manager.apiClient.isLoggedIn && !manager.apiClient.isOffline) {
-                                            Toast.makeText(TimeTableViewActivity.this, "Dein Login ist abgelaufen. Du musst dich erneut anmelden", Toast.LENGTH_LONG).show();
-                                            startLoginProcess();
-                                        }
-*/
+                                    if (timeTable == null) return;
 
-                                        // TODO: Show some kind of message here
-                                        return;
-                                    }
                                     if (!timeTableLoaded)
                                         if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
                                             Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
@@ -214,7 +209,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                     currentTimeTable = timeTable;
                                     updateTimeTableView(timeTable);
                                 }
-                        )
+                        ),
+                error -> {
+                    if(error == ResultType.NoLoginSaved || error == ResultType.TokenExpired){
+                        runOnUiThread(() -> {
+                            Toast.makeText(TimeTableViewActivity.this, "Dein Login ist abgelaufen. Du musst dich erneut anmelden.", Toast.LENGTH_SHORT).show();
+                            startLoginProcess();
+                        });
+                    }
+                }
         );
     }
 
