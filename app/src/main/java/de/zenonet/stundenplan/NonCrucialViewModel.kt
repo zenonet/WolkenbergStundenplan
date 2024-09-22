@@ -23,7 +23,8 @@ import kotlin.math.abs
 
 class NonCrucialViewModel(
     val ttm: TimeTableManager? = null,
-    private val quote: Quote? = null
+    private val quote: Quote? = null,
+    val previewTimeTable:TimeTable? = null
 ) : ViewModel() {
 
     private val _quoteOfTheDay = MutableStateFlow<Quote?>(Quote())
@@ -47,14 +48,18 @@ class NonCrucialViewModel(
 
     private var loadingTimeTable = false;
     suspend fun loadTimeTable() {
-        if (loadingTimeTable || currentTimeTable.value != null || ttm == null) return
+        if (loadingTimeTable || currentTimeTable.value != null) return
 
         loadingTimeTable = true
 
-        val tt = withContext(Dispatchers.IO) {
-            ttm.getCurrentTimeTable()
+        if(ttm != null) {
+            val tt = withContext(Dispatchers.IO) {
+                ttm.getCurrentTimeTable()
+            }
+            _currentTimeTable.value = tt
+        }else{
+            _currentTimeTable.value = previewTimeTable
         }
-        _currentTimeTable.value = tt
         loadingTimeTable = false
 
     }

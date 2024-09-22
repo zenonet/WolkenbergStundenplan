@@ -473,7 +473,19 @@ public class TimeTableViewActivity extends AppCompatActivity {
             cv.setId(987);
             l.addView(cv);
         }
-        NonCrucialUiKt.applyUiToComposeView(cv, new NonCrucialViewModel(manager, null));
+
+        NonCrucialViewModel vm;
+        if(isPreview){
+            try {
+                vm = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this));
+            } catch (IOException e) {
+                return;
+            }
+        }else{
+            vm = new NonCrucialViewModel(manager, null, null);
+        }
+
+        NonCrucialUiKt.applyUiToComposeView(cv, vm);
         nonCrucialUiLoaded = true;
 
         Log.i(LogTags.Timing, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
