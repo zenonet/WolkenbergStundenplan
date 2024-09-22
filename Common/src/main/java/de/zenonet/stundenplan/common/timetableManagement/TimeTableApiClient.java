@@ -8,7 +8,6 @@ import android.util.Pair;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
@@ -88,10 +88,10 @@ public class TimeTableApiClient {
         }
     }
 
-    public void login() throws ApiLoginException {
+    public ResultType login() {
         String refreshToken = sharedPreferences.getString("refreshToken", "null");
 
-        if (refreshToken.equals("null")) throw new ApiLoginException();
+        if (refreshToken.equals("null")) return ResultType.NoLoginSaved;
         try {
             HttpURLConnection httpCon = getUrlApiConnection("POST", "token");
             httpCon.setDoOutput(true);
@@ -107,7 +107,7 @@ public class TimeTableApiClient {
 
             if (respCode != 200) {
                 Log.e(LogTags.Api, "Login unsuccessful:" + httpCon.getResponseMessage());
-                throw new ApiLoginException();
+                return ResultType.TokenExpired;
             }
 
             String content = Utils.readAllFromStream(httpCon.getInputStream());
@@ -119,11 +119,16 @@ public class TimeTableApiClient {
             accessToken = jObj.getString("access_token");
             isLoggedIn = true;
             Log.i(LogTags.Login, "Logged in successfully");
+            return ResultType.Success;
         } catch (IOException | JSONException e) {
-            if(e instanceof UnknownHostException)
+            if(e instanceof UnknownHostException) {
                 isOffline = true;
-            throw new ApiLoginException();
+                Log.i(LogTags.Login, "Can't connect to API");
+                return ResultType.Offline;
+            }
+            Log.e(LogTags.Login, "Can't login to API");
         }
+        return ResultType.UnknownError;
     }
 
     public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback){

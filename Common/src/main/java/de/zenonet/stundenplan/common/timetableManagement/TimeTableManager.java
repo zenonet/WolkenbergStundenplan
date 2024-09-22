@@ -17,11 +17,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
+import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
-import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.callbacks.TimeTableLoadFailedCallback;
 import de.zenonet.stundenplan.common.models.User;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadedCallback;
 
@@ -56,21 +57,21 @@ public class TimeTableManager implements TimeTableClient {
         parser = new TimeTableParser(lookup, sharedPreferences);
     }
 
-    public void login() throws UserLoadException {
-        if (apiClient.isLoggedIn) return;
+    public ResultType login() throws UserLoadException {
+        if (apiClient.isLoggedIn) return ResultType.Success;
+
+        ResultType resultType = apiClient.login();
+        if(resultType != ResultType.Success) return resultType;
 
         try {
-            apiClient.login();
-
             if (!lookup.isLookupDataAvailable())
                 apiClient.fetchMasterData();
-        } catch (ApiLoginException e) {
-            Log.i(LogTags.Api, "Unable to log into API");
         } catch (DataNotAvailableException e) {
-            throw new RuntimeException(e);
+            return ResultType.CantLoadLookupData;
         }
 
         user = getUser();
+        return ResultType.Success;
     }
 
     public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
@@ -183,8 +184,11 @@ public class TimeTableManager implements TimeTableClient {
         if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
         return getTimeTableForWeek(weekOfYear);
     }
-
     public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback) {
+        return getTimeTableAsyncWithAdjustments(week, callback, null);
+    }
+
+    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback, TimeTableLoadFailedCallback errorCallback) {
 
         AtomicInteger stage = new AtomicInteger();
 
@@ -194,8 +198,11 @@ public class TimeTableManager implements TimeTableClient {
         // API fetch thread
         new Thread(() -> {
             try {
-                if (!apiClient.isLoggedIn)
-                    login();
+                ResultType loginResult = login();
+                if(loginResult != ResultType.Success){
+                    errorCallback.errorOccurred(loginResult);
+                    return;
+                }
 
                 long counter = apiClient.getLatestCounterValue();
                 confirmedCounter.set(apiClient.isCounterConfirmed ? counter : -1);
@@ -217,6 +224,8 @@ public class TimeTableManager implements TimeTableClient {
             } catch (DataNotAvailableException ignored) {
                 // If the cache and the API failed, indicate that the timetable could not be loaded
                 if (stage.get() == -1) callback.timeTableLoaded(null);
+
+                errorCallback.errorOccurred(ResultType.CantLoadTimeTable);
             }
         }).start();
 
@@ -238,6 +247,7 @@ public class TimeTableManager implements TimeTableClient {
             } catch (TimeTableLoadException e) {
                 // Indicate that the cache failed
                 stage.set(-1);
+                errorCallback.errorOccurred(ResultType.CacheMiss);
             }
         }).start();
         return timeTableFromCache;
