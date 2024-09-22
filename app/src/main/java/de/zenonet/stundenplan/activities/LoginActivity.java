@@ -3,6 +3,10 @@ package de.zenonet.stundenplan.activities;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.webkit.*;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login_view);
 
         WebView webView = findViewById(R.id.webView);
+        webView.requestFocus(View.FOCUS_DOWN);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onLoadResource(WebView view, String url) {
@@ -36,11 +41,6 @@ public class LoginActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading (WebView view, WebResourceRequest request) {
                 return checkForCodeUrl(view, request.getUrl().toString());
             }
-
-            public boolean shouldOverrideKeyEvent (WebView view, KeyEvent event) {
-                return true;
-            }
-
 
             private boolean checkForCodeUrl(WebView view, String url) {
                 if (!url.startsWith("https://www.wolkenberg-gymnasium.de/wolkenberg-app/stundenplan-web-app/?code="))
