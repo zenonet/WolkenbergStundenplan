@@ -39,7 +39,7 @@ fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
 
 @Composable
 fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
-    StundenplanTheme {
+    StundenplanTheme(darkTheme = true) {
 
 
         Surface {
