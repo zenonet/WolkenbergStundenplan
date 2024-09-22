@@ -51,11 +51,11 @@ class NonCrucialViewModel(
 
         loadingTimeTable = true
 
-            val tt = withContext(Dispatchers.IO) {
-                ttm.getCurrentTimeTable()
-            }
-            _currentTimeTable.value = tt
-            loadingTimeTable = false
+        val tt = withContext(Dispatchers.IO) {
+            ttm.getCurrentTimeTable()
+        }
+        _currentTimeTable.value = tt
+        loadingTimeTable = false
 
     }
 
@@ -87,17 +87,22 @@ class NonCrucialViewModel(
         var stairCases = 0
         for ((period, lesson) in tt.Lessons[dayOfWeek].withIndex()) {
 
-            val c: Char = if (lesson != null) lesson.Room[0] else 'B'
+            val height: Int
 
-            val height = when (c) {
-                'A' -> -1
-                'B' -> 0
-                'C' -> 1
-                'D' -> 2
-                'E' -> 3
-                'T' -> 0
-                else -> throw Exception("Unknown room ${lesson.Room}")
-            }
+            if(lesson == null)
+                height = 0
+            else if (lesson.isTakingPlace) {
+
+                height = when (lesson.Room[0]) {
+                    'A' -> -1
+                    'B' -> 0
+                    'C' -> 1
+                    'D' -> 2
+                    'E' -> 3
+                    'T' -> 0
+                    else -> throw Exception("Unknown room ${lesson.Room}")
+                }
+            } else height = lastHeight
 
             // Assume the user goes to 0th floor after the second and the fourth period (breaks)
             if (period == 2 || period == 4) {

@@ -180,7 +180,7 @@ public class TimeTableManager implements TimeTableClient {
     }
 
     public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
-        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+        int weekOfYear = Timing.getRelevantWeekOfYear();
         if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
         return getTimeTableForWeek(weekOfYear);
     }
