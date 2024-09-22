@@ -3,6 +3,7 @@ package de.zenonet.stundenplan
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,6 +34,7 @@ class NonCrucialViewModel(
 
     var stairCasesUsedToday by mutableIntStateOf(-1)
     var stairCasesUsedThisWeek by mutableIntStateOf(-1)
+    var stairCaseAnalysisCompleted by mutableStateOf(false)
 
     private val quoteProvider: QuoteProvider = QuoteProvider()
 
@@ -58,31 +60,37 @@ class NonCrucialViewModel(
         loadingTimeTable = false
     }
 
-    fun analyzeStaircaseUsage(){
+    fun analyzeStaircaseUsage() {
         loadTimeTable()
         if (currentTimeTable.value == null) return
 
-        stairCasesUsedToday = calculateStaircasesUsedOnDay(Timing.getCurrentDayOfWeek())
+        try {
 
-        // calculate for week
-        stairCasesUsedThisWeek = 0
-        for (day in 0..4) {
-            stairCasesUsedThisWeek += calculateStaircasesUsedOnDay(day)
+            stairCasesUsedToday = calculateStaircasesUsedOnDay(Timing.getCurrentDayOfWeek())
+
+            // calculate for week
+            stairCasesUsedThisWeek = 0
+            for (day in 0..4) {
+                stairCasesUsedThisWeek += calculateStaircasesUsedOnDay(day)
+            }
+            stairCaseAnalysisCompleted = true
+        } catch (e: Exception) {
+            Log.e(LogTags.TimeTableAnalysis, e.stackTraceToString())
         }
     }
 
-    private fun calculateStaircasesUsedOnDay(dayOfWeek:Int):Int {
+    private fun calculateStaircasesUsedOnDay(dayOfWeek: Int): Int {
         val tt: TimeTable = currentTimeTable.value!!
 
-        if(dayOfWeek > 4 || dayOfWeek < 0) return 0
+        if (dayOfWeek > 4 || dayOfWeek < 0) return 0
         // Analyze the current day
         var lastHeight = 0
         var stairCases = 0
         for ((period, lesson) in tt.Lessons[dayOfWeek].withIndex()) {
 
-            val c: Char = if(lesson != null) lesson.Room[0] else 'B'
+            val c: Char = if (lesson != null) lesson.Room[0] else 'B'
 
-            val height = when(c){
+            val height = when (c) {
                 'A' -> -1
                 'B' -> 0
                 'C' -> 1
@@ -93,16 +101,16 @@ class NonCrucialViewModel(
             }
 
             // Assume the user goes to 0th floor after the second and the fourth period (breaks)
-            if(period == 2 || period == 4){
+            if (period == 2 || period == 4) {
                 stairCases += abs(lastHeight)
                 lastHeight = 0
             }
 
-            stairCases += abs(height-lastHeight)
+            stairCases += abs(height - lastHeight)
             lastHeight = height
         }
         stairCases += abs(lastHeight) // Go to ground level to leave the building
-         return stairCases
+        return stairCases
     }
 
     fun loadQuoteOfTheDay() {
@@ -111,10 +119,16 @@ class NonCrucialViewModel(
         viewModelScope.launch {
 
             val q = withContext(Dispatchers.IO) {
-                quoteProvider.getQuoteOfTheDay()
+                try {
+                    quoteProvider.getQuoteOfTheDay()
+                } catch (_: Exception) {
+                    null
+                }
             }
-            _quoteOfTheDay.value = q
-            Log.i(LogTags.Debug, "Assigned quote to state")
+            if (q != null) {
+                _quoteOfTheDay.value = q
+                Log.i(LogTags.Debug, "Assigned quote to state")
+            }
 
         }
     }

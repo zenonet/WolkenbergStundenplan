@@ -83,9 +83,9 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
 
 @Composable
 fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
-    val day = Timing.getCurrentDayOfWeek()
+    val dayOfWeek = Timing.getCurrentDayOfWeek()
     // Don't show this on week-ends
-    if(day > 4) return
+    if(dayOfWeek > 4 || dayOfWeek < 0) return
 
     val currentTime = Timing.getCurrentTime()
 
@@ -109,7 +109,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(10.dp))
 
             val day: Array<Lesson>? =
-                if (timeTable != null) timeTable!!.Lessons[day] else null
+                if (timeTable != null) timeTable!!.Lessons[dayOfWeek] else null
 
             if (day != null) {
                 val lesson = day[period]
@@ -141,10 +141,11 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
-    vm.analyzeStaircaseUsage()
-    val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle()
+    LaunchedEffect(null) {
+        vm.analyzeStaircaseUsage()
+    }
 
-    if (timeTable == null) return
+    if (!vm.stairCaseAnalysisCompleted) return
 
     Box(modifier.padding(15.dp)) {
         Column {

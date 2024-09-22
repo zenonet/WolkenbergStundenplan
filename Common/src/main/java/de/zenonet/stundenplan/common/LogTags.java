@@ -10,4 +10,6 @@ public final class LogTags {
     public static final String Api = "timeTableApi";
     public static final String Parser = "timeTableParser";
     public static final String Complications = "timeTableComplications";
+
+    public static final String TimeTableAnalysis = "timeTableAnalysis";
 }
