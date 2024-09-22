@@ -74,6 +74,7 @@ class WearTimeTableViewActivity : ComponentActivity() {
                 .getBoolean("showPreview", false)
         ) {
             startLoginActivity()
+            return
         }
 
         setTheme(android.R.style.Theme_DeviceDefault)
