@@ -74,8 +74,7 @@ class NonCrucialViewModel(
     private fun calculateStaircasesUsedOnDay(dayOfWeek:Int):Int {
         val tt: TimeTable = currentTimeTable.value!!
 
-
-        if(dayOfWeek > 4) return 0
+        if(dayOfWeek > 4 || dayOfWeek < 0) return 0
         // Analyze the current day
         var lastHeight = 0
         var stairCases = 0
