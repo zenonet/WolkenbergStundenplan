@@ -46,21 +46,20 @@ class NonCrucialViewModel(
     }
 
     private var loadingTimeTable = false;
-    fun loadTimeTable() {
+    suspend fun loadTimeTable() {
         if (loadingTimeTable || currentTimeTable.value != null || ttm == null) return
 
         loadingTimeTable = true
-        viewModelScope.launch {
 
             val tt = withContext(Dispatchers.IO) {
                 ttm.getCurrentTimeTable()
             }
             _currentTimeTable.value = tt
-        }
-        loadingTimeTable = false
+            loadingTimeTable = false
+
     }
 
-    fun analyzeStaircaseUsage() {
+    suspend fun analyzeStaircaseUsage() {
         loadTimeTable()
         if (currentTimeTable.value == null) return
 
