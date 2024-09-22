@@ -390,7 +390,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         table.addView(headerRow);
 
-        for (int periodI = 0; periodI < 10; periodI++) {
+        for (int periodI = 0; periodI < 9; periodI++) {
             TableRow row = new TableRow(this);
 
             for (int dayI = 0; dayI < 5; dayI++) {
