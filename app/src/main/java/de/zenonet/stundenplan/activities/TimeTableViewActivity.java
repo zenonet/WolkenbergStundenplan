@@ -39,6 +39,7 @@ import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.StatisticsManager;
 import de.zenonet.stundenplan.common.TimeTableSource;
+import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
@@ -57,7 +58,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     ImageButton nextWeekButton;
     ImageButton currentWeekButton;
 
-    int selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+    int selectedWeek = Timing.getRelevantWeekOfYear();
     private TimeTable currentTimeTable;
 
     private boolean isPreview;
@@ -129,7 +130,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         });
 
         currentWeekButton.setOnClickListener((sender) -> {
-            selectedWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+            selectedWeek = Timing.getRelevantWeekOfYear();
             previousWeekButton.setEnabled(selectedWeek != 0);
             nextWeekButton.setEnabled(selectedWeek != 52);
             loadTimeTableAsync();

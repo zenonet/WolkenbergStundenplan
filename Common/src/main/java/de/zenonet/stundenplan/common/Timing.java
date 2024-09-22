@@ -19,4 +19,12 @@ public abstract class Timing {
         if(DayOfWeekOverride != -1) return DayOfWeekOverride;
         return (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7;
     }
+
+    public static int getRelevantWeekOfYear(){
+        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+
+        int dayOfWeek = getCurrentDayOfWeek();
+        if (dayOfWeek > 4 || dayOfWeek < 0) weekOfYear++;
+        return weekOfYear;
+    }
 }
