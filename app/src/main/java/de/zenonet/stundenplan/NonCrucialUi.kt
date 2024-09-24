@@ -10,7 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -26,6 +29,7 @@ import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import kotlinx.coroutines.delay
 import java.time.LocalTime
 import kotlin.math.roundToInt
 
@@ -86,46 +90,41 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
 fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     val dayOfWeek = Timing.getCurrentDayOfWeek()
     // Don't show this on week-ends
-    if(dayOfWeek > 4 || dayOfWeek < 0) return
+    if (dayOfWeek > 4 || dayOfWeek < 0) return
 
-    val currentTime = Timing.getCurrentTime()
+    LaunchedEffect(null) {
+        while (true) {
+            delay(1000 * 60)
+            vm.generateCurrentLessonInfoData()
+        }
+    }
 
-    val period = remember { Utils.getCurrentPeriod(currentTime) }
-    if (period == -1 || currentTime.isBefore(LocalTime.of(8, 0))) return
-
-    val pair = remember { Utils.getStartAndEndTimeOfPeriod(period) }
-
-
-    val lessonStart = pair.first
-    val totalLessonSeconds = pair.second.toSecondOfDay() - lessonStart.toSecondOfDay()
-    val progressInSeconds =
-        currentTime.toSecondOfDay().toLong() - lessonStart.toSecondOfDay().toLong()
-    val progress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
+    if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
     Box(modifier.padding(15.dp)) {
         Column {
 
-            if(progress > 0)
-                Heading("${period + 1}. Stunde")
+            if (!vm.isBreak)
+                Heading("${vm.currentPeriod + 1}. Stunde")
             else
-                Heading("Pause vor der ${period + 1}. Stunde")
+                Heading("Pause vor der ${vm.currentPeriod + 1}. Stunde")
             Spacer(Modifier.height(10.dp))
 
             val day: Array<Lesson>? =
                 if (timeTable != null) timeTable!!.Lessons[dayOfWeek] else null
 
             if (day != null) {
-                val lesson = day[period]
+                val lesson = day[vm.currentPeriod]
                 if (lesson != null) {
                     Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
                 }
             }
-            Text("Von ${pair.first} bis ${pair.second} ${if (progress > 0) " ($progress%)" else ""}")
+            Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
             if (day != null) {
-                val lesson = day[period]
+                val lesson = day[vm.currentPeriod]
 
-                var nextPeriod = period + 1
+                var nextPeriod = vm.currentPeriod + 1
                 while (nextPeriod < day.size && (day[nextPeriod] == null || !day[nextPeriod].isTakingPlace)) nextPeriod++
 
                 if (nextPeriod < day.size) {
@@ -156,7 +155,7 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
             Heading("Treppensteig-Analyse")
             Spacer(Modifier.height(10.dp))
 
-            if(vm.stairCasesUsedToday > 0)
+            if (vm.stairCasesUsedToday > 0)
                 Text("Treppen heute: ${vm.stairCasesUsedToday}")
             Text("Treppen diese Woche: ${vm.stairCasesUsedThisWeek}")
         }

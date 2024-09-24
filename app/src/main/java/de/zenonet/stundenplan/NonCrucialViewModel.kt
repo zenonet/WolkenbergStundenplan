@@ -2,6 +2,7 @@ package de.zenonet.stundenplan
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
+import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
@@ -19,7 +21,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalTime
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class NonCrucialViewModel(
     val ttm: TimeTableManager? = null,
@@ -41,6 +45,7 @@ class NonCrucialViewModel(
 
 
     init {
+        generateCurrentLessonInfoData()
         if (quote != null) {
             _quoteOfTheDay.value = quote
         }
@@ -140,5 +145,29 @@ class NonCrucialViewModel(
             }
 
         }
+    }
+
+    var currentPeriod by mutableIntStateOf(-1)
+    var startTime:LocalTime by mutableStateOf(LocalTime.MIN)
+    var endTime:LocalTime by mutableStateOf(LocalTime.MIN)
+    var currentTime:LocalTime by mutableStateOf(Timing.getCurrentTime())
+    var isBreak:Boolean by mutableStateOf(false)
+    var lessonProgress:Int by mutableIntStateOf(0)
+
+    fun generateCurrentLessonInfoData(){
+        Log.i(LogTags.UI, "Recalculating data for current lesson info...")
+        currentTime = Timing.getCurrentTime()
+        currentPeriod = Utils.getCurrentPeriod(currentTime)
+
+        val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
+        startTime = pair.first
+        endTime = pair.second
+
+        isBreak = startTime.isAfter(currentTime)
+
+        val totalLessonSeconds = endTime.toSecondOfDay() - startTime.toSecondOfDay()
+        val progressInSeconds = currentTime.toSecondOfDay() - startTime.toSecondOfDay()
+        lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
+
     }
 }
