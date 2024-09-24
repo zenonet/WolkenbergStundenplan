@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 class NonCrucialViewModel(
     val ttm: TimeTableManager? = null,
     private val quote: Quote? = null,
-    val previewTimeTable:TimeTable? = null
+    val previewTimeTable: TimeTable? = null
 ) : ViewModel() {
 
     private val _quoteOfTheDay = MutableStateFlow<Quote?>(Quote())
@@ -45,7 +45,6 @@ class NonCrucialViewModel(
 
 
     init {
-        generateCurrentLessonInfoData()
         if (quote != null) {
             _quoteOfTheDay.value = quote
         }
@@ -57,12 +56,12 @@ class NonCrucialViewModel(
 
         loadingTimeTable = true
 
-        if(ttm != null) {
+        if (ttm != null) {
             val tt = withContext(Dispatchers.IO) {
                 ttm.getCurrentTimeTable()
             }
             _currentTimeTable.value = tt
-        }else{
+        } else {
             _currentTimeTable.value = previewTimeTable
         }
         loadingTimeTable = false
@@ -99,7 +98,7 @@ class NonCrucialViewModel(
 
             val height: Int
 
-            if(lesson == null)
+            if (lesson == null)
                 height = 0
             else if (lesson.isTakingPlace) {
 
@@ -148,26 +147,27 @@ class NonCrucialViewModel(
     }
 
     var currentPeriod by mutableIntStateOf(-1)
-    var startTime:LocalTime by mutableStateOf(LocalTime.MIN)
-    var endTime:LocalTime by mutableStateOf(LocalTime.MIN)
-    var currentTime:LocalTime by mutableStateOf(Timing.getCurrentTime())
-    var isBreak:Boolean by mutableStateOf(false)
-    var lessonProgress:Int by mutableIntStateOf(0)
+    var startTime: LocalTime? by mutableStateOf(LocalTime.MIN)
+    var endTime: LocalTime? by mutableStateOf(LocalTime.MIN)
+    var currentTime: LocalTime by mutableStateOf(Timing.getCurrentTime())
+    var isBreak: Boolean by mutableStateOf(false)
+    var lessonProgress: Int by mutableIntStateOf(0)
 
-    fun generateCurrentLessonInfoData(){
+    fun generateCurrentLessonInfoData() {
         Log.i(LogTags.UI, "Recalculating data for current lesson info...")
         currentTime = Timing.getCurrentTime()
         currentPeriod = Utils.getCurrentPeriod(currentTime)
 
         val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
-        startTime = pair.first
-        endTime = pair.second
+        startTime = pair?.first
+        endTime = pair?.second
 
-        isBreak = startTime.isAfter(currentTime)
+        if (startTime != null && endTime != null) {
+            isBreak = startTime!!.isAfter(currentTime)
 
-        val totalLessonSeconds = endTime.toSecondOfDay() - startTime.toSecondOfDay()
-        val progressInSeconds = currentTime.toSecondOfDay() - startTime.toSecondOfDay()
-        lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
-
+            val totalLessonSeconds = endTime!!.toSecondOfDay() - startTime!!.toSecondOfDay()
+            val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
+            lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
+        }
     }
 }
