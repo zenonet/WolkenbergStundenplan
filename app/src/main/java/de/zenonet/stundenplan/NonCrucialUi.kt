@@ -94,8 +94,8 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
     LaunchedEffect(null) {
         while (true) {
-            delay(1000 * 60)
             vm.generateCurrentLessonInfoData()
+            delay(1000 * 60)
         }
     }
 
@@ -114,15 +114,14 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
             val day: Array<Lesson>? =
                 if (timeTable != null) timeTable!!.Lessons[dayOfWeek] else null
 
-            if (day != null) {
-                val lesson = day[vm.currentPeriod]
-                if (lesson != null) {
-                    Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
-                }
+            val lesson: Lesson? =
+                if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
+            if (lesson != null) {
+                Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
             }
+            
             Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
             if (day != null) {
-                val lesson = day[vm.currentPeriod]
 
                 var nextPeriod = vm.currentPeriod + 1
                 while (nextPeriod < day.size && (day[nextPeriod] == null || !day[nextPeriod].isTakingPlace)) nextPeriod++
