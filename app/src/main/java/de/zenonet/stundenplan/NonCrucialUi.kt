@@ -109,18 +109,23 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
                 Heading("${vm.currentPeriod + 1}. Stunde")
             else
                 Heading("Pause vor der ${vm.currentPeriod + 1}. Stunde")
+
+            // Show start- and end time of lesson or break
+            Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
             Spacer(Modifier.height(10.dp))
 
-            val day: Array<Lesson>? =
-                if (timeTable != null) timeTable!!.Lessons[dayOfWeek] else null
+            if(vm.isBreak){
+                Text("Danach:")
+            }
 
-            val lesson: Lesson? =
-                if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
+            val day: Array<Lesson>? = timeTable?.Lessons?.get(dayOfWeek)
+            val lesson: Lesson? = if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
+
+
             if (lesson != null) {
-                Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
+                LessonInfoSentence(lesson)
             }
             
-            Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
             if (day != null) {
 
                 var nextPeriod = vm.currentPeriod + 1
@@ -129,9 +134,10 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
                 if (nextPeriod < day.size) {
 
                     val nextLesson = day[nextPeriod]
-                    if (lesson == null || !lesson.isTakingPlace) {
+                    if (lesson == null || !lesson.isTakingPlace) { // Freistunden
                         Text("Freistunde", fontWeight = FontWeight.Bold)
-                        Text("Nächste Stunde (${nextLesson.Subject} in ${nextLesson.Room}) beginnt um ${nextLesson.StartTime}")
+                        Text("Danach:")
+                        Text("${nextLesson.Subject} in ${nextLesson.Room} (beginnt um ${nextLesson.StartTime})")
                     }
                 }
             }
@@ -139,6 +145,11 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
         }
 
     }
+}
+
+@Composable
+fun LessonInfoSentence(lesson: Lesson) {
+    Text("${lesson.Subject} mit ${lesson.Teacher} ${if (!lesson.isTakingPlace) "(Ausfall)" else ""}")
 }
 
 @Composable

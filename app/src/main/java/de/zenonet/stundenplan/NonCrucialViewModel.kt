@@ -165,6 +165,13 @@ class NonCrucialViewModel(
         if (startTime != null && endTime != null) {
             isBreak = startTime!!.isAfter(currentTime)
 
+            if(isBreak && currentPeriod > 0){
+                endTime = startTime
+
+                val pairOfLessonBefore = Utils.getStartAndEndTimeOfPeriod(currentPeriod-1)
+                startTime = pairOfLessonBefore.second
+            }
+
             val totalLessonSeconds = endTime!!.toSecondOfDay() - startTime!!.toSecondOfDay()
             val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
             lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
