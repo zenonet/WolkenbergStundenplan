@@ -92,12 +92,6 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     // Don't show this on week-ends
     if (dayOfWeek > 4 || dayOfWeek < 0) return
 
-    LaunchedEffect(null) {
-        while (true) {
-            vm.generateCurrentLessonInfoData()
-            delay(1000 * 60)
-        }
-    }
 
     if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
@@ -114,31 +108,29 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
             Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
             Spacer(Modifier.height(10.dp))
 
-            if(vm.isBreak){
-                Text("Danach:")
-            }
+            if (vm.isBreak)
+                Text("Nach der Pause:", fontWeight = FontWeight.Bold)
 
-            val day: Array<Lesson>? = timeTable?.Lessons?.get(dayOfWeek)
-            val lesson: Lesson? = if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
+            val day: Array<Lesson?>? = timeTable?.Lessons?.get(dayOfWeek)
+            val lesson: Lesson? =
+                if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
 
-
+            // if lesson is null, this means, it's a regular free period
             if (lesson != null) {
                 LessonInfoSentence(lesson)
             }
-            
-            if (day != null) {
+            else if (day != null) {
 
                 var nextPeriod = vm.currentPeriod + 1
-                while (nextPeriod < day.size && (day[nextPeriod] == null || !day[nextPeriod].isTakingPlace)) nextPeriod++
+                while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
 
                 if (nextPeriod < day.size) {
+                    // The loop can only stop if nextPeriod reached the end (in which case we wouldn't be in this if) or if day[nextPeriod] is not null, so nextLesson will never be null
+                    val nextLesson: Lesson = day[nextPeriod]!!
+                    Text("Freistunde")
+                    Text("Danach:", fontWeight = FontWeight.Bold)
+                    Text("${nextLesson.Subject} in ${nextLesson.Room} (beginnt um ${nextLesson.StartTime})")
 
-                    val nextLesson = day[nextPeriod]
-                    if (lesson == null || !lesson.isTakingPlace) { // Freistunden
-                        Text("Freistunde", fontWeight = FontWeight.Bold)
-                        Text("Danach:")
-                        Text("${nextLesson.Subject} in ${nextLesson.Room} (beginnt um ${nextLesson.StartTime})")
-                    }
                 }
             }
 

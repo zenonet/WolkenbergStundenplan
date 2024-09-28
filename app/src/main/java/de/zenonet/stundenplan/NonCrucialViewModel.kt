@@ -16,6 +16,7 @@ import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +46,14 @@ class NonCrucialViewModel(
 
 
     init {
+        // Update progress regularly (this is implemented here because it's the right place for it according to this: https://developer.android.com/topic/libraries/architecture/coroutines#viewmodelscope)
+        viewModelScope.launch {
+            while (true) {
+                generateCurrentLessonInfoData()
+                delay(1000 * 27) // Updating every 27 seconds means that every percent of a 45 minute lesson will be shown (1%*45min = 45min/100 = 2700s/100 = 27s)
+            }
+        }
+
         if (quote != null) {
             _quoteOfTheDay.value = quote
         }
@@ -126,23 +135,18 @@ class NonCrucialViewModel(
         return stairCases
     }
 
-    fun loadQuoteOfTheDay() {
+    suspend fun loadQuoteOfTheDay() {
         if (quote != null) return
-
-        viewModelScope.launch {
-
-            val q = withContext(Dispatchers.IO) {
-                try {
-                    quoteProvider.getQuoteOfTheDay()
-                } catch (_: Exception) {
-                    null
-                }
+        val q = withContext(Dispatchers.IO) {
+            try {
+                quoteProvider.getQuoteOfTheDay()
+            } catch (_: Exception) {
+                null
             }
-            if (q != null) {
-                _quoteOfTheDay.value = q
-                Log.i(LogTags.Debug, "Assigned quote to state")
-            }
-
+        }
+        if (q != null) {
+            _quoteOfTheDay.value = q
+            Log.i(LogTags.Debug, "Assigned quote to state")
         }
     }
 
@@ -165,10 +169,10 @@ class NonCrucialViewModel(
         if (startTime != null && endTime != null) {
             isBreak = startTime!!.isAfter(currentTime)
 
-            if(isBreak && currentPeriod > 0){
+            if (isBreak && currentPeriod > 0) {
                 endTime = startTime
 
-                val pairOfLessonBefore = Utils.getStartAndEndTimeOfPeriod(currentPeriod-1)
+                val pairOfLessonBefore = Utils.getStartAndEndTimeOfPeriod(currentPeriod - 1)
                 startTime = pairOfLessonBefore.second
             }
 

@@ -36,4 +36,8 @@ public final class Lesson {
         Lesson other = (Lesson) obj;
         return Objects.equals(other.Room, Room) && Objects.equals(other.SubjectShortName, SubjectShortName) && Objects.equals(other.Teacher, Teacher) && other.Type == Type;
     }
+
+    public static boolean doesTakePlace(Lesson lesson){
+        return lesson != null && lesson.isTakingPlace();
+    }
 }
