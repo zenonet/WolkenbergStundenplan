@@ -72,7 +72,7 @@ class OnboardingActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            StundenplanTheme(dynamicColor = false) {
+            StundenplanTheme(dynamicColor = true) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     OnboardingScreen(this, Modifier.padding(innerPadding))
                 }
