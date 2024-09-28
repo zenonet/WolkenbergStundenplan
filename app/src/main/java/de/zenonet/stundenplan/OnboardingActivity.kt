@@ -272,7 +272,9 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                     if (activity == null) return@Button
 
                                     PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                                        .putBoolean("onboardingCompleted", true).apply()
+                                        .putBoolean("onboardingCompleted", true)
+                                        .putBoolean("showPreview", false)
+                                        .apply()
 
                                     // Open timetable view activity
                                     val mainActivityIntent =

@@ -178,8 +178,6 @@ fun View(activity: SettingsActivity?) {
                         Button(onClick = {
                             if (activity == null) return@Button
 
-                            PreferenceManager.getDefaultSharedPreferences(activity).edit()
-                                .putBoolean("showPreview", false).apply()
                             val intent = Intent(activity, OnboardingActivity::class.java)
                             activity.startActivity(intent)
                             activity.finish()
