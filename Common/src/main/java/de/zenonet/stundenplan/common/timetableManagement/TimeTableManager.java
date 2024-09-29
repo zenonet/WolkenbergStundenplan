@@ -57,7 +57,7 @@ public class TimeTableManager implements TimeTableClient {
         parser = new TimeTableParser(lookup, sharedPreferences);
     }
 
-    public ResultType login() throws UserLoadException {
+    public ResultType login() {
         if (apiClient.isLoggedIn) return ResultType.Success;
 
         ResultType resultType = apiClient.login();
@@ -66,23 +66,27 @@ public class TimeTableManager implements TimeTableClient {
         try {
             if (!lookup.isLookupDataAvailable())
                 apiClient.fetchMasterData();
-        } catch (DataNotAvailableException e) {
+
+            user = getUser();
+        }
+        catch (UserLoadException e){
+            return ResultType.NoLoginSaved;
+        }
+        catch (DataNotAvailableException e) {
             return ResultType.CantLoadLookupData;
         }
 
-        user = getUser();
         return ResultType.Success;
     }
 
     public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
         if (week < 1 || week > 52) throw new TimeTableLoadException();
 
-        if(!apiClient.isLoggedIn) apiClient.login();
-
-        long counter = apiClient.isLoggedIn ? apiClient.getLatestCounterValue() : -1;
         long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
 
-        if(counter == -1 && cacheCounter == -1) throw new TimeTableLoadException("Failed to log in and cache miss");
+        if(login() != ResultType.Success && cacheCounter == -1)throw new TimeTableLoadException("Failed to log in and cache miss");
+
+        long counter = apiClient.getLatestCounterValue();
 
         TimeTableSource source;
         Pair<String, String> rawData;
