@@ -77,8 +77,12 @@ public class TimeTableManager implements TimeTableClient {
     public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
         if (week < 1 || week > 52) throw new TimeTableLoadException();
 
-        long counter = apiClient.getLatestCounterValue();
+        if(!apiClient.isLoggedIn) apiClient.login();
+
+        long counter = apiClient.isLoggedIn ? apiClient.getLatestCounterValue() : -1;
         long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
+
+        if(counter == -1 && cacheCounter == -1) throw new TimeTableLoadException("Failed to log in and cache miss");
 
         TimeTableSource source;
         Pair<String, String> rawData;
@@ -99,6 +103,7 @@ public class TimeTableManager implements TimeTableClient {
                 if (masterDataChanged[0] == 1) {
                     Log.i(LogTags.Api, "Detected change in master data");
                     int oldUserId = user.id;
+                    // TODO: Just lookup new ID in lookup data instead of refetching userdata
                     fetchUser();
 
                     // If the user id changed (yeah, that actually happens)

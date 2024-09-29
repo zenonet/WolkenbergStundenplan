@@ -7,6 +7,11 @@ public class TimeTableLoadException extends DataNotAvailableException {
     public TimeTableLoadException(Exception causingException){
         this.causingException = causingException;
     }
+
+    public TimeTableLoadException(String message) {
+        super(message);
+    }
+
     public TimeTableLoadException(){
         causingException = null;
     }
