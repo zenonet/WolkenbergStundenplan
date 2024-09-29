@@ -93,6 +93,10 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     if (dayOfWeek > 4 || dayOfWeek < 0) return
 
 
+    LaunchedEffect(Unit) {
+        vm.startRegularDataRecalculation()
+    }
+
     if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)

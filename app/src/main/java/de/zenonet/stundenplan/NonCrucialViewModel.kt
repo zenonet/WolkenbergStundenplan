@@ -46,14 +46,6 @@ class NonCrucialViewModel(
 
 
     init {
-        // Update progress regularly (this is implemented here because it's the right place for it according to this: https://developer.android.com/topic/libraries/architecture/coroutines#viewmodelscope)
-        viewModelScope.launch {
-            while (true) {
-                generateCurrentLessonInfoData()
-                delay(1000 * 27) // Updating every 27 seconds means that every percent of a 45 minute lesson will be shown (1%*45min = 45min/100 = 2700s/100 = 27s)
-            }
-        }
-
         if (quote != null) {
             _quoteOfTheDay.value = quote
         }
@@ -149,6 +141,17 @@ class NonCrucialViewModel(
             Log.i(LogTags.Debug, "Assigned quote to state")
         }
     }
+
+    fun startRegularDataRecalculation() {
+        // Update progress regularly (this is implemented here because it's the right place for it according to this: https://developer.android.com/topic/libraries/architecture/coroutines#viewmodelscope)
+        viewModelScope.launch {
+            while (true) {
+                generateCurrentLessonInfoData()
+                delay(1000 * 27) // Updating every 27 seconds means that every percent of a 45 minute lesson will be shown (1%*45min = 45min/100 = 2700s/100 = 27s)
+            }
+        }
+    }
+
 
     var currentPeriod by mutableIntStateOf(-1)
     var startTime: LocalTime? by mutableStateOf(LocalTime.MIN)
