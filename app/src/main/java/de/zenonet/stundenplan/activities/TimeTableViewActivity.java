@@ -64,6 +64,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private boolean isPreview;
     private boolean isInitialLoad = true;
     private Formatter formatter;
+    private final int RowCount = 8;
     private final View.OnClickListener onClickListener = view -> {
         // id = 666 + dayI*9 + periodI
         int id = view.getId() - 666;
@@ -260,8 +261,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             hasData |= timeTable.Lessons[dayI].length != 0;
 
-            for (int periodI = 0; periodI < 9; periodI++) {
-                int viewId = 666 + dayI * 9 + periodI;
+            for (int periodI = 0; periodI < RowCount; periodI++) {
+                int viewId = 666 + dayI * RowCount + periodI;
                 ViewGroup lessonView = findViewById(viewId);
 
                 Lesson lesson = periodI < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI] : null;
@@ -391,7 +392,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         table.addView(headerRow);
 
-        for (int periodI = 0; periodI < 9; periodI++) {
+        for (int periodI = 0; periodI < RowCount; periodI++) {
             TableRow row = new TableRow(this);
 
             for (int dayI = 0; dayI < 5; dayI++) {
@@ -436,7 +437,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                 : ViewGroup.LayoutParams.MATCH_PARENT);
                 layoutParams.setMargins(lessonMargin, lessonMargin, lessonMargin, lessonMargin);
 
-                lessonLayout.setId(666 + dayI * 9 + periodI);
+                lessonLayout.setId(666 + dayI * RowCount + periodI);
                 lessonLayout.setOnClickListener(onClickListener);
                 lessonLayout.setLayoutParams(layoutParams);
             }
