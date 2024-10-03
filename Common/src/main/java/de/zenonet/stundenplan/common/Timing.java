@@ -7,8 +7,8 @@ import java.util.Calendar;
 
 public abstract class Timing {
 
-    private static final int DayOfWeekOverride = -1;
-    private static final LocalTime TimeOverride = null;//LocalTime.of(9, 36);
+    public static int DayOfWeekOverride = -1;
+    public static LocalTime TimeOverride = null;//LocalTime.of(9, 36);
     public static LocalTime getCurrentTime() {
         if(TimeOverride != null) return TimeOverride;
         return LocalTime.now(); // offset so that actual 15:00 is 8:00
