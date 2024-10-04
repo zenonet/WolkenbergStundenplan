@@ -3,7 +3,9 @@ package de.zenonet.stundenplan.nonCrucialUi.widgets
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -24,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.zenonet.stundenplan.nonCrucialUi.Heading
 import me.zhanghai.compose.preference.rememberPreferenceState
 
 @Composable
@@ -66,9 +70,9 @@ fun Widget(
                     showConfirmationDialog = true
                 },
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(12.dp)
                     .align(Alignment.TopEnd)
-                    .size(36.dp)
+                    .size(48.dp)
                     .padding(8.dp)
             ) {
                 Icon(
@@ -104,5 +108,17 @@ fun Widget(
 public class WidgetScope(private var showState: MutableState<Boolean>) {
     fun hideWidget(){
         showState.value = false
+    }
+}
+
+@Preview
+@Composable
+private fun WidgetPreview() {
+    Widget("previewWidget") {
+        Column{
+            Heading("My Widget")
+            Spacer(Modifier.height(10.dp))
+            Text("This is an example widget for non crucial ui")
+        }
     }
 }
