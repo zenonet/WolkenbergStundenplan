@@ -480,12 +480,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
         NonCrucialViewModel vm;
         if(isPreview){
             try {
-                vm = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this));
+                vm = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this), this);
             } catch (IOException e) {
                 return;
             }
         }else{
-            vm = new NonCrucialViewModel(manager, null, null);
+            vm = new NonCrucialViewModel(manager, null, null, this);
         }
 
         NonCrucialUiKt.applyUiToComposeView(cv, vm);

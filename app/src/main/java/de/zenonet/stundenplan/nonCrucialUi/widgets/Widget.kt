@@ -3,7 +3,6 @@ package de.zenonet.stundenplan.nonCrucialUi.widgets
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,10 +32,11 @@ fun Widget(
     widgetKey: String,
     modifier: Modifier = Modifier,
     closingOverride: (() -> Unit)? = null,
-    content: @Composable (ColumnScope.() -> Unit)
+    content: @Composable (WidgetScope.() -> Unit)
 ) {
     var showConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    var show by rememberPreferenceState("nonCrucialUi.$widgetKey", true)
+    val showState = rememberPreferenceState("nonCrucialUi.$widgetKey", true)
+    var show by showState
     AnimatedVisibility(show) {
         Box {
 
@@ -51,7 +52,7 @@ fun Widget(
             ) {
 
                 Column(modifier.padding(16.dp)) {
-                    content()
+                    content(WidgetScope(showState))
                 }
             }
 
@@ -97,5 +98,11 @@ fun Widget(
                     })
         }
 
+    }
+}
+
+public class WidgetScope(private var showState: MutableState<Boolean>) {
+    fun hideWidget(){
+        showState.value = false
     }
 }

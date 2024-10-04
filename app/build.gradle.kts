@@ -88,7 +88,13 @@ dependencies {
     implementation("me.zhanghai.compose.preference:library:1.0.0")
     implementation("com.google.accompanist:accompanist-permissions:0.31.0-alpha")
 
+    // Glance app widgets
     implementation( "androidx.glance:glance-appwidget:1.0.0" )
     implementation( "androidx.glance:glance-material3:1.0.0" )
+
+    // In-App reviews
+    implementation("com.google.android.play:review:2.0.1")
+    implementation("com.google.android.play:review-ktx:2.0.1")
+
 
 }
