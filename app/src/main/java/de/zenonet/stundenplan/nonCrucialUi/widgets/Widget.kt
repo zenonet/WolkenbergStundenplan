@@ -25,13 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import me.zhanghai.compose.preference.LocalPreferenceFlow
 import me.zhanghai.compose.preference.rememberPreferenceState
 
 @Composable
 fun Widget(
-    widgetKey:String,
+    widgetKey: String,
     modifier: Modifier = Modifier,
+    closingOverride: (() -> Unit)? = null,
     content: @Composable (ColumnScope.() -> Unit)
 ) {
     var showConfirmationDialog by rememberSaveable { mutableStateOf(false) }
@@ -56,7 +56,14 @@ fun Widget(
             }
 
             IconButton(
-                onClick = { showConfirmationDialog = true },
+                onClick = {
+                    if (closingOverride != null) {
+                        closingOverride()
+                        return@IconButton
+                    }
+
+                    showConfirmationDialog = true
+                },
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.TopEnd)

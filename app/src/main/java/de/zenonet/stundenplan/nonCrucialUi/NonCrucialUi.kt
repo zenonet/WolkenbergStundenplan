@@ -1,13 +1,26 @@
 package de.zenonet.stundenplan.nonCrucialUi
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -17,12 +30,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.zenonet.stundenplan.Header
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.nonCrucialUi.widgets.Widget
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import me.zhanghai.compose.preference.LocalPreferenceFlow
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
+import me.zhanghai.compose.preference.SwitchPreference
+import me.zhanghai.compose.preference.rememberPreferenceState
 import java.time.LocalTime
 
 fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
@@ -37,8 +54,6 @@ fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
 @Composable
 fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
     StundenplanTheme(darkTheme = true) {
-
-
         Surface {
             ProvidePreferenceLocals {
                 Column {
@@ -52,8 +67,10 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                     if (quote != null && quote!!.text != null)
                         QuoteView(quote!!)
 
-
                     DailyStaircaseAnalysis(viewModel)
+                    //FeedbackPls()
+
+                    WidgetConfigurator()
                 }
             }
 
@@ -65,7 +82,7 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
-    Widget("quoteView") {
+    Widget(NonCrucialWidgetKeys.QUOTE) {
         Heading(if (quote.classification == null) "Zitat des Tages" else quote.classification!!)
         Spacer(Modifier.height(10.dp))
         Text(
@@ -75,7 +92,7 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
         )
 
         Spacer(Modifier.height(10.dp))
-        Text("  " + quote.author)
+        Text(quote.author, modifier = Modifier.padding(10.dp, 0.dp))
     }
 
 }
@@ -94,7 +111,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
-    Widget("currentLessonInfo") {
+    Widget(NonCrucialWidgetKeys.CURRENT_LESSON_INFO) {
         if (!vm.isBreak)
             Heading("${vm.currentPeriod + 1}. Stunde")
         else
@@ -144,7 +161,7 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
 
     if (!vm.stairCaseAnalysisCompleted) return
 
-    Widget("staircaseAnalysis") {
+    Widget(NonCrucialWidgetKeys.STAIRCASE_ANALYSIS) {
         Heading("Treppensteig-Analyse")
         Spacer(Modifier.height(10.dp))
 
@@ -154,6 +171,55 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
 
 
     }
+}
+
+@Composable
+fun FeedbackPls(modifier: Modifier = Modifier) {
+    Widget(NonCrucialWidgetKeys.FEEDBACK_PLS) {
+        Heading("Gefällt Dir diese App?")
+        Row{
+            Button({}) {
+                Text("Nein, leider nicht")
+            }
+            Spacer(Modifier.width(12.dp))
+            Button({}) {
+                Text("Ja")
+            }
+        }
+    }
+}
+
+@Composable
+fun WidgetConfigurator() {
+    var show by rememberSaveable { mutableStateOf(false) }
+
+    Spacer(Modifier.height(36.dp))
+    Column(Modifier.fillMaxWidth()) {
+        AnimatedVisibility(!show, modifier = Modifier.align(CenterHorizontally)) {
+            Button({ show = !show }) {
+                Text("Infokarten konfigurieren")
+            }
+        }
+
+        AnimatedVisibility(show) {
+            Widget("configurator", closingOverride = { show = false }) {
+                Heading("Infokarten konfigurieren")
+                Column {
+                    WidgetConfigToggle("Infos zur aktuellen Stunde", NonCrucialWidgetKeys.CURRENT_LESSON_INFO)
+                    WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
+                    WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
+                    WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun WidgetConfigToggle(title: String, key: String, modifier: Modifier = Modifier) {
+    val v = rememberPreferenceState("nonCrucialUi.$key", true)
+    SwitchPreference(v, { Text(title) })
 }
 
 @Composable
