@@ -65,9 +65,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private boolean isInitialLoad = true;
     private Formatter formatter;
     private final int RowCount = 8;
+    private final int LessonIdOffset = 666;
     private final View.OnClickListener onClickListener = view -> {
         // id = 666 + dayI*9 + periodI
-        int id = view.getId() - 666;
+        int id = view.getId() - LessonIdOffset;
         int day = id / 9;
         int period = id - 9 * day;
 
@@ -262,7 +263,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             hasData |= timeTable.Lessons[dayI].length != 0;
 
             for (int periodI = 0; periodI < RowCount; periodI++) {
-                int viewId = 666 + dayI * RowCount + periodI;
+                int viewId = LessonIdOffset + dayI * RowCount + periodI;
                 ViewGroup lessonView = findViewById(viewId);
 
                 Lesson lesson = periodI < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI] : null;
@@ -437,7 +438,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                 : ViewGroup.LayoutParams.MATCH_PARENT);
                 layoutParams.setMargins(lessonMargin, lessonMargin, lessonMargin, lessonMargin);
 
-                lessonLayout.setId(666 + dayI * RowCount + periodI);
+                lessonLayout.setId(LessonIdOffset + dayI * RowCount + periodI);
                 lessonLayout.setOnClickListener(onClickListener);
                 lessonLayout.setLayoutParams(layoutParams);
             }
@@ -467,11 +468,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         Log.i(LogTags.Timing, String.format("Time from application start to started loading non-crucial-ui : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
 
-        ComposeView cv = findViewById(987);
+        final int composeViewId = 987;
+        ComposeView cv = findViewById(composeViewId);
         if (cv == null) {
             LinearLayout l = findViewById(R.id.mainViewGroup);
             cv = new ComposeView(this);
-            cv.setId(987);
+            cv.setId(composeViewId);
             l.addView(cv);
         }
 
