@@ -1,12 +1,9 @@
-package de.zenonet.stundenplan
+package de.zenonet.stundenplan.nonCrucialUi
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,46 +11,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.zenonet.stundenplan.common.Timing
-import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
-import kotlinx.coroutines.delay
 import java.time.LocalTime
-import kotlin.math.roundToInt
 
 fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
     view.apply {
@@ -93,7 +80,7 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
-    Widget {
+    Widget("quoteView") {
         Heading(if (quote.classification == null) "Zitat des Tages" else quote.classification!!)
         Spacer(Modifier.height(10.dp))
         Text(
@@ -101,6 +88,7 @@ fun QuoteView(quote: Quote, modifier: Modifier = Modifier) {
             fontStyle = FontStyle.Italic,
             fontSize = 18.sp
         )
+
         Spacer(Modifier.height(10.dp))
         Text("  " + quote.author)
     }
@@ -121,7 +109,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
-    Widget {
+    Widget("currentLessonInfo") {
         if (!vm.isBreak)
             Heading("${vm.currentPeriod + 1}. Stunde")
         else
@@ -171,7 +159,7 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
 
     if (!vm.stairCaseAnalysisCompleted) return
 
-    Widget {
+    Widget("staircaseAnalysis") {
         Heading("Treppensteig-Analyse")
         Spacer(Modifier.height(10.dp))
 
@@ -194,18 +182,22 @@ fun Heading(text: String) {
 
 @Composable
 fun Widget(
+    widgetKey:String,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit)
 ) {
+
+    var showConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var show by rememberSaveable { mutableStateOf(true) }
     AnimatedVisibility(show) {
         Box {
+
 
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = Color(38, 36, 42),
                 ),
-                elevation = CardDefaults.cardElevation(4.dp),
+                //elevation = CardDefaults.cardElevation(4.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(5.dp)
@@ -217,7 +209,7 @@ fun Widget(
             }
 
             IconButton(
-                onClick = {show = false},
+                onClick = { showConfirmationDialog = true },
                 modifier = Modifier
                     .padding(8.dp)
                     .align(TopEnd)
@@ -229,6 +221,26 @@ fun Widget(
                     contentDescription = "Close",
                 )
             }
+
+            if(showConfirmationDialog)
+            AlertDialog(
+                title = {
+                    Text("Entfernen bestätigen")
+                },
+                text = {
+                    Text("Möchtest du diese Karte wirklich dauerhaft entfernen? Du kannst dies in den Einstellungen rückgängig machen")
+                },
+                onDismissRequest = {showConfirmationDialog = false},
+                confirmButton = {
+                    Button({show = false; showConfirmationDialog = false}){
+                        Text("Ja")
+                    }
+                },
+                dismissButton = {
+                    Button({showConfirmationDialog = false}){
+                        Text("Nein")
+                    }
+                })
         }
 
     }

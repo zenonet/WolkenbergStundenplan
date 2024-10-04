@@ -29,8 +29,8 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-import de.zenonet.stundenplan.NonCrucialUiKt;
-import de.zenonet.stundenplan.NonCrucialViewModel;
+import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
+import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
