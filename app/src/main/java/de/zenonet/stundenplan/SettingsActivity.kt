@@ -101,10 +101,7 @@ fun View(activity: SettingsActivity?) {
     Scaffold(
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundBlue,
-                    titleContentColor = CloudWhite,
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(),
                 title = { Text("Einstellungen") },
                 navigationIcon = {
                     IconButton(
