@@ -40,13 +40,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.preference.PreferenceManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import de.zenonet.stundenplan.nonCrucialUi.PreviewPermissionState
 import de.zenonet.stundenplan.ui.theme.BackgroundBlue
 import de.zenonet.stundenplan.ui.theme.CalendarRed
 import de.zenonet.stundenplan.ui.theme.CloudWhite
@@ -118,9 +121,11 @@ fun View(activity: SettingsActivity?) {
         },
     ) { paddingValues ->
 
-        val notificationPermission = rememberPermissionState(
-            permission = Manifest.permission.POST_NOTIFICATIONS
-        )
+
+        val notificationPermission =
+            if (LocalView.current.isInEditMode) PreviewPermissionState() else rememberPermissionState(
+                permission = Manifest.permission.POST_NOTIFICATIONS
+            )
 
         var permissionAlertNecessary by remember {
             mutableStateOf(false)
@@ -256,7 +261,7 @@ fun SettingsView(modifier: Modifier = Modifier, content: LazyListScope.() -> Uni
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun SettingsPreview() {
     StundenplanTheme {
         View(null)
     }
