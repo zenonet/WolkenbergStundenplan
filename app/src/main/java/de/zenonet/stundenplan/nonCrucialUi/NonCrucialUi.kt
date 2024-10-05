@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +66,7 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                         QuoteView(quote!!)
 
                     DailyStaircaseAnalysis(viewModel)
-                    FeedbackPls(viewModel)
+                    if(viewModel.showReviewRequest) FeedbackPls(viewModel)
 
                     WidgetConfigurator()
                 }
@@ -174,6 +174,7 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
 @Composable
 fun FeedbackPls(vm: NonCrucialViewModel) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     Widget(NonCrucialWidgetKeys.FEEDBACK_PLS) {
         Heading("Gefällt Dir diese App?")
         Spacer(Modifier.height(10.dp))
@@ -182,8 +183,7 @@ fun FeedbackPls(vm: NonCrucialViewModel) {
         Row {
             Button({
                 coroutineScope.launch {
-                    vm.askForPlayStoreReview()
-                    hideWidget()
+                    vm.askForPlayStoreReview(context)
                 }
             }) {
                 Text("Ja")

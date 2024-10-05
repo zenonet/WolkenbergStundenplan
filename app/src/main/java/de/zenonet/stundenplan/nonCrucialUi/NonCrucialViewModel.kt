@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan.nonCrucialUi
 
 import android.app.Activity
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,28 +32,32 @@ import kotlin.math.roundToInt
 class NonCrucialViewModel(
     val ttm: TimeTableManager? = null,
     private val quote: Quote? = null,
-    val previewTimeTable: TimeTable? = null,
-    private val context: Activity? = null
+    val previewTimeTable: TimeTable? = null
 ) : ViewModel() {
-
-    private val _quoteOfTheDay = MutableStateFlow<Quote?>(Quote())
-    val quoteOfTheDay: StateFlow<Quote?> = _quoteOfTheDay.asStateFlow()
 
     private val _currentTimeTable = MutableStateFlow<TimeTable?>(null)
     val currentTimeTable: StateFlow<TimeTable?> = _currentTimeTable.asStateFlow()
 
-    var stairCasesUsedToday by mutableIntStateOf(-1)
-    var stairCasesUsedThisWeek by mutableIntStateOf(-1)
-    var stairCaseAnalysisCompleted by mutableStateOf(false)
-
+    //region quoteOfTheDay
     private val quoteProvider: QuoteProvider = QuoteProvider()
-
-
-    init {
-        if (quote != null) {
-            _quoteOfTheDay.value = quote
+    private val _quoteOfTheDay = MutableStateFlow<Quote?>(Quote())
+    val quoteOfTheDay: StateFlow<Quote?> = _quoteOfTheDay.asStateFlow()
+    suspend fun loadQuoteOfTheDay() {
+        if (quote != null) return
+        val q = withContext(Dispatchers.IO) {
+            try {
+                quoteProvider.getQuoteOfTheDay()
+            } catch (_: Exception) {
+                null
+            }
+        }
+        if (q != null) {
+            _quoteOfTheDay.value = q
+            Log.i(LogTags.Debug, "Assigned quote to state")
         }
     }
+    //endregion
+
 
     private var loadingTimeTable = false;
     suspend fun loadTimeTable() {
@@ -72,6 +77,10 @@ class NonCrucialViewModel(
 
     }
 
+    //region staircase analysis
+    var stairCasesUsedToday by mutableIntStateOf(-1)
+    var stairCasesUsedThisWeek by mutableIntStateOf(-1)
+    var stairCaseAnalysisCompleted by mutableStateOf(false)
     suspend fun analyzeStaircaseUsage() {
         loadTimeTable()
         if (currentTimeTable.value == null) return
@@ -129,21 +138,34 @@ class NonCrucialViewModel(
         stairCases += abs(lastHeight) // Go to ground level to leave the building
         return stairCases
     }
+    //endregion
 
-    suspend fun loadQuoteOfTheDay() {
-        if (quote != null) return
-        val q = withContext(Dispatchers.IO) {
-            try {
-                quoteProvider.getQuoteOfTheDay()
-            } catch (_: Exception) {
-                null
-            }
-        }
-        if (q != null) {
-            _quoteOfTheDay.value = q
-            Log.i(LogTags.Debug, "Assigned quote to state")
+    //region review requests
+    var showReviewRequest by mutableStateOf(true)
+    suspend fun askForPlayStoreReview(context: Context) {
+        if (context !is Activity) return
+
+        try {
+            val manager = ReviewManagerFactory.create(context)
+            val request = manager.requestReviewFlow()
+            val reviewInfo = request.await()
+            val flow = manager.launchReviewFlow(context, reviewInfo)
+            flow.await()
+            showReviewRequest = false
+        } catch (_: Exception) {
+
         }
     }
+
+    //endregion
+
+    //region currentLessonInfo
+    var currentPeriod by mutableIntStateOf(-1)
+    var startTime: LocalTime? by mutableStateOf(LocalTime.MIN)
+    var endTime: LocalTime? by mutableStateOf(LocalTime.MIN)
+    var currentTime: LocalTime by mutableStateOf(Timing.getCurrentTime())
+    var isBreak: Boolean by mutableStateOf(false)
+    var lessonProgress: Int by mutableIntStateOf(0)
 
     fun startRegularDataRecalculation() {
         // Update progress regularly (this is implemented here because it's the right place for it according to this: https://developer.android.com/topic/libraries/architecture/coroutines#viewmodelscope)
@@ -155,50 +177,35 @@ class NonCrucialViewModel(
         }
     }
 
-    suspend fun askForPlayStoreReview() {
-        if (context == null) return
+    fun generateCurrentLessonInfoData() {
+        Log.i(LogTags.UI, "Recalculating data for current lesson info...")
+        currentTime = Timing.getCurrentTime()
+        currentPeriod = Utils.getCurrentPeriod(currentTime)
 
-        try {
-            val manager = ReviewManagerFactory.create(context)
-            val request = manager.requestReviewFlow()
-            val reviewInfo = request.await()
-            val flow = manager.launchReviewFlow(context, reviewInfo)
-            flow.await()
-        }catch (_:Exception){
+        val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
+        startTime = pair?.first
+        endTime = pair?.second
 
+        if (startTime != null && endTime != null) {
+            isBreak = startTime!!.isAfter(currentTime)
+
+            if (isBreak && currentPeriod > 0) {
+                endTime = startTime
+
+                val pairOfLessonBefore = Utils.getStartAndEndTimeOfPeriod(currentPeriod - 1)
+                startTime = pairOfLessonBefore.second
+            }
+
+            val totalLessonSeconds = endTime!!.toSecondOfDay() - startTime!!.toSecondOfDay()
+            val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
+            lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
         }
     }
+    //endregion
 
-
-var currentPeriod by mutableIntStateOf(-1)
-var startTime: LocalTime? by mutableStateOf(LocalTime.MIN)
-var endTime: LocalTime? by mutableStateOf(LocalTime.MIN)
-var currentTime: LocalTime by mutableStateOf(Timing.getCurrentTime())
-var isBreak: Boolean by mutableStateOf(false)
-var lessonProgress: Int by mutableIntStateOf(0)
-
-fun generateCurrentLessonInfoData() {
-    Log.i(LogTags.UI, "Recalculating data for current lesson info...")
-    currentTime = Timing.getCurrentTime()
-    currentPeriod = Utils.getCurrentPeriod(currentTime)
-
-    val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
-    startTime = pair?.first
-    endTime = pair?.second
-
-    if (startTime != null && endTime != null) {
-        isBreak = startTime!!.isAfter(currentTime)
-
-        if (isBreak && currentPeriod > 0) {
-            endTime = startTime
-
-            val pairOfLessonBefore = Utils.getStartAndEndTimeOfPeriod(currentPeriod - 1)
-            startTime = pairOfLessonBefore.second
+    init {
+        if (quote != null) {
+            _quoteOfTheDay.value = quote
         }
-
-        val totalLessonSeconds = endTime!!.toSecondOfDay() - startTime!!.toSecondOfDay()
-        val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
-        lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
     }
-}
 }
