@@ -197,4 +197,34 @@ public class TimeTableCacheClient implements TimeTableClient {
 
         }
     }
+
+    public void cachePosts(Post[] posts){
+        try {
+            File rawCacheDir = new File(Utils.CachePath, "raw");
+            if(!rawCacheDir.exists()){
+                rawCacheDir.mkdir();
+            }
+
+            File timetableFile = new File(Utils.CachePath, "/raw/posts.json");
+
+            Log.v(LogTags.Caching, "saving posts...");
+            String json = new Gson().toJson(posts);
+            try (FileOutputStream out = new FileOutputStream(timetableFile)) {
+                out.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (IOException ignored) {
+
+        }
+    }
+    public Post[] loadPosts(){
+        try {
+            File timetableFile = new File(Utils.CachePath, "/raw/posts.json");
+            String json = Utils.readAllText(timetableFile);
+
+            return new Gson().fromJson(json, Post[].class);
+
+        } catch (IOException e) {
+            return null;
+        }
+    }
 }

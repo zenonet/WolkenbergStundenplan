@@ -179,6 +179,7 @@ public class TimeTableApiClient {
      */
     private long latestCounter = -1;
     public boolean isCounterConfirmed;
+    public String postsHash;
     public long getLatestCounterValue() {
         // If the counter has already been fetched, just return it
         if(latestCounter != -1) // TODO: Add expiration and re-fetching
@@ -192,11 +193,19 @@ public class TimeTableApiClient {
             // Let's just assume this counter works like a big number with a few dashes between digits
             latestCounter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
             latestCounter += CounterOffset;
-            sharedPreferences.edit().putLong("counter", latestCounter).apply();
             isCounterConfirmed = true;
+
+            // while we're here, also use the posts hash
+            postsHash = response.getString("POSTS_HASH");
+            sharedPreferences.edit()
+                    .putLong("counter", latestCounter)
+                    .putString("postsHash", postsHash)
+                    .apply();
+
             return latestCounter;
         } catch (IOException | JSONException e) {
             isCounterConfirmed = false;
+            postsHash = sharedPreferences.getString("postsHash", "");
             return sharedPreferences.getLong("counter", -1);
         }
     }

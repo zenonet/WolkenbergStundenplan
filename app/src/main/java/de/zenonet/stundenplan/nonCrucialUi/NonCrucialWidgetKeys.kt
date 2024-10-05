@@ -5,4 +5,5 @@ object NonCrucialWidgetKeys {
     const val QUOTE = "quote"
     const val STAIRCASE_ANALYSIS = "staircaseAnalysis"
     const val CURRENT_LESSON_INFO = "currentLessonInfo"
+    const val POSTS = "posts"
 }

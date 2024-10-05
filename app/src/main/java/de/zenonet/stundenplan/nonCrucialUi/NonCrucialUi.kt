@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
+import de.zenonet.stundenplan.common.timetableManagement.Post
 import de.zenonet.stundenplan.nonCrucialUi.widgets.Widget
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlinx.coroutines.launch
@@ -67,6 +69,8 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
                     DailyStaircaseAnalysis(viewModel)
                     if(viewModel.showReviewRequest) FeedbackPls(viewModel)
+
+                    Posts(viewModel)
 
                     WidgetConfigurator()
                 }
@@ -199,6 +203,28 @@ fun FeedbackPls(vm: NonCrucialViewModel) {
 }
 
 @Composable
+fun Posts(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    LaunchedEffect(Unit) {
+        vm.loadPosts()
+    }
+
+
+    val posts by vm.posts.collectAsStateWithLifecycle()
+    if (posts == null) return
+    posts!!.forEach {
+        Widget(NonCrucialWidgetKeys.POSTS) {
+            Column{
+                Heading(it.Title)
+                Text("Von ${it.Creator}", fontWeight = FontWeight.Light)
+                Spacer(Modifier.height(10.dp))
+
+                Text(it.Text)
+            }
+        }
+    }
+}
+
+@Composable
 fun WidgetConfigurator() {
     var show by rememberSaveable { mutableStateOf(false) }
 
@@ -221,6 +247,7 @@ fun WidgetConfigurator() {
                     )
                     WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
+                    WidgetConfigToggle("Posts aus dem offiziellen Stundenplan", NonCrucialWidgetKeys.POSTS)
                     WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
                 }
             }

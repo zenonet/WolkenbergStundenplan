@@ -15,6 +15,7 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
+import de.zenonet.stundenplan.common.timetableManagement.Post
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,15 @@ class NonCrucialViewModel(
         }
         loadingTimeTable = false
 
+    }
+
+    private val _posts = MutableStateFlow<Array<Post>?>(null)
+    val posts: StateFlow<Array<Post>?> = _posts.asStateFlow()
+    suspend fun loadPosts(){
+        val p = withContext(Dispatchers.IO) {
+            ttm?.getPosts()
+        }
+        _posts.value = p
     }
 
     //region staircase analysis

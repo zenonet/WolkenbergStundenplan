@@ -288,4 +288,18 @@ public class TimeTableManager implements TimeTableClient {
         cacheClient.saveUser(user);
         apiClient.user = user;
     }
+
+    public Post[] getPosts(){
+        // Ensure a posts hash is available
+        String localHash = sharedPreferences.getString("postsHash", "_");
+        apiClient.getLatestCounterValue();
+        String apiHash = apiClient.postsHash;
+
+        if(!localHash.equals(apiHash)){
+            Post[] posts = apiClient.getPosts();
+            cacheClient.cachePosts(posts);
+            return posts;
+        }
+        return cacheClient.loadPosts();
+    }
 }
