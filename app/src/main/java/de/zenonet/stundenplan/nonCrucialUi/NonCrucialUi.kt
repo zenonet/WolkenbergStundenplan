@@ -68,7 +68,7 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                         QuoteView(quote!!)
 
                     DailyStaircaseAnalysis(viewModel)
-                    if(viewModel.showReviewRequest) FeedbackPls(viewModel)
+                    //if(viewModel.showReviewRequest) FeedbackPls(viewModel)
 
                     Posts(viewModel)
 
@@ -248,7 +248,7 @@ fun WidgetConfigurator() {
                     WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
                     WidgetConfigToggle("Posts aus dem offiziellen Stundenplan", NonCrucialWidgetKeys.POSTS)
-                    WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
+                    //WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
                 }
             }
 
