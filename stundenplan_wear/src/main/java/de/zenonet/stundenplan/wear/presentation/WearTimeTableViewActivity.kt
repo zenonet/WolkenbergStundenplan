@@ -114,14 +114,6 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
             initialPage = 1
         )
 
-        val weekDays = arrayOf(
-            "Montag",
-            "Dienstag",
-            "Mittwoch",
-            "Donnerstag",
-            "Freitag",
-        )
-
         val dayOfWeek = Timing.getCurrentDayOfWeek()
 
         HorizontalPager(
@@ -149,7 +141,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                 ) {
 
                     Text(
-                        weekDays[day],
+                        Utils.getWordForDayOfWeek(day),
                         Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(0.dp, 3.dp, 0.dp, 0.dp), textAlign = TextAlign.Center

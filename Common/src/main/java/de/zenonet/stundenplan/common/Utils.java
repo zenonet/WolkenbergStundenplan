@@ -3,6 +3,8 @@ package de.zenonet.stundenplan.common;
 import android.content.Context;
 import android.util.Pair;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -112,5 +114,20 @@ public class Utils {
         TimeTable t = new Gson().fromJson(Utils.readAllFromStream(context.getResources().openRawResource(de.zenonet.stundenplan.common.R.raw.preview_timetable)), TimeTable.class);
         t.source = TimeTableSource.Preview;
         return t;
+    }
+
+
+    static final String[] weekDays = new String[]{
+            "Sonntag",
+            "Montag",
+            "Dienstag",
+            "Mittwoch",
+            "Donnerstag",
+            "Freitag",
+            "Samstag"
+    };
+    public static String getWordForDayOfWeek(int dayOfWeek){
+        if(dayOfWeek < -1 || dayOfWeek > 5) return null;
+        return weekDays[dayOfWeek+1];
     }
 }
