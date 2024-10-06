@@ -21,6 +21,12 @@
         android:theme="@style/Theme.Stundenplan"
         tools:targetApi="34">
         <activity
+            android:name=".homework.HomeworkEditorActivity"
+            android:exported="false"
+            android:label="Hausaufgaben-Editor"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Stundenplan" />
+        <activity
             android:name=".OnboardingActivity"
             android:exported="true"
             android:label="Onboarding"
@@ -59,6 +65,7 @@
         <activity
             android:name=".activities.LoginActivity"
             android:exported="false" />
+
         <receiver android:name=".BackgroundUpdater" />
     </application>
 

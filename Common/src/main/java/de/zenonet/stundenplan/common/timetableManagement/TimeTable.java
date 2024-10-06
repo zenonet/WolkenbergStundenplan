@@ -23,4 +23,8 @@ public final class TimeTable {
     public boolean isGoodEnough(){
         return ChronoUnit.MILLIS.between(lastConfirmedDate, LocalDateTime.now()) <= assumedValidityDurationInMillis;
     }
+
+    public boolean hasDataForLesson(int dayOfWeek, int period){
+        return Lessons != null && dayOfWeek >= 0 && dayOfWeek < 5 && Lessons[dayOfWeek].length > period && Lessons[dayOfWeek][period] != null;
+    }
 }

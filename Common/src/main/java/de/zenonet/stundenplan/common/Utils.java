@@ -130,4 +130,11 @@ public class Utils {
         if(dayOfWeek < -1 || dayOfWeek > 5) return null;
         return weekDays[dayOfWeek+1];
     }
+
+    public static JSONObject getOrAppendJSONObject(JSONObject base, String key) throws JSONException {
+        if(base.has(key)) return base.getJSONObject(key);
+        JSONObject obj = new JSONObject();
+        base.put(key, obj);
+        return obj;
+    }
 }

@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
+import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
 import de.zenonet.stundenplan.OnboardingActivity;
@@ -392,6 +393,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
         @Override
         public boolean onMenuItemClick(MenuItem item) {
 
+            if (item.getItemId() == R.id.menuInsertHomework) {
+                Intent intent = new Intent(TimeTableViewActivity.this, HomeworkEditorActivity.class);
+                intent.putExtra("week", selectedWeek);
+                intent.putExtra("dayOfWeek", dayOfWeek);
+                intent.putExtra("period", period);
+
+                startActivity(intent);
+                return true;
+            }
             return true;
         }
     }
