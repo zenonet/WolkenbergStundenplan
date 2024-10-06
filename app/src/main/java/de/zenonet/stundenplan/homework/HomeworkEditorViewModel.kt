@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan.homework
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -23,7 +24,7 @@ import java.util.Calendar
 class HomeworkEditorViewModel(
     val week: Int,
     val dayOfWeek: Int,
-    val period: Int,
+    val subjectHashCode: Int,
     private val ttm: TimeTableManager?,
     private val previewTimeTable: TimeTable? = null
 ) : ViewModel() {
@@ -37,6 +38,7 @@ class HomeworkEditorViewModel(
         else null
     }
 
+    var period by mutableIntStateOf(-1)
     var text by mutableStateOf("")
 
     suspend fun loadTimeTable() {
@@ -49,29 +51,38 @@ class HomeworkEditorViewModel(
         } else if (previewTimeTable != null) {
             _timeTable.value = previewTimeTable
         }
+
+        // Calculate period
+        val lessons = _timeTable.value!!.Lessons[dayOfWeek]
+        for(i in lessons.indices){
+            if(lessons[i] != null && lessons[i].Subject.hashCode() == subjectHashCode){
+                period = i
+                break
+            }
+        }
     }
 
     suspend fun loadExistingText(){
         withContext(Dispatchers.IO) {
             val (_, _, thisDay) = getJSONObjectForThisDay()
 
-            if (!thisDay.has(period.toString())) return@withContext
+            if (!thisDay.has(subjectHashCode.toString())) return@withContext
 
-            text = thisDay.getString(period.toString())
+            text = thisDay.getString(subjectHashCode.toString())
         }
     }
 
     suspend fun save() {
         withContext(Dispatchers.IO) {
             val (file, root, thisDay) = getJSONObjectForThisDay()
-            thisDay.put(period.toString(), text)
+            thisDay.put(subjectHashCode.toString(), text)
 
             Utils.writeAllText(file, root.toString())
         }
     }
 
     private fun getJSONObjectForThisDay(): Triple<File, JSONObject, JSONObject> {
-        // Structure of homework.json: year->week->day->period
+        // Structure of homework.json: year->week->day->subjectHashCode
         val file = File(StundenplanApplication.application.dataDir, "homework.json")
 
         val root: JSONObject;

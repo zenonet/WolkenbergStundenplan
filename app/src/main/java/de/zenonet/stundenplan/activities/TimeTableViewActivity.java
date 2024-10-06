@@ -156,7 +156,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> intentLauncher;
     private ActivityResultLauncher<Intent> settingsIntentLauncher;
 
-    private void registerIntentLauncher(){
+    private void registerIntentLauncher() {
         intentLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -189,12 +189,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
         settingsIntentLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    if(currentTimeTable != null) updateTimeTableView(currentTimeTable);
+                    if (currentTimeTable != null) updateTimeTableView(currentTimeTable);
                 }
         );
     }
+
     private void startLoginProcess() {
-        if(intentLauncher == null) throw new IllegalStateException("TimeTableViewActivity.startLoginProcess() before TimeTableViewActivity.registerIntentLauncher() was called.");
+        if (intentLauncher == null)
+            throw new IllegalStateException("TimeTableViewActivity.startLoginProcess() before TimeTableViewActivity.registerIntentLauncher() was called.");
         intentLauncher.launch(new Intent(this, LoginActivity.class));
 
     }
@@ -224,7 +226,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                 }
                         ),
                 error -> {
-                    if(error == ResultType.NoLoginSaved || error == ResultType.TokenExpired){
+                    if (error == ResultType.NoLoginSaved || error == ResultType.TokenExpired) {
                         runOnUiThread(() -> {
                             Toast.makeText(TimeTableViewActivity.this, "Dein Login ist abgelaufen. Du musst dich erneut anmelden.", Toast.LENGTH_SHORT).show();
                             startLoginProcess();
@@ -246,7 +248,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void updateTimeTableView(TimeTable timeTable) {
 
-        if(popup != null) popup.dismiss();
+        if (popup != null) popup.dismiss();
 
         String stateText;
         switch (timeTable.source) {
@@ -281,8 +283,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 if (lesson == null) continue;
 
                 boolean cssl = getSharedPreferences().getBoolean("combineSameSubjectLessons", false);
-                Lesson lessonAfter = periodI+1 < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI+1] : null;
-                Lesson lessonBefore = periodI-1 >= 0 ? timeTable.Lessons[dayI][periodI-1] : null;
+                Lesson lessonAfter = periodI + 1 < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI + 1] : null;
+                Lesson lessonBefore = periodI - 1 >= 0 ? timeTable.Lessons[dayI][periodI - 1] : null;
                 int paddingTop = cssl && lessonBefore != null && lessonBefore.SubjectShortName.equals(lesson.SubjectShortName) ? 0 : lessonMargin;
                 int paddingBottom = cssl && lessonAfter != null && lessonAfter.SubjectShortName.equals(lesson.SubjectShortName) ? 0 : lessonMargin;
 
@@ -381,6 +383,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     PopupMenu popup;
+
     private void onLessonClicked(int dayOfWeek, int period, View lessonView) {
         Log.d(LogTags.Debug, String.format("Tapped on day %d at period %d", dayOfWeek, period));
 
@@ -389,12 +392,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
         menuListener.period = period;
 
         // Just some unnecessary checks because I am afraid of this crashing somehow
-        if(currentTimeTable.Lessons.length < dayOfWeek-1 && currentTimeTable.Lessons[dayOfWeek] == null) return;
-        if(currentTimeTable.Lessons[dayOfWeek].length < period-1 && currentTimeTable.Lessons[dayOfWeek][period] == null) return;
+        if (currentTimeTable.Lessons.length < dayOfWeek - 1 && currentTimeTable.Lessons[dayOfWeek] == null)
+            return;
+        if (currentTimeTable.Lessons[dayOfWeek].length < period - 1 && currentTimeTable.Lessons[dayOfWeek][period] == null)
+            return;
 
         Lesson lesson = currentTimeTable.Lessons[dayOfWeek][period];
 
-        if(popup != null) popup.dismiss();
+        if (popup != null) popup.dismiss();
 
         popup = new PopupMenu(this, lessonView);
         popup.setOnMenuItemClickListener(menuListener);
@@ -407,14 +412,24 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         public int dayOfWeek;
         public int period;
+
         @Override
         public boolean onMenuItemClick(MenuItem item) {
 
             if (item.getItemId() == R.id.menuInsertHomework) {
+
+/*
+                // get the first period of the block
+                while (period > 0
+                                && currentTimeTable.Lessons[dayOfWeek][period - 1] != null
+                                && currentTimeTable.Lessons[dayOfWeek][period - 1].SubjectShortName.equals(currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName)
+                ) period--;
+*/
+
                 Intent intent = new Intent(TimeTableViewActivity.this, HomeworkEditorActivity.class);
                 intent.putExtra("week", selectedWeek);
                 intent.putExtra("dayOfWeek", dayOfWeek);
-                intent.putExtra("period", period);
+                intent.putExtra("subjectHashCode", currentTimeTable.Lessons[dayOfWeek][period].Subject.hashCode());
 
                 startActivity(intent);
                 return true;
@@ -425,6 +440,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
 
     final int lessonMargin = 3;
+
     private void createTableLayout() {
         final int width = table.getMeasuredWidth();
         final int widthPerRow = width / 5;
@@ -535,13 +551,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
 
         NonCrucialViewModel vm;
-        if(isPreview){
+        if (isPreview) {
             try {
                 vm = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this));
             } catch (IOException e) {
                 return;
             }
-        }else{
+        } else {
             vm = new NonCrucialViewModel(manager, null, null);
         }
 

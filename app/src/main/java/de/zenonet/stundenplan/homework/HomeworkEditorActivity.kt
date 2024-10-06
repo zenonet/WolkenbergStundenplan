@@ -42,14 +42,14 @@ class HomeworkEditorActivity : ComponentActivity() {
 
         val week = intent.extras?.getInt("week")
         val dayOfWeek = intent.extras?.getInt("dayOfWeek")
-        val period = intent.extras?.getInt("period")
+        val subjectHashCode = intent.extras?.getInt("subjectHashCode")
 
-        if (week == null || dayOfWeek == null || period == null) finish()
+        if (week == null || dayOfWeek == null || subjectHashCode == null) finish()
 
         val ttm = TimeTableManager()
         ttm.init(this)
 
-        val vm = HomeworkEditorViewModel(week!!, dayOfWeek!!, period!!, ttm)
+        val vm = HomeworkEditorViewModel(week!!, dayOfWeek!!, subjectHashCode!!, ttm)
 
         enableEdgeToEdge()
         setContent {
