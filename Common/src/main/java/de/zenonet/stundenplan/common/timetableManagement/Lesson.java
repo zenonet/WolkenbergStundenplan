@@ -16,6 +16,7 @@ public final class Lesson {
     public String Text;
     public transient LocalTime StartTime;
     public transient LocalTime EndTime;
+    public transient boolean HasHomeworkAttached;
 
     public boolean isTakingPlace() {
         return Type != LessonType.Cancelled && Type != LessonType.Absent && Type != LessonType.Holiday && Type != LessonType.Assignment;

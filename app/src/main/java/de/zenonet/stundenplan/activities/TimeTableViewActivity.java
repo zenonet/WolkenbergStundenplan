@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicReference;
 
 
+import de.zenonet.stundenplan.common.HomeworkManager;
 import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
@@ -155,6 +156,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> intentLauncher;
     private ActivityResultLauncher<Intent> settingsIntentLauncher;
+    private ActivityResultLauncher<Intent> homeworkEditorLauncher;
 
     private void registerIntentLauncher() {
         intentLauncher = registerForActivityResult(
@@ -192,6 +194,14 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     if (currentTimeTable != null) updateTimeTableView(currentTimeTable);
                 }
         );
+
+        homeworkEditorLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, currentTimeTable);
+                    updateTimeTableView(currentTimeTable);
+                }
+        );
     }
 
     private void startLoginProcess() {
@@ -204,11 +214,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private AtomicReference<TimeTable> loadingTimeTableReference;
 
     private boolean timeTableLoaded = false;
-
     private void loadTimeTableAsync() {
+        int[] timeTableVersionsReceived = new int[1];
         loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(selectedWeek,
-                (timeTable) ->
-                        runOnUiThread(() -> {
+                (timeTable) -> {
+                    timeTableVersionsReceived[0]++;
+                    runOnUiThread(() -> {
 
                                     if (timeTable == null) return;
 
@@ -224,7 +235,21 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                     currentTimeTable = timeTable;
                                     updateTimeTableView(timeTable);
                                 }
-                        ),
+                    );
+
+
+                    // add annotations for lessons with homework attached
+                    int timeTableIndex = timeTableVersionsReceived[0];
+                    HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, timeTable);
+                    if(timeTableIndex == timeTableVersionsReceived[0]){
+                        // update view to show homework annotations
+                        runOnUiThread(()-> {
+                            Log.i(LogTags.Timing, String.format("Time from app start to homework annotations applied to timetable: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                            updateTimeTableView(timeTable);
+                        });
+                    }
+
+                },
                 error -> {
                     if (error == ResultType.NoLoginSaved || error == ResultType.TokenExpired) {
                         runOnUiThread(() -> {
@@ -300,8 +325,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 subjectView.setText(lesson.SubjectShortName);
                 roomView.setText(formatter.formatRoomName(lesson.Room));
                 teacherView.setText(formatter.formatTeacherName(lesson.Teacher));
-                textView.setText(lesson.Text != null ? lesson.Text : "");
-                textView.setVisibility(lesson.Text == null ? View.GONE : View.VISIBLE);
+                String text = lesson.Text != null ? lesson.Text : "";
+                if(lesson.HasHomeworkAttached) {
+                    if(text != "") text += "\n";
+                    text += "Hausaufgaben";
+                }
+                textView.setText(text);
+                textView.setVisibility(lesson.Text != null || lesson.HasHomeworkAttached ? View.VISIBLE : View.GONE);
 
                 /*if (lesson.Type == LessonType.Assignment)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.assignment_substituted_lesson));
@@ -431,7 +461,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 intent.putExtra("dayOfWeek", dayOfWeek);
                 intent.putExtra("subjectAbbreviationHash", currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
 
-                startActivity(intent);
+                homeworkEditorLauncher.launch(intent);
                 return true;
             }
             return true;

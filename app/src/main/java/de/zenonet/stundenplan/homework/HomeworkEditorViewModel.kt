@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
@@ -64,20 +65,13 @@ class HomeworkEditorViewModel(
 
     suspend fun loadExistingText(){
         withContext(Dispatchers.IO) {
-            val (_, _, thisDay) = getJSONObjectForThisDay()
-
-            if (!thisDay.has(subjectAbbreviationHash.toString())) return@withContext
-
-            text = thisDay.getString(subjectAbbreviationHash.toString())
+            text = HomeworkManager.getNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash)
         }
     }
 
     suspend fun save() {
         withContext(Dispatchers.IO) {
-            val (file, root, thisDay) = getJSONObjectForThisDay()
-            thisDay.put(subjectAbbreviationHash.toString(), text)
-
-            Utils.writeAllText(file, root.toString())
+            HomeworkManager.putNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash, text)
         }
     }
 
