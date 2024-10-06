@@ -11,6 +11,12 @@ object HomeworkManager {
         Utils.writeAllText(file, root.toString())
     }
 
+    fun deleteNoteFor(year:Int, week:Int, dayOfWeek:Int, subjectAbbreviationHash:Int){
+        val (file, root, day) = getJSONObjectForThisDay(year, week, dayOfWeek)
+        day.remove(subjectAbbreviationHash.toString())
+        Utils.writeAllText(file, root.toString())
+    }
+
     fun getNoteFor(year:Int, week:Int, dayOfWeek:Int, subjectAbbreviationHash:Int): String{
         val (_, _, day) = getJSONObjectForThisDay(year, week, dayOfWeek)
         if (!day.has(subjectAbbreviationHash.toString())) return ""
@@ -31,9 +37,7 @@ object HomeworkManager {
             for (lesson in tt.Lessons[day]) {
                 if(lesson == null) continue
                 val hash = lesson.SubjectShortName.hashCode().toString()
-                if(!jsonDay.has(hash)) continue
-
-                lesson.HasHomeworkAttached = jsonDay.getString(hash).isNotBlank()
+                lesson.HasHomeworkAttached = jsonDay.has(hash) && jsonDay.getString(hash).isNotBlank()
             }
         }
 

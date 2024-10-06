@@ -197,11 +197,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         homeworkEditorLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, currentTimeTable);
-                    updateTimeTableView(currentTimeTable);
-                }
+                result -> updateHomeworkAnnotations()
         );
+    }
+
+    private void updateHomeworkAnnotations() {
+        HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, currentTimeTable);
+        updateTimeTableView(currentTimeTable);
     }
 
     private void startLoginProcess() {
@@ -435,6 +437,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(menuListener);
         popup.getMenuInflater().inflate(R.menu.lessoncontextmenu, popup.getMenu());
         popup.getMenu().findItem(R.id.menuTimeView).setTitle(String.format("%s - %s", lesson.StartTime, lesson.EndTime));
+        if(lesson.HasHomeworkAttached) popup.getMenu().add("Hausaufgaben entfernen");
         popup.show();
     }
 
@@ -463,6 +466,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
                 homeworkEditorLauncher.launch(intent);
                 return true;
+            } else if ("Hausaufgaben entfernen".contentEquals(item.getTitle())) { // FIXME: 06.10.2024 Pls stop comparing the title for this, also maybe add confirmation dialog
+                HomeworkManager.INSTANCE.deleteNoteFor(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
+                runOnUiThread(TimeTableViewActivity.this::updateHomeworkAnnotations);
             }
             return true;
         }
