@@ -93,7 +93,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
         int dayOfWeek = Timing.getCurrentDayOfWeek();
 
         // Ensure it's a weekday
-        if (dayOfWeek > 4)
+        if (dayOfWeek > 4 || dayOfWeek < 0)
             return;
 
         int nextPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime().plusMinutes(6));
