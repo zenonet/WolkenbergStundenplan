@@ -110,7 +110,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         formatter = new Formatter(this);
         createTableLayout();
 
-        findViewById(R.id.settingsButton).setOnClickListener((sender) -> startActivity(new Intent(this, SettingsActivity.class)));
+        findViewById(R.id.settingsButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
 
         previousWeekButton = findViewById(R.id.previousWeekButton);
         nextWeekButton = findViewById(R.id.nextWeekButton);
@@ -154,6 +154,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private ActivityResultLauncher<Intent> intentLauncher;
+    private ActivityResultLauncher<Intent> settingsIntentLauncher;
 
     private void registerIntentLauncher(){
         intentLauncher = registerForActivityResult(
@@ -182,6 +183,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
                             });
                         }
                     }
+                }
+        );
+
+        settingsIntentLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if(currentTimeTable != null) updateTimeTableView(currentTimeTable);
                 }
         );
     }
@@ -272,6 +280,15 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 lessonView.setVisibility(lesson == null ? View.INVISIBLE : View.VISIBLE);
                 if (lesson == null) continue;
 
+                boolean cssl = getSharedPreferences().getBoolean("combineSameSubjectLessons", false);
+                Lesson lessonAfter = periodI+1 < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI+1] : null;
+                Lesson lessonBefore = periodI-1 >= 0 ? timeTable.Lessons[dayI][periodI-1] : null;
+                int paddingTop = cssl && lessonBefore != null && lessonBefore.SubjectShortName.equals(lesson.SubjectShortName) ? 0 : lessonMargin;
+                int paddingBottom = cssl && lessonAfter != null && lessonAfter.SubjectShortName.equals(lesson.SubjectShortName) ? 0 : lessonMargin;
+
+                TableRow.LayoutParams params = (TableRow.LayoutParams) lessonView.getLayoutParams();
+                params.setMargins(lessonMargin, paddingTop, lessonMargin, paddingBottom);
+                lessonView.setLayoutParams(params);
 
                 TextView subjectView = (TextView) lessonView.getChildAt(0);
                 TextView roomView = (TextView) (lessonView.getChildAt(1));
@@ -329,10 +346,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+/*
         // Update so that formatting changes from the settings page are reflected
         if(currentTimeTable != null)
-            updateTimeTableView(currentTimeTable);
+            updateTimeTableView(currentTimeTable);*/
     }
 
     @SuppressLint("SimpleDateFormat")
@@ -407,10 +424,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
 
+    final int lessonMargin = 3;
     private void createTableLayout() {
         final int width = table.getMeasuredWidth();
         final int widthPerRow = width / 5;
-        final int lessonMargin = 3;
         final int lessonTextPaddingH = 30;
         final int lessonTextPaddingV = 15;
 

@@ -231,6 +231,17 @@ fun View(activity: SettingsActivity?) {
                 title = { Text(text = "Zeige führende Nullen in Raum-Bezeichnungen") },
                 summary = { Text(text = if (it) "Bsp: D07" else "Bsp: D7") }
             )
+            switchPreference(
+                key = "combineSameSubjectLessons",
+                defaultValue = false,
+                title = { Text(text = "Verbinde Doppelstunden") },
+                summary = { Text(text = if (it) "Kein Spalt zwischen Stunden einer Doppelstunde wird angezeigt" else "Spalt zwischen Stunden einer Doppelstunde wird angezeigt") }
+            )
+/*            switchPreference(
+                key = "useCursedLayout",
+                defaultValue = false,
+                title = { Text(text = "Cursed Layout") },
+            )*/
 
             /*
                         // TODO:
