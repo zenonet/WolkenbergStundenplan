@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -75,7 +76,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         // period > 7 is some weird stuff we don't want
         if (period > 7) return;
 
-        onLessonClicked(day, period);
+        onLessonClicked(day, period, view);
     };
 
     @Override
@@ -234,10 +235,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
         updateTimeTableView(currentTimeTable);
     }
 
-
-    private PopupWindow popupWindow;
-
     private void updateTimeTableView(TimeTable timeTable) {
+
+        if(popup != null) popup.dismiss();
 
         String stateText;
         switch (timeTable.source) {
@@ -362,8 +362,38 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
     }
 
-    private void onLessonClicked(int dayOfWeek, int period) {
+    PopupMenu popup;
+    private void onLessonClicked(int dayOfWeek, int period, View lessonView) {
         Log.d(LogTags.Debug, String.format("Tapped on day %d at period %d", dayOfWeek, period));
+
+        MenuListener menuListener = new MenuListener();
+        menuListener.dayOfWeek = dayOfWeek;
+        menuListener.period = period;
+
+        // Just some unnecessary checks because I am afraid of this crashing somehow
+        if(currentTimeTable.Lessons.length < dayOfWeek-1 && currentTimeTable.Lessons[dayOfWeek] == null) return;
+        if(currentTimeTable.Lessons[dayOfWeek].length < period-1 && currentTimeTable.Lessons[dayOfWeek][period] == null) return;
+
+        Lesson lesson = currentTimeTable.Lessons[dayOfWeek][period];
+
+        if(popup != null) popup.dismiss();
+
+        popup = new PopupMenu(this, lessonView);
+        popup.setOnMenuItemClickListener(menuListener);
+        popup.getMenuInflater().inflate(R.menu.lessoncontextmenu, popup.getMenu());
+        popup.getMenu().findItem(R.id.menuTimeView).setTitle(String.format("%s - %s", lesson.StartTime, lesson.EndTime));
+        popup.show();
+    }
+
+    private class MenuListener implements PopupMenu.OnMenuItemClickListener {
+
+        public int dayOfWeek;
+        public int period;
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+
+            return true;
+        }
     }
 
 
