@@ -68,6 +68,7 @@ class NonCrucialViewModel(
 
         if (ttm != null) {
             val tt = withContext(Dispatchers.IO) {
+                ttm.login()
                 ttm.getCurrentTimeTable()
             }
             _currentTimeTable.value = tt
