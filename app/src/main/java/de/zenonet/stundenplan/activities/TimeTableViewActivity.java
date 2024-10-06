@@ -69,8 +69,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private final View.OnClickListener onClickListener = view -> {
         // id = 666 + dayI*9 + periodI
         int id = view.getId() - LessonIdOffset;
-        int day = id / 9;
-        int period = id - 9 * day;
+        int day = id / RowCount;
+        int period = id - RowCount * day;
 
         // period > 7 is some weird stuff we don't want
         if (period > 7) return;
