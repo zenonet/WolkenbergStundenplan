@@ -24,7 +24,7 @@ import java.util.Calendar
 class HomeworkEditorViewModel(
     val week: Int,
     val dayOfWeek: Int,
-    val subjectHashCode: Int,
+    val subjectAbbreviationHash: Int,
     private val ttm: TimeTableManager?,
     private val previewTimeTable: TimeTable? = null
 ) : ViewModel() {
@@ -55,7 +55,7 @@ class HomeworkEditorViewModel(
         // Calculate period
         val lessons = _timeTable.value!!.Lessons[dayOfWeek]
         for(i in lessons.indices){
-            if(lessons[i] != null && lessons[i].Subject.hashCode() == subjectHashCode){
+            if(lessons[i] != null && lessons[i].SubjectShortName.hashCode() == subjectAbbreviationHash){
                 period = i
                 break
             }
@@ -66,16 +66,16 @@ class HomeworkEditorViewModel(
         withContext(Dispatchers.IO) {
             val (_, _, thisDay) = getJSONObjectForThisDay()
 
-            if (!thisDay.has(subjectHashCode.toString())) return@withContext
+            if (!thisDay.has(subjectAbbreviationHash.toString())) return@withContext
 
-            text = thisDay.getString(subjectHashCode.toString())
+            text = thisDay.getString(subjectAbbreviationHash.toString())
         }
     }
 
     suspend fun save() {
         withContext(Dispatchers.IO) {
             val (file, root, thisDay) = getJSONObjectForThisDay()
-            thisDay.put(subjectHashCode.toString(), text)
+            thisDay.put(subjectAbbreviationHash.toString(), text)
 
             Utils.writeAllText(file, root.toString())
         }

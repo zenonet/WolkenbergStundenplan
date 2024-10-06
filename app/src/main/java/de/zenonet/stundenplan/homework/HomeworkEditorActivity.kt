@@ -42,7 +42,7 @@ class HomeworkEditorActivity : ComponentActivity() {
 
         val week = intent.extras?.getInt("week")
         val dayOfWeek = intent.extras?.getInt("dayOfWeek")
-        val subjectHashCode = intent.extras?.getInt("subjectHashCode")
+        val subjectHashCode = intent.extras?.getInt("subjectAbbreviationHash")
 
         if (week == null || dayOfWeek == null || subjectHashCode == null) finish()
 

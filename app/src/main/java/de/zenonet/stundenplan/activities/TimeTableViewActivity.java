@@ -429,7 +429,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 Intent intent = new Intent(TimeTableViewActivity.this, HomeworkEditorActivity.class);
                 intent.putExtra("week", selectedWeek);
                 intent.putExtra("dayOfWeek", dayOfWeek);
-                intent.putExtra("subjectHashCode", currentTimeTable.Lessons[dayOfWeek][period].Subject.hashCode());
+                intent.putExtra("subjectAbbreviationHash", currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
 
                 startActivity(intent);
                 return true;
