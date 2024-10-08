@@ -282,6 +282,7 @@ fun WidgetConfigurator() {
                     )
                     WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
+                    WidgetConfigToggle("Update-Benachrichtigung", NonCrucialWidgetKeys.UPDATE_NOTICES)
                     //WidgetConfigToggle("Posts aus dem offiziellen Stundenplan", NonCrucialWidgetKeys.POSTS)
                     //WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
                 }
