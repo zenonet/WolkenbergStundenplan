@@ -181,8 +181,13 @@ public class TimeTableApiClient {
     public boolean isCounterConfirmed;
     public String postsHash;
     public long getLatestCounterValue() {
+        return getLatestCounterValue(false);
+    }
+
+
+    public long getLatestCounterValue(boolean forceRefetch) {
         // If the counter has already been fetched, just return it
-        if(latestCounter != -1) // TODO: Add expiration and re-fetching
+        if (latestCounter != -1 && !forceRefetch) // TODO: Add expiration and re-fetching
             return latestCounter;
 
         try {
