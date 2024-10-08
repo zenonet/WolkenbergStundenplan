@@ -2,6 +2,8 @@ package de.zenonet.stundenplan.nonCrucialUi
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,6 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
@@ -211,6 +216,38 @@ class NonCrucialViewModel(
             val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
             lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
         }
+    }
+
+    //endregion
+
+
+    //region app update notices
+    var isAppUpdateAvailable by mutableStateOf(false)
+    private var appUpdateManager:AppUpdateManager? = null
+
+    suspend fun checkForAppUpdates(context: Context) {
+
+        try {
+            appUpdateManager = AppUpdateManagerFactory.create(context)
+            val appUpdateInfo = appUpdateManager!!.appUpdateInfo.await()
+            isAppUpdateAvailable =
+                appUpdateInfo!!.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+        }catch (_:Exception){
+            isAppUpdateAvailable = false
+        }
+    }
+
+    fun updateAppNow(context: Activity) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")))
+
+        }catch (e:Exception){
+            isAppUpdateAvailable = false
+        }
+    }
+
+    fun dontUpdateAppNow() {
+        isAppUpdateAvailable = false
     }
     //endregion
 

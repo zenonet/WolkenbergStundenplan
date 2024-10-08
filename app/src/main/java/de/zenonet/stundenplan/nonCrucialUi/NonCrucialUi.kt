@@ -1,5 +1,6 @@
 package de.zenonet.stundenplan.nonCrucialUi
 
+import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
-import de.zenonet.stundenplan.common.timetableManagement.Post
 import de.zenonet.stundenplan.nonCrucialUi.widgets.Widget
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlinx.coroutines.launch
@@ -59,13 +58,15 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                 Column {
 
                     CurrentLessonInfo(viewModel)
+                    UpdateNotices(viewModel)
 
                     LaunchedEffect(key1 = null) {
                         viewModel.loadQuoteOfTheDay()
                     }
                     val quote by viewModel.quoteOfTheDay.collectAsStateWithLifecycle(null)
-                    if (quote != null && quote!!.text != null)
+                    AnimatedVisibility(quote != null && quote!!.text != null) {
                         QuoteView(quote!!)
+                    }
 
                     DailyStaircaseAnalysis(viewModel)
                     //if(viewModel.showReviewRequest) FeedbackPls(viewModel)
@@ -161,17 +162,51 @@ fun DailyStaircaseAnalysis(vm: NonCrucialViewModel, modifier: Modifier = Modifie
         vm.analyzeStaircaseUsage()
     }
 
-    if (!vm.stairCaseAnalysisCompleted) return
+    AnimatedVisibility(vm.stairCaseAnalysisCompleted) {
+        Widget(NonCrucialWidgetKeys.STAIRCASE_ANALYSIS) {
+            Heading("Treppensteig-Analyse")
+            Spacer(Modifier.height(10.dp))
 
-    Widget(NonCrucialWidgetKeys.STAIRCASE_ANALYSIS) {
-        Heading("Treppensteig-Analyse")
-        Spacer(Modifier.height(10.dp))
-
-        if (vm.stairCasesUsedToday > 0)
-            Text("Treppen heute: ${vm.stairCasesUsedToday}")
-        Text("Treppen diese Woche: ${vm.stairCasesUsedThisWeek}")
+            if (vm.stairCasesUsedToday > 0)
+                Text("Treppen heute: ${vm.stairCasesUsedToday}")
+            Text("Treppen diese Woche: ${vm.stairCasesUsedThisWeek}")
 
 
+        }
+    }
+}
+
+@Composable
+fun UpdateNotices(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        vm.checkForAppUpdates(context)
+    }
+
+    AnimatedVisibility(vm.isAppUpdateAvailable) {
+        Widget(NonCrucialWidgetKeys.UPDATE_NOTICES) {
+            Heading("Ein Update ist verfügbar")
+            Spacer(Modifier.height(10.dp))
+
+            val coroutineScope = rememberCoroutineScope()
+
+            Text("Updates werden eventuell benötigt, damit Dein Stundenplan ausgelesen werden kann und können neue Features bringen")
+            Row {
+                Button({
+                    coroutineScope.launch {
+                        if (context is Activity)
+                            vm.updateAppNow(context)
+                    }
+                }) { Text("Jetzt updaten") }
+                Spacer(Modifier.width(12.dp))
+                Button({
+                    coroutineScope.launch {
+                        vm.dontUpdateAppNow()
+                    }
+                }) { Text("Nicht jetzt") }
+            }
+
+        }
     }
 }
 
@@ -213,7 +248,7 @@ fun Posts(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     if (posts == null) return
     posts!!.forEach {
         Widget(NonCrucialWidgetKeys.POSTS) {
-            Column{
+            Column {
                 Heading(it.Title)
                 Text("Von ${it.Creator}", fontWeight = FontWeight.Light)
                 Spacer(Modifier.height(10.dp))
