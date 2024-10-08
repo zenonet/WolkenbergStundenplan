@@ -2,6 +2,7 @@ package de.zenonet.stundenplan.homework
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -56,9 +57,12 @@ class HomeworkEditorActivity : ComponentActivity() {
             StundenplanTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LaunchedEffect(Unit) {
-                        vm.loadTimeTable()
                         vm.loadExistingText()
                     }
+                    LaunchedEffect(Unit) {
+                        vm.loadTimeTable()
+                    }
+
                     Editor(
                         vm,
                         modifier = Modifier.padding(innerPadding).imePadding()
@@ -74,9 +78,9 @@ fun Editor(vm: HomeworkEditorViewModel, modifier: Modifier = Modifier) {
     Box(modifier.padding(24.dp, 24.dp, 24.dp, 8.dp)) {
         Column {
             val lesson by vm.lesson.collectAsStateWithLifecycle(null)
-            if (lesson == null) return@Box
 
-            Heading("Hausaufgaben für ${lesson!!.Subject} am ${Utils.getWordForDayOfWeek(vm.dayOfWeek)}")
+            Heading("Hausaufgaben ${if(lesson == null) "" else "für ${lesson!!.Subject}"} am ${Utils.getWordForDayOfWeek(vm.dayOfWeek)}")
+            Spacer(Modifier.height(10.dp))
 
             val coroutineScope = rememberCoroutineScope()
             val context = LocalContext.current
@@ -95,10 +99,11 @@ fun Editor(vm: HomeworkEditorViewModel, modifier: Modifier = Modifier) {
                 value = vm.text,
                 onValueChange = { vm.text = it },
                 singleLine = false,
+                enabled = vm.isTextLoaded,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Transparent),
-                placeholder = { Text("Gib hier deine Hausaufgaben für ${lesson!!.Subject} ein") }
+                placeholder = { Text("Gib hier deine Hausaufgaben ${if(lesson == null) "" else "für ${lesson!!.Subject}"} ein") }
             )
         }
     }

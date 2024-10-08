@@ -41,6 +41,7 @@ class HomeworkEditorViewModel(
 
     var period by mutableIntStateOf(-1)
     var text by mutableStateOf("")
+    var isTextLoaded by mutableStateOf(false)
 
     suspend fun loadTimeTable() {
         if (ttm != null) {
@@ -66,6 +67,7 @@ class HomeworkEditorViewModel(
     suspend fun loadExistingText(){
         withContext(Dispatchers.IO) {
             text = HomeworkManager.getNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash)
+            isTextLoaded = true
         }
     }
 
