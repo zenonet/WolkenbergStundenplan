@@ -114,6 +114,10 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     if (vm.currentPeriod == -1 || vm.currentTime.isBefore(LocalTime.of(8, 0))) return
 
     val timeTable by vm.currentTimeTable.collectAsStateWithLifecycle(null)
+    LaunchedEffect(timeTable) {
+        // Additionally to the time-based recomputations, recompute when the timetable changes
+        vm.generateCurrentLessonInfoData()
+    }
     Widget(NonCrucialWidgetKeys.CURRENT_LESSON_INFO) {
         if (!vm.isBreak)
             Heading("${vm.currentPeriod + 1}. Stunde")
@@ -127,25 +131,15 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
         if (vm.isBreak && timeTable != null)
             Text("Nach der Pause:", fontWeight = FontWeight.Bold)
 
-        val day: Array<Lesson?>? = timeTable?.Lessons?.get(dayOfWeek)
-        val lesson: Lesson? =
-            if (day != null && day.size > vm.currentPeriod) day[vm.currentPeriod] else null
-
         // if lesson is null, this means, it's a regular free period
-        if (lesson != null) {
-            LessonInfoSentence(lesson)
-        } else if (day != null) {
-
-            var nextPeriod = vm.currentPeriod + 1
-            while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
-
-            if (nextPeriod < day.size) {
-                // The loop can only stop if nextPeriod reached the end (in which case we wouldn't be in this if) or if day[nextPeriod] is not null, so nextLesson will never be null
-                val nextLesson: Lesson = day[nextPeriod]!!
-                Text("Freistunde")
+        if (vm.currentLesson != null) {
+            LessonInfoSentence(vm.currentLesson!!)
+        }
+        if (vm.isFreeSection) {
+            Text("Frei von ${vm.freeSectionStartTime} bis ${vm.freeSectionEndTime} (${vm.freeSectionProgress}%)")
+            if(vm.nextActualLesson != null) {
                 Text("Danach:", fontWeight = FontWeight.Bold)
-                Text("${nextLesson.Subject} in ${nextLesson.Room} (beginnt um ${nextLesson.StartTime})")
-
+                Text("${vm.nextActualLesson!!.Subject} in ${vm.nextActualLesson!!.Room} (beginnt um ${vm.nextActualLesson!!.StartTime})")
             }
         }
     }
@@ -282,7 +276,10 @@ fun WidgetConfigurator() {
                     )
                     WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
-                    WidgetConfigToggle("Update-Benachrichtigung", NonCrucialWidgetKeys.UPDATE_NOTICES)
+                    WidgetConfigToggle(
+                        "Update-Benachrichtigung",
+                        NonCrucialWidgetKeys.UPDATE_NOTICES
+                    )
                     //WidgetConfigToggle("Posts aus dem offiziellen Stundenplan", NonCrucialWidgetKeys.POSTS)
                     //WidgetConfigToggle("Bitte um Feedback", NonCrucialWidgetKeys.FEEDBACK_PLS)
                 }

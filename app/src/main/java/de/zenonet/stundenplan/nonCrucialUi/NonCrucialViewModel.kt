@@ -20,6 +20,7 @@ import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
+import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.Post
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
@@ -182,6 +183,13 @@ class NonCrucialViewModel(
     var currentTime: LocalTime by mutableStateOf(Timing.getCurrentTime())
     var isBreak: Boolean by mutableStateOf(false)
     var lessonProgress: Int by mutableIntStateOf(0)
+    var currentLesson: Lesson? by mutableStateOf(null)
+
+    var isFreeSection:Boolean by mutableStateOf(false)
+    var freeSectionStartTime:LocalTime? by mutableStateOf(null)
+    var freeSectionEndTime:LocalTime? by mutableStateOf(null)
+    var freeSectionProgress: Int by mutableIntStateOf(0)
+    var nextActualLesson: Lesson? by mutableStateOf(null)
 
     fun startRegularDataRecalculation() {
         // Update progress regularly (this is implemented here because it's the right place for it according to this: https://developer.android.com/topic/libraries/architecture/coroutines#viewmodelscope)
@@ -212,10 +220,42 @@ class NonCrucialViewModel(
                 startTime = pairOfLessonBefore.second
             }
 
-            val totalLessonSeconds = endTime!!.toSecondOfDay() - startTime!!.toSecondOfDay()
-            val progressInSeconds = currentTime.toSecondOfDay() - startTime!!.toSecondOfDay()
-            lessonProgress = (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
+            lessonProgress = calculateProgress(startTime!!, endTime!!, currentTime)
         }
+
+        if(currentTimeTable.value != null) {
+            val timeTable = currentTimeTable.value!!
+            val day = timeTable.Lessons?.get(Timing.getCurrentDayOfWeek()) ?: return
+
+            currentLesson = if (day.size > currentPeriod) day[currentPeriod] else null
+
+            // Handle free sections
+            if(!Lesson.doesTakePlace(currentLesson)){
+
+                var nextPeriod = currentPeriod + 1
+                while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
+                if(nextPeriod-1 == day.size) return
+
+                // Last period meaning the last period before the current free section began
+                var lastPeriod = currentPeriod
+                while (lastPeriod > 0 && !Lesson.doesTakePlace(day[lastPeriod])) lastPeriod--
+                if(lastPeriod-1 == 0) return
+
+                isFreeSection = true
+                nextActualLesson = day[nextPeriod]
+
+                freeSectionStartTime = Utils.getStartAndEndTimeOfPeriod(lastPeriod).second
+                freeSectionEndTime = Utils.getStartAndEndTimeOfPeriod(nextPeriod).first
+
+                freeSectionProgress = calculateProgress(freeSectionStartTime!!, freeSectionEndTime!!, currentTime)
+            }
+        }
+    }
+
+    private fun calculateProgress(start:LocalTime, end:LocalTime, current:LocalTime):Int{
+        val totalLessonSeconds = end.toSecondOfDay() - start.toSecondOfDay()
+        val progressInSeconds = current.toSecondOfDay() - start.toSecondOfDay()
+        return (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
     }
 
     //endregion
