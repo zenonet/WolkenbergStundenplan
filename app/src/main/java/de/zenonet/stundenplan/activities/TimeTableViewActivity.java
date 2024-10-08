@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -436,8 +437,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
         popup = new PopupMenu(this, lessonView);
         popup.setOnMenuItemClickListener(menuListener);
         popup.getMenuInflater().inflate(R.menu.lessoncontextmenu, popup.getMenu());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            popup.setForceShowIcon(true);
+        }
         popup.getMenu().findItem(R.id.menuTimeView).setTitle(String.format("%s - %s", lesson.StartTime, lesson.EndTime));
-        if(lesson.HasHomeworkAttached) popup.getMenu().add("Hausaufgaben entfernen");
+        popup.getMenu().findItem(R.id.clearHomework).setVisible(lesson.HasHomeworkAttached);
         popup.show();
     }
 
@@ -448,17 +452,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-
-            if (item.getItemId() == R.id.menuInsertHomework) {
-
-/*
-                // get the first period of the block
-                while (period > 0
-                                && currentTimeTable.Lessons[dayOfWeek][period - 1] != null
-                                && currentTimeTable.Lessons[dayOfWeek][period - 1].SubjectShortName.equals(currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName)
-                ) period--;
-*/
-
+            final int id = item.getItemId();
+            if (id == R.id.menuInsertHomework) {
                 Intent intent = new Intent(TimeTableViewActivity.this, HomeworkEditorActivity.class);
                 intent.putExtra("week", selectedWeek);
                 intent.putExtra("dayOfWeek", dayOfWeek);
@@ -466,9 +461,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
                 homeworkEditorLauncher.launch(intent);
                 return true;
-            } else if ("Hausaufgaben entfernen".contentEquals(item.getTitle())) { // FIXME: 06.10.2024 Pls stop comparing the title for this, also maybe add confirmation dialog
+            }
+            if (id ==  R.id.clearHomework) {
                 HomeworkManager.INSTANCE.deleteNoteFor(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
                 runOnUiThread(TimeTableViewActivity.this::updateHomeworkAnnotations);
+                return true;
             }
             return true;
         }
