@@ -66,9 +66,7 @@ class SettingsActivity : ComponentActivity() {
 
 
         // If notifications are enabled but the permission is not
-        if (PreferenceManager.getDefaultSharedPreferences(this@SettingsActivity)
-                .getBoolean("showNotifications", false)
-            && (ActivityCompat.checkSelfPermission(
+        if ((ActivityCompat.checkSelfPermission(
                 this@SettingsActivity,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED)
@@ -76,6 +74,8 @@ class SettingsActivity : ComponentActivity() {
             // Disable the preference
             PreferenceManager.getDefaultSharedPreferences(this@SettingsActivity).edit()
                 .putBoolean("showNotifications", false).apply();
+            PreferenceManager.getDefaultSharedPreferences(this@SettingsActivity).edit()
+                .putBoolean("showChangeNotifications", false).apply();
         }
 
         setContent {
@@ -90,7 +90,7 @@ class SettingsActivity : ComponentActivity() {
     }
 
     fun closeActivity() {
-        finish()
+
     }
 }
 
