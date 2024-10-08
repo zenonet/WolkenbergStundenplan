@@ -3,7 +3,6 @@ package de.zenonet.stundenplan.common.timetableManagement;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.preference.PreferenceManager;
 
@@ -16,9 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
 import java.util.Calendar;
-import java.util.Hashtable;
 
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
@@ -56,7 +53,7 @@ public class TimeTableCacheClient implements TimeTableClient {
             timeTable.source = TimeTableSource.Cache;
             timeTable.isCacheStateConfirmed = false;
             // Re-add the uncached start- and end-times of the periods
-            insertTimes(timeTable);
+            Utils.insertTimes(timeTable);
             return timeTable;
         } catch (Exception e) {
             Log.e(LogTags.Caching, e.getMessage());
@@ -82,29 +79,10 @@ public class TimeTableCacheClient implements TimeTableClient {
             timeTable.source = TimeTableSource.Cache;
             timeTable.isCacheStateConfirmed = false;
             // Re-add the uncached start- and end-times of the periods
-            insertTimes(timeTable);
+            Utils.insertTimes(timeTable);
             return timeTable;
         } catch (Exception e) {
             throw new TimeTableLoadException(e);
-        }
-    }
-
-    private void insertTimes(TimeTable timeTable) {
-        Hashtable<Integer, Pair<LocalTime, LocalTime>> cache = new Hashtable<>();
-        for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
-            for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
-                if(timeTable.Lessons[dayI][periodI] == null) continue;
-
-                Pair<LocalTime, LocalTime> times;
-                if (cache.containsKey(periodI)) {
-                    times = cache.get(periodI);
-                } else {
-                    times = Utils.getStartAndEndTimeOfPeriod(periodI);
-                    cache.put(periodI, times);
-                }
-                timeTable.Lessons[dayI][periodI].StartTime = times.first;
-                timeTable.Lessons[dayI][periodI].EndTime = times.second;
-            }
         }
     }
 

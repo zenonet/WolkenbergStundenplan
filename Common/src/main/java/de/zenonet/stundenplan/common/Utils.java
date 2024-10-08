@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
+import java.util.Hashtable;
 
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 
@@ -112,6 +113,7 @@ public class Utils {
 
     public static TimeTable getPreviewTimeTable(Context context) throws IOException {
         TimeTable t = new Gson().fromJson(Utils.readAllFromStream(context.getResources().openRawResource(de.zenonet.stundenplan.common.R.raw.preview_timetable)), TimeTable.class);
+        insertTimes(t);
         t.source = TimeTableSource.Preview;
         return t;
     }
@@ -136,5 +138,24 @@ public class Utils {
         JSONObject obj = new JSONObject();
         base.put(key, obj);
         return obj;
+    }
+
+    public static void insertTimes(TimeTable timeTable) {
+        Hashtable<Integer, Pair<LocalTime, LocalTime>> cache = new Hashtable<>();
+        for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
+            for (int periodI = 0; periodI < timeTable.Lessons[dayI].length; periodI++) {
+                if(timeTable.Lessons[dayI][periodI] == null) continue;
+
+                Pair<LocalTime, LocalTime> times;
+                if (cache.containsKey(periodI)) {
+                    times = cache.get(periodI);
+                } else {
+                    times = getStartAndEndTimeOfPeriod(periodI);
+                    cache.put(periodI, times);
+                }
+                timeTable.Lessons[dayI][periodI].StartTime = times.first;
+                timeTable.Lessons[dayI][periodI].EndTime = times.second;
+            }
+        }
     }
 }
