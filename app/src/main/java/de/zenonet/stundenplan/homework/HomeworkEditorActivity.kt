@@ -2,7 +2,6 @@ package de.zenonet.stundenplan.homework
 
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,6 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.preference.PreferenceManager
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.nonCrucialUi.Heading
@@ -36,6 +37,7 @@ import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlinx.coroutines.launch
 
 class HomeworkEditorActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,15 +49,20 @@ class HomeworkEditorActivity : ComponentActivity() {
 
         if (week == null || dayOfWeek == null || subjectHashCode == null) finish()
 
-        val ttm = TimeTableManager()
-        ttm.init(this)
+        val ttm =
+            if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("showPreview", false)) null
+            else TimeTableManager();
+        ttm?.init(this)
 
-        val vm = HomeworkEditorViewModel(week!!, dayOfWeek!!, subjectHashCode!!, ttm)
+        val viewModelFactory: () -> HomeworkEditorViewModel = {
+            HomeworkEditorViewModel(week!!, dayOfWeek!!, subjectHashCode!!, ttm, Utils.getPreviewTimeTable(this))
+        }
 
         enableEdgeToEdge()
         setContent {
             StundenplanTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    val vm = viewModel<HomeworkEditorViewModel>(factory = ViewModelFactory(viewModelFactory))
                     LaunchedEffect(Unit) {
                         vm.loadExistingText()
                     }

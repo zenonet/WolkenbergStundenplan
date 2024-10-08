@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Utils
@@ -44,6 +45,7 @@ class HomeworkEditorViewModel(
     var isTextLoaded by mutableStateOf(false)
 
     suspend fun loadTimeTable() {
+        if(timeTable.value != null) return
         if (ttm != null) {
             val tt = withContext(Dispatchers.IO) {
                 ttm.login()
@@ -65,6 +67,7 @@ class HomeworkEditorViewModel(
     }
 
     suspend fun loadExistingText(){
+        if(isTextLoaded) return
         withContext(Dispatchers.IO) {
             text = HomeworkManager.getNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash)
             isTextLoaded = true
@@ -97,4 +100,8 @@ class HomeworkEditorViewModel(
         val thisDay = Utils.getOrAppendJSONObject(thisWeek, dayOfWeek.toString())
         return Triple(file, root, thisDay)
     }
+}
+
+class ViewModelFactory(private val factory:() -> ViewModel) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = factory() as T
 }
