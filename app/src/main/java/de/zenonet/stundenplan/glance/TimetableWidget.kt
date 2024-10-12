@@ -31,7 +31,9 @@ import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.glance.layout.wrapContentSize
 import androidx.glance.state.GlanceStateDefinition
+import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
@@ -64,7 +66,8 @@ class TimetableWidget : GlanceAppWidget() {
             ) = TimeTableDataStore(context)
 
 
-            override fun getLocation(context: Context, fileKey: String) = throw NotImplementedError("Not implemented for TimeTable App Widget State Definition")
+            override fun getLocation(context: Context, fileKey: String) =
+                throw NotImplementedError("Not implemented for TimeTable App Widget State Definition")
 
         }
 
@@ -124,17 +127,30 @@ class TimeTableDataStore(private val context: Context) :
 @Composable
 private fun MyContent(timeTable: TimeTable) {
     val (sizeX, _) = LocalSize.current
+    val dayOfWeek = Timing.getCurrentDayOfWeek()
+
+    val isWeekend = dayOfWeek < 0 || dayOfWeek > 4
+    if (isWeekend || timeTable.Lessons[dayOfWeek].isEmpty()) {
+
+        Box(GlanceModifier.fillMaxSize().background(colorResource(R.color.cancelled_lesson)), contentAlignment = Alignment.Center) {
+            Text(
+                if (isWeekend) (if(sizeX <= 100.dp) "Wochen\nende!" else "Wochenende!") else "Frei!",
+                style = TextStyle(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
+                modifier = GlanceModifier.wrapContentSize(),
+            )
+        }
+
+        return
+    }
     LazyColumn(
         modifier = GlanceModifier.fillMaxSize()
             .background(GlanceTheme.colors.background).padding(0.dp),
         //verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val dayOfWeek = Timing.getCurrentDayOfWeek()
         itemsIndexed(timeTable.Lessons[dayOfWeek]) { index, lesson ->
             val col = getBackgroundColorForLesson(lesson)
             Row(GlanceModifier.fillMaxWidth().cornerRadius(5.dp).background(col).padding(15.dp)) {
-                //Text("${lesson.SubjectShortName} in ${lesson.Room} mit ${lesson.Teacher}")
                 Text(
                     "${index + 1}. ${lesson.SubjectShortName}",
                     GlanceModifier.defaultWeight(),
@@ -212,7 +228,7 @@ suspend fun loadTimeTable(context: Context): TimeTable? {
     return tt
 }
 
-fun updateWidgets(context: Context){
+fun updateWidgets(context: Context) {
     suspend {
         TimetableWidget().updateAll(context)
     }
