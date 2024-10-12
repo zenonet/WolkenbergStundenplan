@@ -16,6 +16,8 @@
     <color name="room_substituted_lesson">#FF29B6F6</color>
     <color name="regular_lesson">#ffffff</color>
 
+    <color name="error_color">#fb5607</color>
+
     <!--
         <color name="regular_lesson">#F5F5F5</color>
     -->

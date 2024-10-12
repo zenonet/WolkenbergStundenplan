@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 import de.zenonet.stundenplan.common.HomeworkManager;
+import de.zenonet.stundenplan.glance.TimetableWidgetKt;
 import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
@@ -224,29 +225,33 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     timeTableVersionsReceived[0]++;
                     runOnUiThread(() -> {
 
-                                    if (timeTable == null) return;
+                                if (timeTable == null) return;
 
-                                    if (!timeTableLoaded)
-                                        if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
-                                            Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
-                                        else if (timeTable.isCacheStateConfirmed) {
-                                            Log.i(LogTags.Timing, String.format("Time from app start to cached timetable confirmed: %d ms", StundenplanApplication.getMillisSinceAppStart()));
-                                        } else {
-                                            Log.i(LogTags.Timing, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
-                                        }
-                                    timeTableLoaded = true;
-                                    currentTimeTable = timeTable;
-                                    updateTimeTableView(timeTable);
-                                }
+                                if (!timeTableLoaded)
+                                    if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
+                                        Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                    else if (timeTable.isCacheStateConfirmed) {
+                                        Log.i(LogTags.Timing, String.format("Time from app start to cached timetable confirmed: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                    } else {
+                                        Log.i(LogTags.Timing, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                                    }
+
+                                if (timeTable.source != TimeTableSource.Cache)
+                                    TimetableWidgetKt.updateWidgets(this);
+
+                                timeTableLoaded = true;
+                                currentTimeTable = timeTable;
+                                updateTimeTableView(timeTable);
+                            }
                     );
 
 
                     // add annotations for lessons with homework attached
                     int timeTableIndex = timeTableVersionsReceived[0];
                     HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, timeTable);
-                    if(timeTableIndex == timeTableVersionsReceived[0]){
+                    if (timeTableIndex == timeTableVersionsReceived[0]) {
                         // update view to show homework annotations
-                        runOnUiThread(()-> {
+                        runOnUiThread(() -> {
                             Log.i(LogTags.Timing, String.format("Time from app start to homework annotations applied to timetable: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                             updateTimeTableView(timeTable);
                         });
@@ -329,8 +334,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 roomView.setText(formatter.formatRoomName(lesson.Room));
                 teacherView.setText(formatter.formatTeacherName(lesson.Teacher));
                 String text = lesson.Text != null ? lesson.Text : "";
-                if(lesson.HasHomeworkAttached) {
-                    if(text != "") text += "\n";
+                if (lesson.HasHomeworkAttached) {
+                    if (text != "") text += "\n";
                     text += "Hausaufgaben";
                 }
                 textView.setText(text);
@@ -403,7 +408,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         for (int i = 444; i < 444 + 5; i++) {
             TextView view = findViewById(i);
             view.setText(format.format(cal.getTime()));
-            if (cal.get(Calendar.DAY_OF_WEEK)-1 == dayOfWeek) {
+            if (cal.get(Calendar.DAY_OF_WEEK) - 1 == dayOfWeek) {
                 view.setTextColor(MaterialColors.getColor(view, R.attr.lessonForeground));
                 view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
             } else {
@@ -462,7 +467,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 homeworkEditorLauncher.launch(intent);
                 return true;
             }
-            if (id ==  R.id.clearHomework) {
+            if (id == R.id.clearHomework) {
                 HomeworkManager.INSTANCE.deleteNoteFor(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
                 runOnUiThread(TimeTableViewActivity.this::updateHomeworkAnnotations);
                 return true;

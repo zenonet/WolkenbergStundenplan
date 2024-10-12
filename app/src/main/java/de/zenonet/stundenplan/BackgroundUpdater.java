@@ -33,6 +33,7 @@ import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
+import de.zenonet.stundenplan.glance.TimetableWidgetKt;
 
 public class BackgroundUpdater extends BroadcastReceiver {
 
@@ -123,6 +124,9 @@ public class BackgroundUpdater extends BroadcastReceiver {
                 } catch (DataNotAvailableException e) {
                     return;
                 }
+
+                TimetableWidgetKt.updateWidgets(context);
+
                 manageShortTermChanges(timeTable);
                 //int dayOfWeek = 0;
 
