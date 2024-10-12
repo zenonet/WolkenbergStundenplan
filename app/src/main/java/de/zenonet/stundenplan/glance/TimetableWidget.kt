@@ -83,7 +83,6 @@ class TimetableWidget : GlanceAppWidget() {
             GlanceTheme {
 
                 val tt = currentState<TimeTable?>()
-                Log.i(LogTags.Debug, "Recomposing... ${tt != null}")
                 if (tt == null)
                     LoginRequest()
                 else
