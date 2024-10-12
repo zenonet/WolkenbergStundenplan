@@ -16,6 +16,7 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -48,6 +49,7 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 class TimetableWidget : GlanceAppWidget() {
@@ -216,3 +218,8 @@ fun updateWidgets(context: Context){
         TimetableWidget().updateAll(context)
     }
 }
+
+fun areWidgetsExistent(context: Context) =
+    runBlocking {
+        GlanceAppWidgetManager(context).getGlanceIds(TimetableWidget::class.java)
+    }.isNotEmpty()

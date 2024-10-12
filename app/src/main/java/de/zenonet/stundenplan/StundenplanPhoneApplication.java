@@ -10,6 +10,7 @@ import androidx.preference.PreferenceManager;
 import java.util.Calendar;
 
 import de.zenonet.stundenplan.common.StundenplanApplication;
+import de.zenonet.stundenplan.glance.TimetableWidgetKt;
 
 public class StundenplanPhoneApplication extends StundenplanApplication {
     @Override
@@ -37,7 +38,7 @@ public class StundenplanPhoneApplication extends StundenplanApplication {
 
     public void scheduleUpdateRepeating() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!preferences.getBoolean("showNotifications", false) && !preferences.getBoolean("showChangeNotifications", false))
+        if(!preferences.getBoolean("showNotifications", false) && !preferences.getBoolean("showChangeNotifications", false) && !TimetableWidgetKt.areWidgetsExistent(this))
             return;
 /*
 
@@ -53,7 +54,9 @@ public class StundenplanPhoneApplication extends StundenplanApplication {
         Intent intent = new Intent(this, BackgroundUpdater.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
+        final long interval = preferences.getBoolean("showNotifications", false) ? AlarmManager.INTERVAL_HALF_HOUR : AlarmManager.INTERVAL_HOUR * 2;
+
         alarmManager.setRepeating(AlarmManager.RTC, Calendar.getInstance().getTimeInMillis()-1,
-                AlarmManager.INTERVAL_HALF_HOUR, pendingIntent);
+                interval, pendingIntent);
     }
 }
