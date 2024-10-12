@@ -75,6 +75,8 @@ public class TimeTableParser {
                         Date startDate = dateFormat.parse(tt.getJSONObject("DATE_FROM").getString("date"));
                         Date endDate = dateFormat.parse(tt.getJSONObject("DATE_TO").getString("date"));
 
+                        if(endDate == null || startDate == null) continue;
+
                         // Check if the current time is inside of the validity range of this timetable-version
                         if (!endDate.after(time.getTime()) || !startDate.before(time.getTime()))
                             continue;
