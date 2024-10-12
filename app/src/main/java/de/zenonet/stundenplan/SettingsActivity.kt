@@ -90,7 +90,7 @@ class SettingsActivity : ComponentActivity() {
     }
 
     fun closeActivity() {
-
+        finish()
     }
 }
 
