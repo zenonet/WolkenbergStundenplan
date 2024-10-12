@@ -392,7 +392,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void updateDayDisplayForWeek(int week) {
         Calendar cal = Calendar.getInstance();
-        int dayOfYear = cal.get(Calendar.DAY_OF_YEAR);
+        int dayOfWeek = Timing.getCurrentDayOfWeek();
         int year = cal.get(Calendar.YEAR);
         cal.clear(); // Reset the calendar
         cal.set(Calendar.YEAR, year); // Recover the year
@@ -403,7 +403,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         for (int i = 444; i < 444 + 5; i++) {
             TextView view = findViewById(i);
             view.setText(format.format(cal.getTime()));
-            if (cal.get(Calendar.DAY_OF_YEAR) == dayOfYear) {
+            if (cal.get(Calendar.DAY_OF_WEEK)-1 == dayOfWeek) {
                 view.setTextColor(MaterialColors.getColor(view, R.attr.lessonForeground));
                 view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
             } else {

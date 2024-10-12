@@ -205,6 +205,8 @@ class NonCrucialViewModel(
         Log.i(LogTags.UI, "Recalculating data for current lesson info...")
         currentTime = Timing.getCurrentTime()
         currentPeriod = Utils.getCurrentPeriod(currentTime)
+        // This fixes all possible indexing problems because CurrentLessonInfo() just won't compose when vm.currentPeriod == -1
+        if(currentPeriod == -1) return
 
         val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
         startTime = pair?.first

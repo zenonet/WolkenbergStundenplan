@@ -128,7 +128,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
         Text("Von ${vm.startTime} bis ${vm.endTime} ${if (vm.lessonProgress > 0) " (${vm.lessonProgress}%)" else ""}")
         Spacer(Modifier.height(10.dp))
 
-        if (vm.isBreak && timeTable != null)
+        if (vm.isBreak && timeTable != null && !vm.isFreeSection)
             Text("Nach der Pause:", fontWeight = FontWeight.Bold)
 
         // if lesson is null, this means, it's a regular free period
