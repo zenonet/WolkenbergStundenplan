@@ -78,7 +78,7 @@ public class TimeTableParser {
                         Date startDate = dateFormat.parse(tt.getJSONObject("DATE_FROM").getString("date"));
                         Date endDate = dateFormat.parse(tt.getJSONObject("DATE_TO").getString("date"));
 
-                        if(endDate == null || startDate == null) continue;
+                        if (endDate == null || startDate == null) continue;
 
                         // Check if the current time is inside of the validity range of this timetable-version
                         if (!endDate.after(time.getTime()) || !startDate.before(time.getTime()))
@@ -131,6 +131,22 @@ public class TimeTableParser {
         return lesson;
     }
 
+    private void applyDataModifications(JSONObject substitution, Lesson lesson) {
+        //TODO: Oh god, pls fix this
+        try {
+            if (substitution.has("SUBJECT_ID_NEW") && !substitution.isNull("SUBJECT_ID_NEW")) lesson.Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
+        } catch (Exception ignored) {}
+        try {
+            if (substitution.has("SUBJECT_ID_NEW") && !substitution.isNull("SUBJECT_ID_NEW")) lesson.SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
+        } catch (Exception ignored) {}
+        try {
+            if (substitution.has("ROOM_ID_NEW") && !substitution.isNull("ROOM_ID_NEW")) lesson.Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
+        } catch (Exception ignored) {}
+        try {
+            if (substitution.has("TEACHER_ID_NEW") && !substitution.isNull("TEACHER_ID_NEW")) lesson.Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
+        } catch (Exception ignored) {}
+    }
+
     private void applySubstitutions(TimeTable timeTable, String json, int week) throws TimeTableLoadException {
         try {
 
@@ -157,6 +173,10 @@ public class TimeTableParser {
                         }
 
                         String type = substitution.getString("TYPE");
+
+                        if (timeTable.Lessons[dayI][period] == null) timeTable.Lessons[dayI][period] = new Lesson();
+
+                        applyDataModifications(substitution, timeTable.Lessons[dayI][period]);
 
                         if (type.equals("ASSIGNMENT")) {
                             timeTable.Lessons[dayI][period].Text = "Aufgaben";
@@ -202,21 +222,12 @@ public class TimeTableParser {
                                 timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
                             }
 
-                            // Make sure the lesson actually exists
-                            if (timeTable.Lessons[dayI][period] == null)
-                                timeTable.Lessons[dayI][period] = new Lesson();
-
                             if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
                                 // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
                                 timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
                             } else {
                                 timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
                             }
-
-                            timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                            timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                            timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                            timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
                             continue;
                         }
 
