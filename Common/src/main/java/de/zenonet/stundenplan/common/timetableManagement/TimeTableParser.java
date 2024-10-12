@@ -4,7 +4,10 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -114,6 +117,20 @@ public class TimeTableParser {
         }
     }
 
+    @NonNull
+    private Lesson createLessonFromSubstitution(JSONObject tt, int periodI) throws JSONException {
+        Lesson lesson = new Lesson();
+        lesson.Subject = lookup.lookupSubjectName(tt.getInt("SUBJECT_ID_NEW"));
+        lesson.SubjectShortName = lookup.lookupSubjectShortName(tt.getInt("SUBJECT_ID_NEW"));
+        lesson.Teacher = lookup.lookupTeacher(tt.getInt("TEACHER_ID_NEW"));
+        lesson.Room = lookup.lookupRoom(tt.getInt("ROOM_ID_NEW"));
+
+        Pair<LocalTime, LocalTime> startAndEndTime = Utils.getStartAndEndTimeOfPeriod(periodI - 1);
+        lesson.StartTime = startAndEndTime.first;
+        lesson.EndTime = startAndEndTime.second;
+        return lesson;
+    }
+
     private void applySubstitutions(TimeTable timeTable, String json, int week) throws TimeTableLoadException {
         try {
 
@@ -174,18 +191,24 @@ public class TimeTableParser {
                         }
 
                         if (type.equals("EXTRA_LESSON")) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
 
                             // Determine if the period array needs to be resized (Hopefully this will never have to happen)
                             if (period >= timeTable.Lessons[dayI].length) {
                                 // Resize the period array
                                 timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
+                            }
 
-                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
-                            } else {
+                            // Make sure the lesson actually exists
+                            if (timeTable.Lessons[dayI][period] == null)
+                                timeTable.Lessons[dayI][period] = new Lesson();
+
+                            if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
                                 // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
                                 timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+                            } else {
+                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
                             }
+
                             timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
                             timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
                             timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
