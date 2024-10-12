@@ -109,7 +109,7 @@ public class TimeTableParser {
 
             try {
                 applySubstitutions(timeTable, substitutionJson, week);
-            }catch (TimeTableLoadException ignored){
+            } catch (TimeTableLoadException ignored) {
             }
             return timeTable;
         } catch (Exception e) {
@@ -150,7 +150,7 @@ public class TimeTableParser {
                         JSONObject substitution = substitutionsArray.getJSONObject(i);
                         int period = substitution.getInt("PERIOD") - 1; // Two-indexing again (except not anymore, yay)
 
-                        if(substitution.has("TEXT")) {
+                        if (substitution.has("TEXT")) {
                             String text = substitution.getString("TEXT");
                             if (!text.isEmpty())
                                 timeTable.Lessons[dayI][period].Text = text;
@@ -158,8 +158,7 @@ public class TimeTableParser {
 
                         String type = substitution.getString("TYPE");
 
-                        if(type.equals("ASSIGNMENT"))
-                        {
+                        if (type.equals("ASSIGNMENT")) {
                             timeTable.Lessons[dayI][period].Text = "Aufgaben";
                             timeTable.Lessons[dayI][period].Type = LessonType.Assignment;
                             continue;
@@ -167,6 +166,11 @@ public class TimeTableParser {
 
                         if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
                             timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
+                            continue;
+                        }
+
+                        if (type.equals("SUPERVISION") && timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
+                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
                             continue;
                         }
 
@@ -236,7 +240,7 @@ public class TimeTableParser {
                         int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
 
                         for (int p = periodFrom; p <= periodTo; p++) {
-                            if(timeTable.Lessons[dayI].length <= p || timeTable.Lessons[dayI][p] == null)
+                            if (timeTable.Lessons[dayI].length <= p || timeTable.Lessons[dayI][p] == null)
                                 continue;
 
                             timeTable.Lessons[dayI][p].Type = LessonType.Absent;
@@ -244,7 +248,7 @@ public class TimeTableParser {
                     }
                 } else if (substitutionsThatDay.has("holiday")) {
                     for (int i = 0; i < timeTable.Lessons[dayI].length; i++) {
-                        if(timeTable.Lessons[dayI][i] == null) continue;
+                        if (timeTable.Lessons[dayI][i] == null) continue;
                         timeTable.Lessons[dayI][i].Type = LessonType.Holiday;
                     }
                 }
