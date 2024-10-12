@@ -35,7 +35,7 @@ public class TimeTableApiClient {
     /**
      * Offset applied to counter values to allow re-fetching when the app version changed
      */
-    private final int CounterOffset = 2;
+    private final int CounterOffset = 3;
 
     private String accessToken;
     public User user;

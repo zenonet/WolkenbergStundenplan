@@ -15,6 +15,7 @@
     <color name="substituted_lesson">#F44336</color>
     <color name="room_substituted_lesson">#FF29B6F6</color>
     <color name="regular_lesson">#ffffff</color>
+    <color name="exam">#F49F36</color>
 
     <color name="error_color">#fb5607</color>
 

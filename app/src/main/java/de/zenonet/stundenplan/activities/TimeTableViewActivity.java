@@ -344,7 +344,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 /*if (lesson.Type == LessonType.Assignment)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.assignment_substituted_lesson));
                 else */
-                if (!lesson.isTakingPlace())
+
+                if(lesson.Text != null && (lesson.Text.toLowerCase().contains("klausur") || lesson.Text.toLowerCase().contains("klassenarbeit")))
+                    lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.exam));
+                else if (!lesson.isTakingPlace())
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.cancelled_lesson));
                 else if (lesson.Type == LessonType.Substitution)
                     lessonView.setBackgroundColor(getColor(de.zenonet.stundenplan.common.R.color.substituted_lesson));
