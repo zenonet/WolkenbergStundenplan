@@ -49,6 +49,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import de.zenonet.stundenplan.glance.TimetableWidget
+import de.zenonet.stundenplan.glance.updateWidgets
 import de.zenonet.stundenplan.nonCrucialUi.PreviewPermissionState
 import de.zenonet.stundenplan.ui.theme.BackgroundBlue
 import de.zenonet.stundenplan.ui.theme.CalendarRed
@@ -90,6 +92,7 @@ class SettingsActivity : ComponentActivity() {
     }
 
     fun closeActivity() {
+        updateWidgets(this)
         finish()
     }
 }

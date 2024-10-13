@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.preference.PreferenceManager
 import de.zenonet.stundenplan.OnboardingActivity
+import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.R
 import de.zenonet.stundenplan.common.Timing
@@ -142,6 +144,9 @@ private fun MyContent(timeTable: TimeTable) {
 
         return
     }
+    val context = LocalContext.current
+    val formatter = remember { Formatter(context) }
+
     LazyColumn(
         modifier = GlanceModifier.fillMaxSize()
             .background(GlanceTheme.colors.background).padding(0.dp),
@@ -159,7 +164,7 @@ private fun MyContent(timeTable: TimeTable) {
                 if (sizeX > 100.dp) {
                     androidx.glance.layout.Spacer(GlanceModifier.defaultWeight())
 
-                    Text(lesson.Room, style = TextStyle(textAlign = TextAlign.Right))
+                    Text(formatter.formatRoomName(lesson.Room), style = TextStyle(textAlign = TextAlign.Right))
                 }
             }
         }
