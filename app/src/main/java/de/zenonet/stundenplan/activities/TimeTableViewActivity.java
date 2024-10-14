@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 
@@ -448,7 +449,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             popup.setForceShowIcon(true);
         }
-        popup.getMenu().findItem(R.id.menuTimeView).setTitle(String.format("%s - %s", lesson.StartTime, lesson.EndTime));
+        popup.getMenu().findItem(R.id.menuTimeView).setTitle(String.format(Locale.GERMAN, "%d.  Std:  %s - %s", period+1, lesson.StartTime, lesson.EndTime));
         popup.getMenu().findItem(R.id.clearHomework).setVisible(lesson.HasHomeworkAttached);
         popup.show();
     }
