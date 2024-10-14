@@ -17,20 +17,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.activity.ConfirmationActivity
+import androidx.wear.compose.foundation.SwipeToDismissValue
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.rememberSwipeToDismissBoxState
@@ -48,6 +52,8 @@ import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 
 class LoginActivity : ComponentActivity() {
@@ -162,6 +168,7 @@ fun WearApp(activity: LoginActivity?) {
             mutableIntStateOf(-1)
         }
         val listState = rememberScalingLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         Scaffold(
             positionIndicator = { PositionIndicator(scalingLazyListState = listState) }
         ) {
@@ -250,6 +257,15 @@ fun WearApp(activity: LoginActivity?) {
                                     textAlign = TextAlign.Center
                                 )
                             }
+                        }
+                    }
+                    item{
+                        Button({
+                            coroutineScope.launch {
+                                boxState.snapTo(SwipeToDismissValue.Dismissed)
+                            }
+                        }, modifier = Modifier.fillMaxWidth(0.8f)) {
+                            Text("Zurück")
                         }
                     }
                 }

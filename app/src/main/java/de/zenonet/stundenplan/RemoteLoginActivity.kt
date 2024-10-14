@@ -18,10 +18,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,14 +81,15 @@ class RemoteLoginActivity : ComponentActivity() {
                     val code = data.getStringExtra("code")
                     val apiClient = TimeTableApiClient()
                     apiClient.init(this)
-                    apiClient.redeemOAuthCodeAsync(code, object:AuthCodeRedeemedCallback {
+                    apiClient.redeemOAuthCodeAsync(code, object : AuthCodeRedeemedCallback {
 
 
                         override fun authCodeRedeemed() {
                             try {
                                 sendRefreshToken()
                             } catch (e: UserLoadException) {
-                            }                        }
+                            }
+                        }
 
                         override fun errorOccurred(message: String?) {
                             TODO("Not yet implemented")
@@ -166,12 +175,9 @@ class RemoteLoginActivity : ComponentActivity() {
 
 @Composable
 fun App(activity: RemoteLoginActivity? = null) {
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        color = MaterialTheme.colorScheme.background
-    ) {
+
+    Scaffold { paddingValues ->
+
         var deviceName: String by remember {
             mutableStateOf("not-available")
         }
@@ -194,7 +200,12 @@ fun App(activity: RemoteLoginActivity? = null) {
             }
         }
 
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(20.dp),
+        ) {
             Text("$deviceName versucht sich in deinen Stundenplan einzuloggen.")
             if (activity!!.isOnboarded) {
                 if (activity.isPreview) {
