@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.wrapContentSize
+import androidx.glance.material3.ColorProviders
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -79,13 +82,14 @@ class TimetableWidget : GlanceAppWidget() {
         // Use `withContext` to switch to another thread for long running
         // operations.
 
-
-        // FIXME: Fetch timetable data somewhere composable
-        Log.i(LogTags.HomeScreenWidgets, "Got timetable for app widget")
-
         provideContent {
             // create your AppWidget here
-            GlanceTheme {
+            GlanceTheme(
+                colors = ColorProviders(
+                    light = lightColorScheme(),
+                    dark = lightColorScheme(),
+                ),
+            ) {
 
                 val tt = currentState<TimeTable?>()
                 if (tt == null)
@@ -137,7 +141,7 @@ private fun MyContent(timeTable: TimeTable) {
         Box(GlanceModifier.fillMaxSize().background(colorResource(R.color.cancelled_lesson)), contentAlignment = Alignment.Center) {
             Text(
                 if (isWeekend) (if(sizeX <= 100.dp) "Wochen\nende!" else "Wochenende!") else "Frei!",
-                style = TextStyle(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
+                style = TextStyle(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = GlanceTheme.colors.onBackground),
                 modifier = GlanceModifier.wrapContentSize(),
             )
         }
@@ -149,22 +153,22 @@ private fun MyContent(timeTable: TimeTable) {
 
     LazyColumn(
         modifier = GlanceModifier.fillMaxSize()
-            .background(GlanceTheme.colors.background).padding(0.dp),
+            .background(GlanceTheme.colors.background),
         //verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         itemsIndexed(timeTable.Lessons[dayOfWeek]) { index, lesson ->
-            val col = getBackgroundColorForLesson(lesson)
-            Row(GlanceModifier.fillMaxWidth().cornerRadius(5.dp).background(col).padding(15.dp)) {
+            val col = getBackgroundColorForLesson(lesson) ?: GlanceTheme.colors.background.getColor(context)
+            Row(GlanceModifier.fillMaxWidth().background(col).padding(15.dp)) {
                 Text(
                     "${index + 1}. ${lesson.SubjectShortName}",
                     GlanceModifier.defaultWeight(),
-                    style = TextStyle(textAlign = TextAlign.Left),
+                    style = TextStyle(textAlign = TextAlign.Left, color = GlanceTheme.colors.onBackground),
                 )
                 if (sizeX > 100.dp) {
                     androidx.glance.layout.Spacer(GlanceModifier.defaultWeight())
 
-                    Text(formatter.formatRoomName(lesson.Room), style = TextStyle(textAlign = TextAlign.Right))
+                    Text(formatter.formatRoomName(lesson.Room), style = TextStyle(textAlign = TextAlign.Right, color = GlanceTheme.colors.onBackground))
                 }
             }
         }
@@ -195,16 +199,17 @@ fun LoginRequest(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun getBackgroundColorForLesson(lesson: Lesson): Color {
+fun getBackgroundColorForLesson(lesson: Lesson): Color? {
     if (!lesson.isTakingPlace/* && lesson.Type != LessonType.Assignment*/) return colorResource(R.color.cancelled_lesson)
+    if(lesson.Text != null && (lesson.Text.lowercase().contains("klassenarbeit") || lesson.Text.lowercase().contains("klausur")))
+        return colorResource(R.color.exam)
 
     return when (lesson.Type) {
         LessonType.Substitution -> colorResource(R.color.substituted_lesson)
         LessonType.RoomSubstitution -> colorResource(R.color.room_substituted_lesson)
         LessonType.Assignment -> colorResource(R.color.assignment_substituted_lesson)
-        else -> {
-            colorResource(R.color.regular_lesson)
-        }
+        else -> null
+
     }
 }
 
