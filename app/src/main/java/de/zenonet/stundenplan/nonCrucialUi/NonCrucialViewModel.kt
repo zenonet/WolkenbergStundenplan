@@ -236,7 +236,7 @@ class NonCrucialViewModel(
 
                 var nextPeriod = currentPeriod + 1
                 while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
-                if(nextPeriod-1 == day.size) return
+                if(nextPeriod == day.size) return
 
                 // Last period meaning the last period before the current free section began
                 var lastPeriod = currentPeriod
