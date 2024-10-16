@@ -21,11 +21,6 @@
         <uses-library
             android:name="com.google.android.wearable"
             android:required="true" />
-
-        <!--
-               Set to true if your app is Standalone, that is, it does not require the handheld
-               app to run.
-        -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="false" />
@@ -33,7 +28,7 @@
         <activity
             android:name=".presentation.WearTimeTableViewActivity"
             android:exported="true"
-            android:taskAffinity=""
+            android:taskAffinity="stpln"
             android:theme="@style/WearTimeTableViewActivityTheme.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -44,10 +39,11 @@
         <activity
             android:name=".presentation.LoginActivity"
             android:exported="true"
-            android:taskAffinity=""
+            android:taskAffinity="stpln"
             android:theme="@style/MainActivityTheme.Starting">
         </activity>
-        <activity android:name="androidx.wear.activity.ConfirmationActivity"/>
+        <activity android:name="androidx.wear.activity.ConfirmationActivity"
+            android:taskAffinity="stpln" />
 
         <service
             android:name=".complications.SubjectShortnameComplicationService"
