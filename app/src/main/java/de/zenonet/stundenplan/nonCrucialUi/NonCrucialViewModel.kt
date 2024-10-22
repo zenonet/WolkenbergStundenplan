@@ -232,7 +232,7 @@ class NonCrucialViewModel(
             currentLesson = if (day.size > currentPeriod) day[currentPeriod] else null
 
             // Handle free sections
-            if(!Lesson.doesTakePlace(currentLesson)){
+            if(currentPeriod < day.size && !Lesson.doesTakePlace(currentLesson)){
 
                 var nextPeriod = currentPeriod + 1
                 while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
