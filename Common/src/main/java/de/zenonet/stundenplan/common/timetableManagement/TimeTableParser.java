@@ -196,14 +196,14 @@ public class TimeTableParser {
 
                         if (type.equals("SUBSTITUTION") || type.equals("SWAP") || type.equals("ROOM_SUBSTITUTION")) {
                             // Update the timetable according to the substitutions
-                            if (substitution.has("SUBJECT_ID_NEW")) {
+                            if (substitution.has("SUBJECT_ID_NEW") && substitution.getInt("SUBJECT_ID_NEW") != 0) {
                                 timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
                                 timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
                             }
-                            if (substitution.has("ROOM_ID_NEW")) {
+                            if (substitution.has("ROOM_ID_NEW") && substitution.getInt("ROOM_ID_NEW") != 0) {
                                 timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
                             }
-                            if (substitution.has("TEACHER_ID_NEW")) {
+                            if (substitution.has("TEACHER_ID_NEW") && substitution.getInt("TEACHER_ID_NEW") != 0) {
                                 timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
                             }
                             if (type.equals("ROOM_SUBSTITUTION"))
