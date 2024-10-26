@@ -126,22 +126,16 @@ class NonCrucialViewModel(
         var stairCases = 0
         for ((period, lesson) in tt.Lessons[dayOfWeek].withIndex()) {
 
-            val height: Int
-
-            if (lesson == null)
-                height = 0
-            else if (lesson.isTakingPlace) {
-
-                height = when (lesson.Room[0]) {
-                    'A' -> -1
-                    'B' -> 0
-                    'C' -> 1
-                    'D' -> 2
-                    'E' -> 3
-                    'T' -> 0
-                    else -> throw Exception("Unknown room ${lesson.Room}")
-                }
-            } else height = lastHeight
+            val height = if (!Lesson.doesTakePlace(lesson)) 0
+            else when (lesson.Room[0]) {
+                'A' -> -1
+                'B' -> 0
+                'C' -> 1
+                'D' -> 2
+                'E' -> 3
+                'T' -> 0
+                else -> throw Exception("Unknown room ${lesson.Room}")
+            }
 
             // Assume the user goes to 0th floor after the second and the fourth period (breaks)
             if (period == 2 || period == 4) {

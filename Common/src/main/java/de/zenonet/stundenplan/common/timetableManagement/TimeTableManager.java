@@ -189,9 +189,7 @@ public class TimeTableManager implements TimeTableClient {
     }
 
     public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
-        int weekOfYear = Timing.getRelevantWeekOfYear();
-        if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
-        return getTimeTableForWeek(weekOfYear);
+        return getTimeTableForWeek(Timing.getRelevantWeekOfYear());
     }
     public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback) {
         return getTimeTableAsyncWithAdjustments(week, callback, null);
