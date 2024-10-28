@@ -1,4 +1,4 @@
-package de.zenonet.stundenplan;
+package de.zenonet.stundenplan.broadcastReceivers;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Objects;
 
+import de.zenonet.stundenplan.StundenplanPhoneApplication;
 import de.zenonet.stundenplan.activities.TimeTableViewActivity;
 import de.zenonet.stundenplan.common.DataNotAvailableException;
 import de.zenonet.stundenplan.common.Formatter;
@@ -91,6 +91,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         this.context = context;
+        Log.i(LogTags.BackgroundWork, "Running background updater...");
         int dayOfWeek = Timing.getCurrentDayOfWeek();
 
         // Ensure it's a weekday

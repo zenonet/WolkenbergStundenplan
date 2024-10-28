@@ -66,9 +66,19 @@
             android:name=".activities.LoginActivity"
             android:exported="false" />
 
-        <receiver android:name=".BackgroundUpdater" />
-        <receiver android:name=".glance.WidgetReceiver"
+        <receiver android:name=".broadcastReceivers.BackgroundUpdater" />
+        <receiver android:name=".broadcastReceivers.BootCompletedReceiver"
             android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".glance.WidgetReceiver"
+            android:exported="true"
+            android:updatePeriodMillis="3600000">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

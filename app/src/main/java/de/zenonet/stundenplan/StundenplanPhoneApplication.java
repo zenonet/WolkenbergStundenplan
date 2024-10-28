@@ -4,11 +4,14 @@ import android.app.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
 import java.util.Calendar;
 
+import de.zenonet.stundenplan.broadcastReceivers.BackgroundUpdater;
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.glance.TimetableWidgetKt;
 
@@ -58,5 +61,6 @@ public class StundenplanPhoneApplication extends StundenplanApplication {
 
         alarmManager.setRepeating(AlarmManager.RTC, Calendar.getInstance().getTimeInMillis()-1,
                 interval, pendingIntent);
+        Log.i(LogTags.BackgroundWork, String.format("Scheduled alarm for background work every %d hours", interval / AlarmManager.INTERVAL_HOUR));
     }
 }
