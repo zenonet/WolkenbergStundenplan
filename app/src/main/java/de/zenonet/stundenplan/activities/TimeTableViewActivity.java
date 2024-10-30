@@ -396,8 +396,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             updateTimeTableView(currentTimeTable);*/
     }
 
-    @SuppressLint("SimpleDateFormat")
-    private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.");
+    private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.", Locale.GERMANY);
 
     private void updateDayDisplayForWeek(int week) {
         Calendar cal = Calendar.getInstance();
