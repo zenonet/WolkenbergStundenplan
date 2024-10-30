@@ -404,6 +404,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         int dayOfWeek = Timing.getCurrentDayOfWeek();
         int year = cal.get(Calendar.YEAR);
         cal.clear(); // Reset the calendar
+        cal.setFirstDayOfWeek(Calendar.MONDAY);
         cal.set(Calendar.YEAR, year); // Recover the year
         cal.set(Calendar.WEEK_OF_YEAR, week); // Set the desired week of year
         // Now, the calendar points at the first day of the desired week
