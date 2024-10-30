@@ -87,7 +87,7 @@ fun Widget(
                         Text("Entfernen bestätigen")
                     },
                     text = {
-                        Text("Möchtest du diese Karte wirklich dauerhaft entfernen? Du kannst dies in den Einstellungen rückgängig machen")
+                        Text("Möchtest du diese Karte wirklich dauerhaft entfernen? Du kannst dies rückgängig machen, wenn du unten auf \"Infokarten konfigurieren\" tippst.")
                     },
                     onDismissRequest = { showConfirmationDialog = false },
                     confirmButton = {
