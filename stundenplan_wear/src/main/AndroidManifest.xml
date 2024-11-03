@@ -28,7 +28,7 @@
         <activity
             android:name=".presentation.WearTimeTableViewActivity"
             android:exported="true"
-            android:taskAffinity="stpln"
+            android:taskAffinity=""
             android:theme="@style/WearTimeTableViewActivityTheme.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,11 +39,11 @@
         <activity
             android:name=".presentation.LoginActivity"
             android:exported="true"
-            android:taskAffinity="stpln"
+            android:taskAffinity=""
             android:theme="@style/MainActivityTheme.Starting">
         </activity>
         <activity android:name="androidx.wear.activity.ConfirmationActivity"
-            android:taskAffinity="stpln" />
+            android:taskAffinity="" />
 
         <service
             android:name=".complications.SubjectShortnameComplicationService"
