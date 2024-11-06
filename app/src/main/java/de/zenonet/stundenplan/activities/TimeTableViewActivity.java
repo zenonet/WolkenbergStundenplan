@@ -408,11 +408,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         cal.set(Calendar.WEEK_OF_YEAR, week); // Set the desired week of year
         // Now, the calendar points at the first day of the desired week
 
+        boolean isCurrentWeek = Timing.getRelevantWeekOfYear() == week;
+
         // Update all the textViews:
         for (int i = 444; i < 444 + 5; i++) {
             TextView view = findViewById(i);
             view.setText(format.format(cal.getTime()));
-            if ((cal.get(Calendar.DAY_OF_WEEK) - 2) % 7 == dayOfWeek) {
+            if (isCurrentWeek  && (cal.get(Calendar.DAY_OF_WEEK) - 2) % 7 == dayOfWeek) {
                 view.setTextColor(MaterialColors.getColor(view, R.attr.lessonForeground));
                 view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
             } else {
