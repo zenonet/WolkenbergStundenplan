@@ -3,6 +3,7 @@ package de.zenonet.stundenplan.nonCrucialUi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.icu.util.Calendar
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -15,6 +16,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
+import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
@@ -24,7 +26,13 @@ import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.Post
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
+import de.zenonet.stundenplan.homework.HomeworkEditorActivity
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +40,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjuster
+import java.time.temporal.TemporalField
+import java.time.temporal.WeekFields
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -67,27 +81,59 @@ class NonCrucialViewModel(
 
 
     private var loadingTimeTable = false;
-    suspend fun loadTimeTable() {
-        if (loadingTimeTable || currentTimeTable.value != null) return
+    private var timeTableLoadingJob: Job? = null;
 
-        loadingTimeTable = true
+    suspend fun loadTimeTableAsync(
+        week: Int = Timing.getRelevantWeekOfYear()
+    ): Deferred<TimeTable?> = coroutineScope {
+        async {
+            if (ttm == null) return@async previewTimeTable
 
-        if (ttm != null) {
             val tt = withContext(Dispatchers.IO) {
-                ttm.login()
-                ttm.getCurrentTimeTable()
+                try {
+                    ttm.login()
+                    ttm.getTimeTableForWeek(week)
+                } catch (e: Exception) {
+                    return@withContext null
+                }
             }
-            _currentTimeTable.value = tt
-        } else {
-            _currentTimeTable.value = previewTimeTable
-        }
-        loadingTimeTable = false
+            if (week == Timing.getRelevantWeekOfYear()) {
+                _currentTimeTable.value = tt
+            }
 
+            tt
+        }
+    }
+
+    suspend fun loadTimeTable(): Job {
+        if (timeTableLoadingJob != null) return timeTableLoadingJob!!;
+
+        return coroutineScope {
+            timeTableLoadingJob = launch {
+
+                if (currentTimeTable.value != null) return@launch
+
+                loadingTimeTable = true
+
+                if (ttm != null) {
+                    val tt = withContext(Dispatchers.IO) {
+                        ttm.login()
+                        ttm.getCurrentTimeTable()
+                    }
+                    _currentTimeTable.value = tt
+                } else {
+                    _currentTimeTable.value = previewTimeTable
+                }
+                loadingTimeTable = false
+                return@launch
+            }
+            timeTableLoadingJob!!
+        }
     }
 
     private val _posts = MutableStateFlow<Array<Post>?>(null)
     val posts: StateFlow<Array<Post>?> = _posts.asStateFlow()
-    suspend fun loadPosts(){
+    suspend fun loadPosts() {
         val p = withContext(Dispatchers.IO) {
             ttm?.getPosts()
         }
@@ -99,7 +145,8 @@ class NonCrucialViewModel(
     var stairCasesUsedThisWeek by mutableIntStateOf(-1)
     var stairCaseAnalysisCompleted by mutableStateOf(false)
     suspend fun analyzeStaircaseUsage() {
-        loadTimeTable()
+        if (currentTimeTable.value == null) loadTimeTableAsync().await()
+
         if (currentTimeTable.value == null) return
 
         try {
@@ -179,9 +226,9 @@ class NonCrucialViewModel(
     var lessonProgress: Int by mutableIntStateOf(0)
     var currentLesson: Lesson? by mutableStateOf(null)
 
-    var isFreeSection:Boolean by mutableStateOf(false)
-    var freeSectionStartTime:LocalTime? by mutableStateOf(null)
-    var freeSectionEndTime:LocalTime? by mutableStateOf(null)
+    var isFreeSection: Boolean by mutableStateOf(false)
+    var freeSectionStartTime: LocalTime? by mutableStateOf(null)
+    var freeSectionEndTime: LocalTime? by mutableStateOf(null)
     var freeSectionProgress: Int by mutableIntStateOf(0)
     var nextActualLesson: Lesson? by mutableStateOf(null)
 
@@ -200,7 +247,7 @@ class NonCrucialViewModel(
         currentTime = Timing.getCurrentTime()
         currentPeriod = Utils.getCurrentPeriod(currentTime)
         // This fixes all possible indexing problems because CurrentLessonInfo() just won't compose when vm.currentPeriod == -1
-        if(currentPeriod == -1) return
+        if (currentPeriod == -1) return
 
         val pair = Utils.getStartAndEndTimeOfPeriod(currentPeriod)
         startTime = pair?.first
@@ -219,23 +266,23 @@ class NonCrucialViewModel(
             lessonProgress = calculateProgress(startTime!!, endTime!!, currentTime)
         }
 
-        if(currentTimeTable.value != null) {
+        if (currentTimeTable.value != null) {
             val timeTable = currentTimeTable.value!!
             val day = timeTable.Lessons?.get(Timing.getCurrentDayOfWeek()) ?: return
 
             currentLesson = if (day.size > currentPeriod) day[currentPeriod] else null
 
             // Handle free sections
-            if(currentPeriod < day.size && !Lesson.doesTakePlace(currentLesson)){
+            if (currentPeriod < day.size && !Lesson.doesTakePlace(currentLesson)) {
 
                 var nextPeriod = currentPeriod + 1
                 while (nextPeriod < day.size && !Lesson.doesTakePlace(day[nextPeriod])) nextPeriod++
-                if(nextPeriod == day.size) return
+                if (nextPeriod == day.size) return
 
                 // Last period meaning the last period before the current free section began
                 var lastPeriod = currentPeriod
                 while (lastPeriod > 0 && !Lesson.doesTakePlace(day[lastPeriod])) lastPeriod--
-                if(lastPeriod == -1) return
+                if (lastPeriod == -1) return
 
                 isFreeSection = true
                 nextActualLesson = day[nextPeriod]
@@ -243,12 +290,13 @@ class NonCrucialViewModel(
                 freeSectionStartTime = Utils.getStartAndEndTimeOfPeriod(lastPeriod).second
                 freeSectionEndTime = Utils.getStartAndEndTimeOfPeriod(nextPeriod).first
 
-                freeSectionProgress = calculateProgress(freeSectionStartTime!!, freeSectionEndTime!!, currentTime)
+                freeSectionProgress =
+                    calculateProgress(freeSectionStartTime!!, freeSectionEndTime!!, currentTime)
             }
         }
     }
 
-    private fun calculateProgress(start:LocalTime, end:LocalTime, current:LocalTime):Int{
+    private fun calculateProgress(start: LocalTime, end: LocalTime, current: LocalTime): Int {
         val totalLessonSeconds = end.toSecondOfDay() - start.toSecondOfDay()
         val progressInSeconds = current.toSecondOfDay() - start.toSecondOfDay()
         return (progressInSeconds.toFloat() / totalLessonSeconds * 100).roundToInt()
@@ -259,7 +307,7 @@ class NonCrucialViewModel(
 
     //region app update notices
     var isAppUpdateAvailable by mutableStateOf(false)
-    private var appUpdateManager:AppUpdateManager? = null
+    private var appUpdateManager: AppUpdateManager? = null
 
     suspend fun checkForAppUpdates(context: Context) {
 
@@ -268,16 +316,21 @@ class NonCrucialViewModel(
             val appUpdateInfo = appUpdateManager!!.appUpdateInfo.await()
             isAppUpdateAvailable =
                 appUpdateInfo!!.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-        }catch (_:Exception){
+        } catch (_: Exception) {
             isAppUpdateAvailable = false
         }
     }
 
     fun updateAppNow(context: Activity) {
         try {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")))
+            context.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                )
+            )
 
-        }catch (e:Exception){
+        } catch (e: Exception) {
             isAppUpdateAvailable = false
         }
     }
@@ -287,9 +340,42 @@ class NonCrucialViewModel(
     }
     //endregion
 
+    //region homework
+
+    var homeworkEntries: List<HomeworkEntry>? by mutableStateOf(null)
+    suspend fun loadHomework() {
+        val currentWeek = Timing.getRelevantWeekOfYear()
+        val year = Calendar.getInstance().get(Calendar.YEAR)
+        val dayOfWeek = Timing.getCurrentDayOfWeek()
+        val period = Utils.getCurrentPeriod(Timing.getCurrentTime())
+        // load homework for these weeks
+        val weekFields = WeekFields.of(Locale.GERMANY)
+        homeworkEntries = (currentWeek..currentWeek + 1).map { loadTimeTableAsync(it) }.awaitAll().filterNotNull().also{ it.forEachIndexed { week, tt -> HomeworkManager.populateTimeTable(year, currentWeek + week, tt) }}.flatMapIndexed { weekOffset, tt -> tt.Lessons.filterIndexed { i, _ -> i >= dayOfWeek }.flatMapIndexed { dayIndex, day -> day.filterIndexed { li, l -> l != null && l.HasHomeworkAttached && (dayIndex >= dayOfWeek || li >= period) }.distinctBy { it.SubjectShortName }.map { l -> HomeworkEntry(HomeworkManager.getNoteFor(year, currentWeek+weekOffset, dayIndex, l.SubjectShortName.hashCode()), l, LocalDate.of(year, 1, 1).with(
+            weekFields.weekOfYear(), (currentWeek+weekOffset).toLong()).with(weekFields.dayOfWeek(), 1).plusDays(dayIndex.toLong())) } }}
+    }
+
+    fun openHomeworkEditor(entry: HomeworkEntry, context: Context) {
+        val intent = Intent(context, HomeworkEditorActivity::class.java)
+            .putExtra("week", entry.day.get(WeekFields.of(Locale.GERMANY).weekOfYear()))
+            .putExtra("dayOfWeek", entry.day.dayOfWeek.value-1)
+            .putExtra(
+                "subjectAbbreviationHash",
+                entry.lesson.SubjectShortName.hashCode()
+            )
+        context.startActivity(intent)
+    }
+
+    //endregion
+
     init {
         if (quote != null) {
             _quoteOfTheDay.value = quote
         }
     }
 }
+
+data class HomeworkEntry(
+    val text: String,
+    val lesson: Lesson,
+    val day: LocalDate
+);

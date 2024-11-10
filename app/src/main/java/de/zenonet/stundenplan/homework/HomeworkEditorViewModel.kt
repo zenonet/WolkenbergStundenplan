@@ -35,7 +35,7 @@ class HomeworkEditorViewModel(
     private val _timeTable = MutableStateFlow<TimeTable?>(null)
     val timeTable: StateFlow<TimeTable?> = _timeTable.asStateFlow()
     val lesson: Flow<Lesson?> = timeTable.map {
-        if (it != null && it.hasDataForLesson(dayOfWeek, period))
+        if (it != null && period != -1 && it.hasDataForLesson(dayOfWeek, period))
             it.Lessons[dayOfWeek][period]
         else null
     }

@@ -7,4 +7,5 @@ object NonCrucialWidgetKeys {
     const val CURRENT_LESSON_INFO = "currentLessonInfo"
     const val POSTS = "posts"
     const val UPDATE_NOTICES = "updateNotices"
+    const val HOMEWORK = "homework"
 }

@@ -24,13 +24,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.zenonet.stundenplan.common.Timing
+import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.nonCrucialUi.widgets.Widget
@@ -40,6 +46,7 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.rememberPreferenceState
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 fun applyUiToComposeView(view: ComposeView, viewModel: NonCrucialViewModel) {
     view.apply {
@@ -67,6 +74,8 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
                     AnimatedVisibility(quote != null && quote!!.text != null) {
                         QuoteView(quote!!)
                     }
+
+                    Homework(viewModel)
 
                     DailyStaircaseAnalysis(viewModel)
                     //if(viewModel.showReviewRequest) FeedbackPls(viewModel)
@@ -137,7 +146,7 @@ fun CurrentLessonInfo(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
         }
         if (vm.isFreeSection) {
             Text("Frei von ${vm.freeSectionStartTime} bis ${vm.freeSectionEndTime} (${vm.freeSectionProgress}%)")
-            if(vm.nextActualLesson != null) {
+            if (vm.nextActualLesson != null) {
                 Text("Danach:", fontWeight = FontWeight.Bold)
                 Text("${vm.nextActualLesson!!.Subject} in ${vm.nextActualLesson!!.Room} (beginnt um ${vm.nextActualLesson!!.StartTime})")
             }
@@ -198,6 +207,39 @@ fun UpdateNotices(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
                         vm.dontUpdateAppNow()
                     }
                 }) { Text("Nicht jetzt") }
+            }
+
+        }
+    }
+}
+
+val fmt: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.")
+
+@Composable
+fun Homework(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        vm.loadHomework()
+    }
+
+    AnimatedVisibility(vm.homeworkEntries != null) {
+        Widget(NonCrucialWidgetKeys.HOMEWORK) {
+            Heading("Hausaufgaben")
+            Spacer(Modifier.height(10.dp))
+            for (homeworkEntry in vm.homeworkEntries!!) {
+                val dayOfWeek = Utils.getWordForDayOfWeek(homeworkEntry.day.dayOfWeek.value - 1)
+
+                Text(buildAnnotatedString {
+                    withLink(LinkAnnotation.Clickable("yeah", linkInteractionListener = {
+                        vm.openHomeworkEditor(homeworkEntry, context)
+                    })) {
+                        append("${homeworkEntry.lesson.Subject} für ${dayOfWeek.substring(0..1)}. ${
+                            homeworkEntry.day.format(
+                                fmt
+                            )
+                        }")
+                    }
+                }, textDecoration = TextDecoration.Underline, overflow = TextOverflow.Ellipsis, maxLines = 1)
             }
 
         }
@@ -276,6 +318,7 @@ fun WidgetConfigurator() {
                     )
                     WidgetConfigToggle("Tägliche Zitate", NonCrucialWidgetKeys.QUOTE)
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
+                    WidgetConfigToggle("Hausaufgaben", NonCrucialWidgetKeys.HOMEWORK)
                     WidgetConfigToggle(
                         "Update-Benachrichtigung",
                         NonCrucialWidgetKeys.UPDATE_NOTICES
