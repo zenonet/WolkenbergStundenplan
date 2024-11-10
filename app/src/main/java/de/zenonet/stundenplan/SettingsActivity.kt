@@ -211,7 +211,7 @@ fun View(activity: SettingsActivity?) {
             switchPreference(
                 key = "showChangeNotifications",
                 defaultValue = false,
-                title = { Text("Zeige Benachrichtigungen wenn sich Dein Stundenplan kurzfristig ändert (Beta)") },
+                title = { Text("Zeige Benachrichtigungen wenn sich Dein Stundenplan ändert (Beta)") },
                 summary = {
                     LaunchedEffect(it) {
                         if (it && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermission.status.isGranted) {

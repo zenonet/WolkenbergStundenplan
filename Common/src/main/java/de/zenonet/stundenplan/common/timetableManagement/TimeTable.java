@@ -4,6 +4,8 @@ import androidx.annotation.Keep;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Objects;
 
 import de.zenonet.stundenplan.common.TimeTableSource;
 
@@ -26,5 +28,18 @@ public final class TimeTable {
 
     public boolean hasDataForLesson(int dayOfWeek, int period){
         return Lessons != null && dayOfWeek >= 0 && dayOfWeek < 5 && Lessons[dayOfWeek].length > period && Lessons[dayOfWeek][period] != null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TimeTable timeTable = (TimeTable) o;
+        return Arrays.deepEquals(Lessons, timeTable.Lessons);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(Lessons);
     }
 }
