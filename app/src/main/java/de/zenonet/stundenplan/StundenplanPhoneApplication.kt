@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan
 
 import android.app.AlarmManager
+import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,8 +12,10 @@ import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import de.zenonet.stundenplan.BackroundWorkers.UpdateTimeTableWorker
 import de.zenonet.stundenplan.broadcastReceivers.BackgroundUpdater
 import de.zenonet.stundenplan.common.LogTags
@@ -22,7 +25,7 @@ import java.time.Duration
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-class StundenplanPhoneApplication : StundenplanApplication() {
+class StundenplanPhoneApplication() : StundenplanApplication() {
     override fun onCreate() {
         super.onCreate()
 
@@ -55,17 +58,12 @@ class StundenplanPhoneApplication : StundenplanApplication() {
     }
 
     fun scheduleUpdateRepeating() {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!preferences.getBoolean(
-                "showNotifications",
-                false
-            ) && !preferences.getBoolean("showChangeNotifications", false) && !areWidgetsExistent(
-                this
-            )
-        ) return
-
-
+        // Schedule work requests for update checks
         scheduleWorkRequests()
+
+        // Schedule alarm for status notifications
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        if (!preferences.getBoolean("showNotifications", false)) return
 
         /*
 
@@ -77,41 +75,32 @@ class StundenplanPhoneApplication : StundenplanApplication() {
 */
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val intent = Intent(
-            this,
-            BackgroundUpdater::class.java
-        )
+        val intent = Intent(this, BackgroundUpdater::class.java)
         val pendingIntent =
             PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val interval =
-            if (preferences.getBoolean("showNotifications", false)) AlarmManager.INTERVAL_HALF_HOUR
-            else AlarmManager.INTERVAL_HOUR * 2
+
 
         alarmManager.setRepeating(
             AlarmManager.RTC, Calendar.getInstance().timeInMillis - 1,
-            interval, pendingIntent
+            AlarmManager.INTERVAL_HOUR, pendingIntent
         )
-        Log.i(
-            LogTags.BackgroundWork,
-            String.format(
-                "Scheduled alarm for background work every %d hours",
-                interval / AlarmManager.INTERVAL_HOUR
-            )
-        )
+        Log.i(LogTags.BackgroundWork, "Scheduled alarm for status notifications")
     }
 
     private fun scheduleWorkRequests() {
+
         val workRequest: PeriodicWorkRequest =
-            PeriodicWorkRequest.Builder(UpdateTimeTableWorker::class.java, 4, TimeUnit.HOURS)
+            PeriodicWorkRequest.Builder(UpdateTimeTableWorker::class.java, 3, TimeUnit.HOURS)
                 .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
                 .build()
 
         val workManager = WorkManager.getInstance(this)
+
         workManager.enqueueUniquePeriodicWork(
             "timetable_update_worker",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
     }

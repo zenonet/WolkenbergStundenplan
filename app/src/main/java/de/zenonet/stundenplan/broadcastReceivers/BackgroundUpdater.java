@@ -62,7 +62,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
                         new Intent(context, TimeTableViewActivity.class), PendingIntent.FLAG_IMMUTABLE);
 
                 // Show notification
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.SHORT_TERM_CHANGES_CHANNEL_ID)
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, StundenplanPhoneApplication.TIME_TABLE_UPDATE_CHANNEL_ID)
                         .setSmallIcon(de.zenonet.stundenplan.common.R.mipmap.ic_launcher)
                         .setContentTitle("Kurzfristige Stundenplan-Änderung!")
                         .setContentIntent(onClickIntent)
@@ -128,7 +128,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
 
                 TimetableWidgetKt.updateWidgets(context);
 
-                manageShortTermChanges(timeTable);
+                //manageShortTermChanges(timeTable);
                 //int dayOfWeek = 0;
 
                 if (!PreferenceManager.getDefaultSharedPreferences(context).getBoolean("showNotifications", false))

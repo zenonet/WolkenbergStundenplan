@@ -24,7 +24,7 @@ import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.models.User;
 
 
-public class TimeTableCacheClient implements TimeTableClient {
+public class TimeTableCacheClient {
 
     public String dataPath;
     public NameLookup lookup = new NameLookup();
@@ -35,33 +35,6 @@ public class TimeTableCacheClient implements TimeTableClient {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    @Override
-    public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
-
-        // BUG: This never checks if the timetable is from the current week
-        try {
-            File cacheFile = new File(Utils.CachePath, "timetable.json");
-
-            int length = (int) cacheFile.length();
-            byte[] bytes = new byte[length];
-            try (FileInputStream in = new FileInputStream(cacheFile)) {
-                in.read(bytes);
-            }
-            String contents = new String(bytes);
-
-            TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
-            timeTable.source = TimeTableSource.Cache;
-            timeTable.isCacheStateConfirmed = false;
-            // Re-add the uncached start- and end-times of the periods
-            Utils.insertTimes(timeTable);
-            return timeTable;
-        } catch (Exception e) {
-            Log.e(LogTags.Caching, e.getMessage());
-            throw new TimeTableLoadException(e);
-        }
-    }
-
-    @Override
     public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
         if(week < 1 || week > 52) throw new TimeTableLoadException();
 
@@ -145,7 +118,6 @@ public class TimeTableCacheClient implements TimeTableClient {
         }
     }
 
-    @Override
     public User getUser() throws UserLoadException {
         try {
             File userFile = new File(dataPath, "/user.json");

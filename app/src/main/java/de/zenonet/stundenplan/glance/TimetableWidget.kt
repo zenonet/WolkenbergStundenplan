@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.datastore.core.DataStore
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -240,7 +241,9 @@ suspend fun loadTimeTable(context: Context): TimeTable? {
 
 fun updateWidgets(context: Context) {
     suspend {
-        TimetableWidget().updateAll(context)
+        GlanceAppWidgetManager(context).getGlanceIds(TimetableWidget::class.java).forEach { id ->
+            TimetableWidget().update(context, id)
+        }
     }
 }
 
