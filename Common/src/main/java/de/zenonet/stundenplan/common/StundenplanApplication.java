@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 
 public class StundenplanApplication extends Application {
     public static Instant applicationEntrypointInstant;
+    public static int millisToDisplay = -1;
     public static StundenplanApplication application;
     @Override
     public void onCreate() {

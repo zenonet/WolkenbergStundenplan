@@ -15,7 +15,7 @@ public abstract class StatisticsManager {
      */
     public static void reportTimetableTime(int time) {
         if(hasReported) return;
-
+        StundenplanApplication.millisToDisplay = time;
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(StundenplanApplication.application);
         int measurements = preferences.getInt("measurementCount", 0);
         float avg = preferences.getFloat("averageTimetableTime", 0);
