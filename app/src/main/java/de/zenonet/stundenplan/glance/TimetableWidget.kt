@@ -57,8 +57,8 @@ import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class TimetableWidget : GlanceAppWidget() {
 
@@ -72,8 +72,8 @@ class TimetableWidget : GlanceAppWidget() {
             ) = TimeTableDataStore(context)
 
 
-            override fun getLocation(context: Context, fileKey: String) =
-                throw NotImplementedError("Not implemented for TimeTable App Widget State Definition")
+            override fun getLocation(context: Context, fileKey: String) = File("none")
+
 
         }
 
@@ -82,7 +82,7 @@ class TimetableWidget : GlanceAppWidget() {
         // In this method, load data needed to render the AppWidget.
         // Use `withContext` to switch to another thread for long running
         // operations.
-
+        Log.i(LogTags.HomeScreenWidgets, "providing glance...")
         provideContent {
             // create your AppWidget here
             GlanceTheme(
@@ -133,16 +133,24 @@ class TimeTableDataStore(private val context: Context) :
 
 @Composable
 private fun MyContent(timeTable: TimeTable) {
+    Log.i(LogTags.HomeScreenWidgets, "content is shown...")
     val (sizeX, _) = LocalSize.current
     val dayOfWeek = Timing.getCurrentDayOfWeek()
 
     val isWeekend = dayOfWeek < 0 || dayOfWeek > 4
     if (isWeekend || timeTable.Lessons[dayOfWeek].isEmpty()) {
 
-        Box(GlanceModifier.fillMaxSize().background(colorResource(R.color.cancelled_lesson)), contentAlignment = Alignment.Center) {
+        Box(
+            GlanceModifier.fillMaxSize().background(colorResource(R.color.cancelled_lesson)),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                if (isWeekend) (if(sizeX <= 100.dp) "Wochen\nende!" else "Wochenende!") else "Frei!",
-                style = TextStyle(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, color = GlanceTheme.colors.onBackground),
+                if (isWeekend) (if (sizeX <= 100.dp) "Wochen\nende!" else "Wochenende!") else "Frei!",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = GlanceTheme.colors.onBackground
+                ),
                 modifier = GlanceModifier.wrapContentSize(),
             )
         }
@@ -159,17 +167,28 @@ private fun MyContent(timeTable: TimeTable) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         itemsIndexed(timeTable.Lessons[dayOfWeek]) { index, lesson ->
-            val col = getBackgroundColorForLesson(lesson) ?: GlanceTheme.colors.background.getColor(context)
+            val col = getBackgroundColorForLesson(lesson) ?: GlanceTheme.colors.background.getColor(
+                context
+            )
             Row(GlanceModifier.fillMaxWidth().background(col).padding(15.dp)) {
                 Text(
                     "${index + 1}. ${lesson.SubjectShortName}",
                     GlanceModifier.defaultWeight(),
-                    style = TextStyle(textAlign = TextAlign.Left, color = GlanceTheme.colors.onBackground),
+                    style = TextStyle(
+                        textAlign = TextAlign.Left,
+                        color = GlanceTheme.colors.onBackground
+                    ),
                 )
                 if (sizeX > 100.dp) {
                     androidx.glance.layout.Spacer(GlanceModifier.defaultWeight())
 
-                    Text(formatter.formatRoomName(lesson.Room), style = TextStyle(textAlign = TextAlign.Right, color = GlanceTheme.colors.onBackground))
+                    Text(
+                        formatter.formatRoomName(lesson.Room),
+                        style = TextStyle(
+                            textAlign = TextAlign.Right,
+                            color = GlanceTheme.colors.onBackground
+                        )
+                    )
                 }
             }
         }
@@ -202,7 +221,9 @@ fun LoginRequest(modifier: Modifier = Modifier) {
 @Composable
 fun getBackgroundColorForLesson(lesson: Lesson): Color? {
     if (!lesson.isTakingPlace/* && lesson.Type != LessonType.Assignment*/) return colorResource(R.color.cancelled_lesson)
-    if(lesson.Text != null && (lesson.Text.lowercase().contains("klassenarbeit") || lesson.Text.lowercase().contains("klausur")))
+    if (lesson.Text != null && (lesson.Text.lowercase()
+            .contains("klassenarbeit") || lesson.Text.lowercase().contains("klausur"))
+    )
         return colorResource(R.color.exam)
 
     return when (lesson.Type) {
@@ -238,16 +259,3 @@ suspend fun loadTimeTable(context: Context): TimeTable? {
     }
     return tt
 }
-
-fun updateWidgets(context: Context) {
-    suspend {
-        GlanceAppWidgetManager(context).getGlanceIds(TimetableWidget::class.java).forEach { id ->
-            TimetableWidget().update(context, id)
-        }
-    }
-}
-
-fun areWidgetsExistent(context: Context) =
-    runBlocking {
-        GlanceAppWidgetManager(context).getGlanceIds(TimetableWidget::class.java)
-    }.isNotEmpty()

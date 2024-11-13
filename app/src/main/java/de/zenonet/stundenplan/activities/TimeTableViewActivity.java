@@ -237,8 +237,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                         Log.i(LogTags.Timing, String.format("Time from app start to fetched timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                     }
 
-                                if (timeTable.source != TimeTableSource.Cache)
-                                    TimetableWidgetKt.updateWidgets(this);
+                                if (timeTable.source != TimeTableSource.Cache){
+                                    /*BuildersKt.launch(GlobalScope.INSTANCE,
+                                            Dispatchers.getMain(),//context to be ran on
+                                            CoroutineStart.DEFAULT,
+                                            (coroutineScope, continuation) -> TimetableWidgetKt.updateWidgets(TimeTableViewActivity.this, continuation)
+                                    );*/
+                                }
 
                                 timeTableLoaded = true;
                                 currentTimeTable = timeTable;

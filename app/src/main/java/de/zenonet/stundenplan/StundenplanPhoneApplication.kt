@@ -1,7 +1,6 @@
 package de.zenonet.stundenplan
 
 import android.app.AlarmManager
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,15 +11,12 @@ import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import de.zenonet.stundenplan.BackroundWorkers.UpdateTimeTableWorker
 import de.zenonet.stundenplan.broadcastReceivers.BackgroundUpdater
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
-import de.zenonet.stundenplan.glance.areWidgetsExistent
 import java.time.Duration
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -91,7 +87,7 @@ class StundenplanPhoneApplication() : StundenplanApplication() {
     private fun scheduleWorkRequests() {
 
         val workRequest: PeriodicWorkRequest =
-            PeriodicWorkRequest.Builder(UpdateTimeTableWorker::class.java, 3, TimeUnit.HOURS)
+            PeriodicWorkRequest.Builder(UpdateTimeTableWorker::class.java, 2, TimeUnit.HOURS)
                 .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
                 .build()

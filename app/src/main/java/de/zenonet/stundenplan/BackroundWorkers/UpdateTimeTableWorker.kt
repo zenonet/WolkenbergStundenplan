@@ -9,28 +9,24 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.glance.appwidget.updateAll
 import androidx.preference.PreferenceManager
 import androidx.work.CoroutineWorker
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import de.zenonet.stundenplan.StundenplanPhoneApplication
 import de.zenonet.stundenplan.activities.TimeTableViewActivity
 import de.zenonet.stundenplan.common.DataNotAvailableException
-import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.R
 import de.zenonet.stundenplan.common.Timing
-import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
-import de.zenonet.stundenplan.common.timetableManagement.UserLoadException
-import de.zenonet.stundenplan.glance.updateWidgets
+import de.zenonet.stundenplan.glance.TimetableWidget
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters) :
@@ -53,7 +49,8 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
             }
             val timeTable = loadTimeTableAsync(client).await()
 
-            updateWidgets(applicationContext)
+
+            TimetableWidget().updateAll(applicationContext)
 
             // check if notifications can and should be sent
             if (!PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean("showChangeNotifications", false) ||

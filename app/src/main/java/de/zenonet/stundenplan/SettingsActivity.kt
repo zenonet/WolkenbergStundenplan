@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -37,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,18 +46,20 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
+import androidx.glance.appwidget.updateAll
 import androidx.preference.PreferenceManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.glance.TimetableWidget
-import de.zenonet.stundenplan.glance.updateWidgets
 import de.zenonet.stundenplan.nonCrucialUi.PreviewPermissionState
 import de.zenonet.stundenplan.ui.theme.BackgroundBlue
 import de.zenonet.stundenplan.ui.theme.CalendarRed
 import de.zenonet.stundenplan.ui.theme.CloudWhite
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import kotlinx.coroutines.launch
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
@@ -90,17 +94,13 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
-
-    fun closeActivity() {
-        updateWidgets(this)
-        finish()
-    }
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun View(activity: SettingsActivity?) {
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -108,10 +108,17 @@ fun View(activity: SettingsActivity?) {
                 title = { Text("Einstellungen") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { activity?.closeActivity() }
+                        onClick = {
+                            if(activity == null) return@IconButton
+
+                            coroutineScope.launch {
+                                TimetableWidget().updateAll(activity)
+                                activity.finish()
+                            }
+                        }
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -181,8 +188,6 @@ fun View(activity: SettingsActivity?) {
                     },
                     widgetContainer = {
                         Button(onClick = {
-                            if (activity == null) return@Button
-
                             val intent = Intent(activity, OnboardingActivity::class.java)
                             activity.startActivity(intent)
                             activity.finish()

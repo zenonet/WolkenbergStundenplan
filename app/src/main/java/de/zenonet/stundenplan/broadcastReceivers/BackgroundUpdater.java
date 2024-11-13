@@ -126,8 +126,6 @@ public class BackgroundUpdater extends BroadcastReceiver {
                     return;
                 }
 
-                TimetableWidgetKt.updateWidgets(context);
-
                 //manageShortTermChanges(timeTable);
                 //int dayOfWeek = 0;
 
