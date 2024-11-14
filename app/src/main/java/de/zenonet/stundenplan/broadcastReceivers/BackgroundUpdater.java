@@ -155,6 +155,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
                                 nextLesson.Subject,
                                 formatter.formatTeacherName(nextLesson.Teacher),
                                 nextLesson.EndTime))
+                        .setSmallIcon(de.zenonet.stundenplan.common.R.drawable.ic_notification_icon)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .setSilent(true);
 

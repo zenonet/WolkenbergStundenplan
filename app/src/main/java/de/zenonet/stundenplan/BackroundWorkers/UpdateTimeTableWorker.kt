@@ -77,7 +77,7 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
                         .setContentText("Dein Stundenplan hat sich geändert. Sie ihn Dir an!")
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true)
-                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setSmallIcon(R.drawable.ic_notification_icon)
                         .build()
 
                     notificationManager.notify(timeTable.CounterValue.hashCode(), notification)
