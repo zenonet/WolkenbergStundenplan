@@ -365,25 +365,25 @@ class NonCrucialViewModel(
         Log.i(LogTags.Debug, timeTables[0].Lessons[4][7].HasHomeworkAttached.toString())
         homeworkEntries = timeTables.flatMapIndexed { weekOffset, tt ->
             tt.Lessons.flatMapIndexed { dayIndex, day ->
-                if(dayIndex < dayOfWeek) return@flatMapIndexed emptyList()
-                    Log.i(LogTags.Debug, "Flattening day $dayIndex")
-                    day.filterIndexed { li, l ->
-                        Log.i(LogTags.Debug, "lesson index:$li, dayIndex: $dayIndex")
+                if(dayIndex < dayOfWeek && weekOffset == 0) return@flatMapIndexed emptyList()
+                Log.i(LogTags.Debug, "Flattening day $dayIndex")
+                day.filterIndexed { li, l ->
+                    Log.i(LogTags.Debug, "lesson index:$li, dayIndex: $dayIndex")
 
-                        l != null && l.HasHomeworkAttached
+                    l != null && l.HasHomeworkAttached
+                }
+                    .distinctBy { it.SubjectShortName }.map { l ->
+                        HomeworkEntry(
+                            HomeworkManager.getNoteFor(
+                                year,
+                                currentWeek + weekOffset,
+                                dayIndex,
+                                l.SubjectShortName.hashCode()
+                            ), l, LocalDate.of(year, 1, 1).with(
+                                weekFields.weekOfYear(), (currentWeek + weekOffset).toLong()
+                            ).with(weekFields.dayOfWeek(), 1).plusDays(dayIndex.toLong())
+                        )
                     }
-                        .distinctBy { it.SubjectShortName }.map { l ->
-                            HomeworkEntry(
-                                HomeworkManager.getNoteFor(
-                                    year,
-                                    currentWeek + weekOffset,
-                                    dayIndex,
-                                    l.SubjectShortName.hashCode()
-                                ), l, LocalDate.of(year, 1, 1).with(
-                                    weekFields.weekOfYear(), (currentWeek + weekOffset).toLong()
-                                ).with(weekFields.dayOfWeek(), 1).plusDays(dayIndex.toLong())
-                            )
-                        }
                 }
         }
     }
