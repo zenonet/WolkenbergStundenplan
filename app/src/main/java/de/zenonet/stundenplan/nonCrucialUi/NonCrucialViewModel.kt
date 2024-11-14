@@ -366,10 +366,7 @@ class NonCrucialViewModel(
         homeworkEntries = timeTables.flatMapIndexed { weekOffset, tt ->
             tt.Lessons.flatMapIndexed { dayIndex, day ->
                 if(dayIndex < dayOfWeek && weekOffset == 0) return@flatMapIndexed emptyList()
-                Log.i(LogTags.Debug, "Flattening day $dayIndex")
                 day.filterIndexed { li, l ->
-                    Log.i(LogTags.Debug, "lesson index:$li, dayIndex: $dayIndex")
-
                     l != null && l.HasHomeworkAttached
                 }
                     .distinctBy { it.SubjectShortName }.map { l ->
