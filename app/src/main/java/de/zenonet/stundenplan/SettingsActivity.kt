@@ -52,6 +52,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.glance.TimetableWidget
 import de.zenonet.stundenplan.nonCrucialUi.PreviewPermissionState
@@ -113,6 +114,7 @@ fun View(activity: SettingsActivity?) {
 
                             coroutineScope.launch {
                                 TimetableWidget().updateAll(activity)
+                                (StundenplanApplication.application as StundenplanPhoneApplication).scheduleUpdateRepeating()
                                 activity.finish()
                             }
                         }
