@@ -162,32 +162,43 @@ private fun MyContent(timeTable: TimeTable) {
 
     LazyColumn(
         modifier = GlanceModifier.fillMaxSize()
-            .background(GlanceTheme.colors.background),
+            .background(Color.Transparent),
         //verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        itemsIndexed(timeTable.Lessons[dayOfWeek]) { index, lesson ->
+        itemsIndexed(timeTable.Lessons[dayOfWeek]) { index, lesson: Lesson? ->
             val col = getBackgroundColorForLesson(lesson) ?: GlanceTheme.colors.background.getColor(
                 context
             )
             Row(GlanceModifier.fillMaxWidth().background(col).padding(15.dp)) {
-                Text(
-                    "${index + 1}. ${lesson.SubjectShortName}",
-                    GlanceModifier.defaultWeight(),
-                    style = TextStyle(
-                        textAlign = TextAlign.Left,
-                        color = GlanceTheme.colors.onBackground
-                    ),
-                )
-                if (sizeX > 100.dp) {
-                    androidx.glance.layout.Spacer(GlanceModifier.defaultWeight())
-
+                if(lesson != null) {
                     Text(
-                        formatter.formatRoomName(lesson.Room),
+                        "${index + 1}. ${lesson.SubjectShortName}",
+                        GlanceModifier.defaultWeight(),
                         style = TextStyle(
-                            textAlign = TextAlign.Right,
+                            textAlign = TextAlign.Left,
                             color = GlanceTheme.colors.onBackground
+                        ),
+                    )
+                    if (sizeX > 100.dp) {
+                        androidx.glance.layout.Spacer(GlanceModifier.defaultWeight())
+
+                        Text(
+                            formatter.formatRoomName(lesson.Room),
+                            style = TextStyle(
+                                textAlign = TextAlign.Right,
+                                color = GlanceTheme.colors.onBackground
+                            )
                         )
+                    }
+                }else{
+                    Text(
+                        "${index + 1}. Frei",
+                        GlanceModifier.defaultWeight(),
+                        style = TextStyle(
+                            textAlign = TextAlign.Left,
+                            color = GlanceTheme.colors.onBackground
+                        ),
                     )
                 }
             }
@@ -219,8 +230,9 @@ fun LoginRequest(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun getBackgroundColorForLesson(lesson: Lesson): Color? {
-    if (!lesson.isTakingPlace/* && lesson.Type != LessonType.Assignment*/) return colorResource(R.color.cancelled_lesson)
+fun getBackgroundColorForLesson(lesson: Lesson?): Color? {
+    if(lesson == null) return Color.Transparent
+    if (lesson == null || !lesson.isTakingPlace/* && lesson.Type != LessonType.Assignment*/) return colorResource(R.color.cancelled_lesson)
     if (lesson.Text != null && (lesson.Text.lowercase()
             .contains("klassenarbeit") || lesson.Text.lowercase().contains("klausur"))
     )
