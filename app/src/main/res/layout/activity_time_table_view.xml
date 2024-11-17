@@ -66,7 +66,7 @@
                 android:id="@+id/nextWeekButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_alignLeft="@id/settingsButton"
+                android:layout_alignLeft="@id/mailButton"
                 android:layout_marginLeft="-40dp"
                 android:background="#00000000"
                 android:src="@drawable/baseline_arrow_forward_24"
@@ -74,6 +74,19 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Zur nächsten Woche"
+                android:tint="?normalForeground" />
+            <ImageButton
+                android:id="@+id/mailButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignLeft="@id/settingsButton"
+                android:layout_marginLeft="-40dp"
+                android:background="#00000000"
+                android:src="@drawable/baseline_email_24"
+                android:scaleType="fitXY"
+                android:minWidth="30dp"
+                android:minHeight="30dp"
+                android:tooltipText="Outlook öffnen"
                 android:tint="?normalForeground" />
 
             <ImageButton

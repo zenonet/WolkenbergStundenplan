@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
@@ -60,9 +61,6 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TimeTableManager manager;
     TableLayout table;
     TextView stateView;
-    ImageButton previousWeekButton;
-    ImageButton nextWeekButton;
-    ImageButton currentWeekButton;
 
     int selectedWeek = Timing.getRelevantWeekOfYear();
     private TimeTable currentTimeTable;
@@ -116,9 +114,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
 
-        previousWeekButton = findViewById(R.id.previousWeekButton);
-        nextWeekButton = findViewById(R.id.nextWeekButton);
-        currentWeekButton = findViewById(R.id.currentWeekButton);
+        ImageButton previousWeekButton = findViewById(R.id.previousWeekButton);
+        ImageButton nextWeekButton = findViewById(R.id.nextWeekButton);
+        ImageButton currentWeekButton = findViewById(R.id.currentWeekButton);
+        ImageButton mailButton = findViewById(R.id.mailButton);
 
         if (isPreview) {
             previousWeekButton.setEnabled(false);
@@ -144,6 +143,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
             loadTimeTableAsync();
         });
 
+        mailButton.setOnClickListener((sender) -> {
+            openOutlook();
+        });
+
         if (isPreview)
             loadPreviewTimeTable();
     }
@@ -155,6 +158,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
         } catch (UserLoadException e) {
             // TODO: Show a message saying that the user id couldn't be loaded
         }
+    }
+
+    private void openOutlook(){
+        Intent outlookIntent = getPackageManager().getLaunchIntentForPackage("com.microsoft.office.outlook");
+        if(outlookIntent != null){
+            startActivity(outlookIntent);
+            return;
+        }
+        // open outlook in webview
+        Intent intent = new Intent(this, OutlookWebView.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        startActivity(intent);
     }
 
     private ActivityResultLauncher<Intent> intentLauncher;

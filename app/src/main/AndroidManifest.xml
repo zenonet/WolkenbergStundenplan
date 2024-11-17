@@ -6,8 +6,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.google.android.wearable.permission.URI_REDIRECT_TO_REMOTE" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+
+    <queries>
+        <package android:name="com.microsoft.office.outlook" />
+    </queries>
 
     <application
         android:name=".StundenplanPhoneApplication"
@@ -20,6 +24,11 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.Stundenplan"
         tools:targetApi="34">
+        <activity
+            android:name=".activities.OutlookWebView"
+            android:exported="true"
+            android:taskAffinity="@string/mail_task_affinity"
+            android:launchMode="singleTask"/>
         <activity
             android:name=".homework.HomeworkEditorActivity"
             android:exported="false"
