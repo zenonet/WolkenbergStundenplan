@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.*;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -149,6 +150,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         if (isPreview)
             loadPreviewTimeTable();
+
+        updateWindowFlags();
     }
 
     private void initializeTimeTableManagement() {
@@ -158,6 +161,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
         } catch (UserLoadException e) {
             // TODO: Show a message saying that the user id couldn't be loaded
         }
+    }
+    private void updateWindowFlags(){
+        boolean showWhenLocked = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("showWhenLocked", true);
+        getWindow().setFlags(showWhenLocked ? WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED : 0, WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
     }
 
     private void openOutlook(){
@@ -210,6 +217,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (currentTimeTable != null) updateTimeTableView(currentTimeTable);
+                    updateWindowFlags();
                 }
         );
 

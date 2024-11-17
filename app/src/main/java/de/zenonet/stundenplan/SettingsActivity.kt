@@ -247,6 +247,13 @@ fun View(activity: SettingsActivity?) {
                 title = { Text(text = "Verbinde Doppelstunden") },
                 summary = { Text(text = if (it) "Kein Spalt zwischen Stunden einer Doppelstunde wird angezeigt" else "Spalt zwischen Stunden einer Doppelstunde wird angezeigt") }
             )
+            preferenceCategory("ik", title = {Text("Andere")})
+            switchPreference(
+                "showWhenLocked",
+                defaultValue = true,
+                title = {Text("Stundenplan über Sperrbildschirm anzeigen")},
+                summary = { Text(text = if (it) "Stunenplan wird über Sperrbildschirm angezeigt" else "Stunenplan wird nicht über Sperrbildschirm angezeigt") }
+            )
 /*            switchPreference(
                 key = "useCursedLayout",
                 defaultValue = false,
