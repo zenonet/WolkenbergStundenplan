@@ -45,7 +45,7 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Zur vorherigen Woche"
-                android:tint="?normalForeground">
+                app:tint="?normalForeground">
             </ImageButton>
 
             <ImageButton
@@ -60,7 +60,7 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Zur aktuellen Woche"
-                android:tint="?normalForeground" />
+                app:tint="?normalForeground" />
 
             <ImageButton
                 android:id="@+id/nextWeekButton"
@@ -74,7 +74,7 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Zur nächsten Woche"
-                android:tint="?normalForeground" />
+                app:tint="?normalForeground" />
             <ImageButton
                 android:id="@+id/mailButton"
                 android:layout_width="wrap_content"
@@ -87,7 +87,7 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Outlook öffnen"
-                android:tint="?normalForeground" />
+                app:tint="?normalForeground" />
 
             <ImageButton
                 android:id="@+id/settingsButton"
@@ -101,7 +101,7 @@
                 android:minWidth="30dp"
                 android:minHeight="30dp"
                 android:tooltipText="Einstellungen"
-                android:tint="?normalForeground">
+                app:tint="?normalForeground">
             </ImageButton>
         </RelativeLayout>
 
