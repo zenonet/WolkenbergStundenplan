@@ -361,8 +361,8 @@ class NonCrucialViewModel(
                             tt
                         )
                     }
-                };
-        Log.i(LogTags.Debug, timeTables[0].Lessons[4][7].HasHomeworkAttached.toString())
+                }
+
         homeworkEntries = timeTables.flatMapIndexed { weekOffset, tt ->
             tt.Lessons.flatMapIndexed { dayIndex, day ->
                 if(dayIndex < dayOfWeek && weekOffset == 0) return@flatMapIndexed emptyList()
