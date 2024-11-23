@@ -15,9 +15,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -234,6 +235,9 @@ fun WearApp(activity: LoginActivity?) {
 
                 if (status < 0) return@SwipeToDismissBox
                 ScalingLazyColumn(Modifier.fillMaxSize()) {
+                    item{
+                        Spacer(Modifier.height(20.dp))
+                    }
                     when (status) {
                         0 -> {
                             item {
