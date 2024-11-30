@@ -302,6 +302,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
         Log.i(LogTags.UI, "Checking for updates...");
         setTimetableSourceText(currentTimeTable, true);
         new Thread(() -> {
+            if(!manager.apiClient.isLoggedIn)
+                manager.login();
             long latestCounterValue = manager.apiClient.getLatestCounterValue(true);
             if(!manager.apiClient.isCounterConfirmed){
                 Log.i(LogTags.UI, "Update check failed!");

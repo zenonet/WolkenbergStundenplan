@@ -30,6 +30,9 @@ import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.models.User;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class TimeTableApiClient {
     /**
@@ -184,31 +187,31 @@ public class TimeTableApiClient {
         return getLatestCounterValue(false);
     }
 
-
+    OkHttpClient client = new OkHttpClient();
     public long getLatestCounterValue(boolean forceRefetch) {
         // If the counter has already been fetched, just return it
         if (latestCounter != -1 && !forceRefetch) // TODO: Add expiration and re-fetching
             return latestCounter;
 
-        try {
-            HttpURLConnection httpCon = getAuthenticatedUrlConnection("GET", "counter");
-
-            JSONObject response = new JSONObject(Utils.readAllFromStream(httpCon.getInputStream()));
+        Request request = getAuthenticatedRequestBuilder("counter").get().build();
+        try (Response response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            JSONObject responseJson = new JSONObject(response.body().string());
 
             // Let's just assume this counter works like a big number with a few dashes between digits
-            latestCounter = Long.parseLong(response.getString("COUNTER").replace("-", ""));
+            latestCounter = Long.parseLong(responseJson.getString("COUNTER").replace("-", ""));
             latestCounter += CounterOffset;
             isCounterConfirmed = true;
 
             // while we're here, also use the posts hash
-            postsHash = response.getString("POSTS_HASH");
+            postsHash = responseJson.getString("POSTS_HASH");
             sharedPreferences.edit()
                     .putLong("counter", latestCounter)
                     .putString("postsHash", postsHash)
                     .apply();
 
             return latestCounter;
-        } catch (IOException | JSONException e) {
+        } catch (IOException | JSONException | AssertionError e) {
             isCounterConfirmed = false;
             postsHash = sharedPreferences.getString("postsHash", "");
             return sharedPreferences.getLong("counter", -1);
@@ -217,6 +220,13 @@ public class TimeTableApiClient {
 
     private final String baseUrl = "https://www.wolkenberg-gymnasium.de/wolkenberg-app/api/";
 
+
+    public Request.Builder getAuthenticatedRequestBuilder(String endpoint){
+        return new Request.Builder()
+                .url(baseUrl + endpoint)
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + accessToken);
+    }
     public HttpURLConnection getAuthenticatedUrlConnection(String method, String endpoint) throws IOException {
         HttpURLConnection httpCon = getUrlApiConnection(method, endpoint);
         httpCon.setRequestProperty("Authorization", "Bearer " + accessToken);
@@ -227,6 +237,7 @@ public class TimeTableApiClient {
         HttpURLConnection httpCon = (HttpURLConnection) new URL(baseUrl + endpoint).openConnection();
         httpCon.setRequestMethod(method);
         httpCon.setRequestProperty("Content-Type", "application/json");
+        httpCon.setRequestProperty("connection", "close");
         return httpCon;
     }
 
