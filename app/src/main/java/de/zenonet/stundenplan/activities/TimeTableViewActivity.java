@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 import de.zenonet.stundenplan.common.HomeworkManager;
-import de.zenonet.stundenplan.glance.TimetableWidgetKt;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
 import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
@@ -298,6 +298,37 @@ public class TimeTableViewActivity extends AppCompatActivity {
         );
     }
 
+    private void checkForUpdatesAsync(){
+        Log.i(LogTags.UI, "Checking for updates...");
+        setTimetableSourceText(currentTimeTable, true);
+        new Thread(() -> {
+            long latestCounterValue = manager.apiClient.getLatestCounterValue(true);
+            if(!manager.apiClient.isCounterConfirmed){
+                Log.i(LogTags.UI, "Update check failed!");
+                runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
+                return;
+            }
+
+            if (latestCounterValue == currentTimeTable.CounterValue) {
+                // Counter state is always confirmed here
+                currentTimeTable.isCacheStateConfirmed = true;
+                runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
+                Log.i(LogTags.UI, "Update check completed! (no changes)");
+                return;
+            }
+
+            try {
+                currentTimeTable = manager.getTimetableForWeekFromRawCacheOrApi(selectedWeek);
+                runOnUiThread(() -> updateTimeTableView(currentTimeTable));
+            } catch (TimeTableLoadException e) {
+                Log.e(LogTags.Api, "Unable to re-fetch timetable");
+            }finally {
+                runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
+                Log.i(LogTags.UI, "Update check completed!");
+            }
+        }).start();
+    }
+
     private void loadPreviewTimeTable() {
         try {
             currentTimeTable = Utils.getPreviewTimeTable(this);
@@ -312,24 +343,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         if (popup != null) popup.dismiss();
 
-        String stateText;
-        switch (timeTable.source) {
-            case Api:
-                stateText = "From API";
-                break;
-            case Cache:
-                stateText = "From cache";
-                break;
-            case RawCache:
-                stateText = "From raw cache";
-                break;
-            default:
-                stateText = "From " + timeTable.source;
-        }
-        if (timeTable.isCacheStateConfirmed) {
-            stateText += " (confirmed)";
-        }
-        stateView.setText(stateText);
+        setTimetableSourceText(timeTable, false);
 
         boolean hasData = false;
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
@@ -415,13 +429,36 @@ public class TimeTableViewActivity extends AppCompatActivity {
         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart());
     }
 
+    private void setTimetableSourceText(TimeTable timeTable, boolean isRefetching) {
+        String stateText;
+        switch (timeTable.source) {
+            case Api:
+                stateText = "From API";
+                break;
+            case Cache:
+                stateText = "From cache";
+                break;
+            case RawCache:
+                stateText = "From raw cache";
+                break;
+            default:
+                stateText = "From " + timeTable.source;
+        }
+        if (timeTable.isCacheStateConfirmed) {
+            stateText += " (confirmed)";
+        }else if(isRefetching){
+            stateText += "(re-fetching...)";
+        }
+        stateView.setText(stateText);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-/*
-        // Update so that formatting changes from the settings page are reflected
+
         if(currentTimeTable != null)
-            updateTimeTableView(currentTimeTable);*/
+            // Check for timetable updates
+            checkForUpdatesAsync();
     }
 
     private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.", Locale.GERMANY);
