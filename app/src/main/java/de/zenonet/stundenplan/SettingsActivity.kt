@@ -243,7 +243,7 @@ fun View(activity: SettingsActivity?) {
             )
             switchPreference(
                 key = "combineSameSubjectLessons",
-                defaultValue = false,
+                defaultValue = true,
                 title = { Text(text = "Verbinde Doppelstunden") },
                 summary = { Text(text = if (it) "Kein Spalt zwischen Stunden einer Doppelstunde wird angezeigt" else "Spalt zwischen Stunden einer Doppelstunde wird angezeigt") }
             )

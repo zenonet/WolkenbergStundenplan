@@ -360,7 +360,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 lessonView.setVisibility(lesson == null ? View.INVISIBLE : View.VISIBLE);
                 if (lesson == null) continue;
 
-                boolean cssl = getSharedPreferences().getBoolean("combineSameSubjectLessons", false);
+                boolean cssl = getSharedPreferences().getBoolean("combineSameSubjectLessons", true);
                 Lesson lessonAfter = periodI + 1 < timeTable.Lessons[dayI].length ? timeTable.Lessons[dayI][periodI + 1] : null;
                 Lesson lessonBefore = periodI - 1 >= 0 ? timeTable.Lessons[dayI][periodI - 1] : null;
                 int paddingTop = cssl && lessonBefore != null && lessonBefore.SubjectShortName.equals(lesson.SubjectShortName) ? 0 : lessonMargin;
