@@ -266,9 +266,10 @@ class NonCrucialViewModel(
             lessonProgress = calculateProgress(startTime!!, endTime!!, currentTime)
         }
 
-        if (currentTimeTable.value != null) {
+        val currentDay = Timing.getCurrentDayOfWeek();
+        if (currentTimeTable.value != null && currentDay >= 0 && currentDay < 5) {
             val timeTable = currentTimeTable.value!!
-            val day = timeTable.Lessons?.get(Timing.getCurrentDayOfWeek()) ?: return
+            val day = timeTable.Lessons?.get(currentDay) ?: return
 
             currentLesson = if (day.size > currentPeriod) day[currentPeriod] else null
 
