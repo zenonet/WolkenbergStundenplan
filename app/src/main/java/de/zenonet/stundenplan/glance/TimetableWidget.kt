@@ -4,14 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEach
 import androidx.datastore.core.DataStore
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -20,13 +18,10 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.itemsIndexed
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
@@ -138,7 +133,7 @@ private fun MyContent(timeTable: TimeTable) {
     val dayOfWeek = Timing.getCurrentDayOfWeek()
 
     val isWeekend = dayOfWeek < 0 || dayOfWeek > 4
-    if (isWeekend || timeTable.Lessons[dayOfWeek].isEmpty()) {
+    if (isWeekend || timeTable.Lessons[dayOfWeek].isEmpty() || timeTable.Lessons[dayOfWeek].all { !Lesson.doesTakePlace(it) }) {
 
         Box(
             GlanceModifier.fillMaxSize().background(colorResource(R.color.cancelled_lesson)),
