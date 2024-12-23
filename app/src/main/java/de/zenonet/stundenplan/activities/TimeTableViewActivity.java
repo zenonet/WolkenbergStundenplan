@@ -243,8 +243,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
     private AtomicReference<TimeTable> loadingTimeTableReference;
 
     private boolean timeTableLoaded = false;
+    int[] timeTableVersionsReceived = new int[1];
     private void loadTimeTableAsync() {
-        int[] timeTableVersionsReceived = new int[1];
         loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(selectedWeek,
                 (timeTable) -> {
                     if (timeTable == null) return;
@@ -276,11 +276,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
                     // add annotations for lessons with homework attached
                     int timeTableIndex = timeTableVersionsReceived[0];
+
                     HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, timeTable);
                     if (timeTableIndex == timeTableVersionsReceived[0]) {
                         // update view to show homework annotations
                         runOnUiThread(() -> {
-                            Log.i(LogTags.Timing, String.format("Time from app start to homework annotations applied to timetable: %d ms", StundenplanApplication.getMillisSinceAppStart()));
+                            if(timeTableIndex == 0)
+                                Log.i(LogTags.Timing, String.format("Time from app start to homework annotations applied to timetable: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                             updateTimeTableView(timeTable);
                         });
                     }
