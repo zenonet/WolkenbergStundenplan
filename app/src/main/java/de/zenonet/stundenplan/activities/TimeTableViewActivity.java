@@ -1,27 +1,29 @@
 package de.zenonet.stundenplan.activities;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.*;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
-
-import android.os.Bundle;
 
 import com.google.android.material.color.MaterialColors;
 
@@ -33,29 +35,28 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
-
-import de.zenonet.stundenplan.common.HomeworkManager;
-import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
-import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
-import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
-import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
 import de.zenonet.stundenplan.common.Formatter;
+import de.zenonet.stundenplan.common.HomeworkManager;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.StatisticsManager;
+import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
+import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
-import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable;
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException;
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager;
 import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
-import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
+import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
+import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
@@ -246,11 +247,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
         int[] timeTableVersionsReceived = new int[1];
         loadingTimeTableReference = manager.getTimeTableAsyncWithAdjustments(selectedWeek,
                 (timeTable) -> {
+                    if (timeTable == null) return;
                     timeTableVersionsReceived[0]++;
                     runOnUiThread(() -> {
-
-                                if (timeTable == null) return;
-
                                 if (!timeTableLoaded)
                                     if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
                                         Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
@@ -292,6 +291,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             Toast.makeText(TimeTableViewActivity.this, "Dein Login ist abgelaufen. Du musst dich erneut anmelden.", Toast.LENGTH_SHORT).show();
                             startLoginProcess();
+                        });
+                    }else if(error == ResultType.CantLoadTimeTable){
+                        runOnUiThread(() -> {
+                            Toast.makeText(this, "Stundenplan konnte nicht geladen werdern", Toast.LENGTH_SHORT).show();
                         });
                     }
                 }
