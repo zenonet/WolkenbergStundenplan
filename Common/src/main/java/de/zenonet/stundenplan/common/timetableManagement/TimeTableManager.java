@@ -17,16 +17,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
-import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
+import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadFailedCallback;
-import de.zenonet.stundenplan.common.models.User;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadedCallback;
+import de.zenonet.stundenplan.common.models.User;
 
-public class TimeTableManager implements TimeTableClient {
+public class TimeTableManager {
 
     public User user;
     public TimeTableApiClient apiClient = new TimeTableApiClient();
