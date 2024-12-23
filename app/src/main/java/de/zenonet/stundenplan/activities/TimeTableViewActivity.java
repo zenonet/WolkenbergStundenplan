@@ -436,23 +436,24 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void setTimetableSourceText(TimeTable timeTable, boolean isRefetching) {
         String stateText;
+        String timeText = Timing.getCurrentTime().format(Timing.TimeFormatter);
         switch (timeTable.source) {
             case Api:
-                stateText = "From API";
+                stateText = "Vom Server (" + timeText + ")";
                 break;
             case Cache:
-                stateText = "From cache";
+                stateText = "Aus cache";
                 break;
             case RawCache:
-                stateText = "From raw cache";
+                stateText = "Aus sekundar-cache";
                 break;
             default:
                 stateText = "From " + timeTable.source;
         }
         if (timeTable.isCacheStateConfirmed) {
-            stateText += " (confirmed)";
+            stateText = "Bestätigt (" + timeText + ")";
         }else if(isRefetching){
-            stateText += "(re-fetching...)";
+            stateText += "(neu-laden...)";
         }
         stateView.setText(stateText);
     }

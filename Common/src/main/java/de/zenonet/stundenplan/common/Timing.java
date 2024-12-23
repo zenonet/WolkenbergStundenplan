@@ -1,8 +1,7 @@
 package de.zenonet.stundenplan.common;
 
-import androidx.preference.PreferenceManager;
-
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 public abstract class Timing {
@@ -13,6 +12,8 @@ public abstract class Timing {
         if(TimeOverride != null) return TimeOverride;
         return LocalTime.now(); // offset so that actual 15:00 is 8:00
     }
+
+    public static DateTimeFormatter TimeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     public static int getCurrentDayOfWeek() {
 
