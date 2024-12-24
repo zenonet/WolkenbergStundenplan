@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
@@ -452,24 +453,29 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void setTimetableSourceText(TimeTable timeTable, boolean isRefetching) {
         String stateText;
-        String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
-        switch (timeTable.source) {
-            case Api:
-                stateText = "Vom Server (" + timeText + ")";
-                break;
-            case Cache:
-                stateText = "Aus cache";
-                break;
-            case RawCache:
-                stateText = "Aus sekundar-cache";
-                break;
-            default:
-                stateText = "From " + timeTable.source;
-        }
-        if (timeTable.isCacheStateConfirmed) {
-            stateText = "Bestätigt (" + timeText + ")";
-        }else if(isRefetching){
-            stateText += "(neu-laden...)";
+        if(timeTable != null){
+            String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
+            switch (timeTable.source) {
+                case Api:
+                    stateText = "Vom Server (" + timeText + ")";
+                    break;
+                case Cache:
+                    stateText = "Aus cache";
+                    break;
+                case RawCache:
+                    stateText = "Aus sekundar-cache";
+                    break;
+                default:
+                    stateText = "From " + timeTable.source;
+            }
+            if (timeTable.isCacheStateConfirmed) {
+                stateText = "Bestätigt (" + timeText + ")";
+            }
+            if(isRefetching){
+                stateText += "(neu-laden...)";
+            }
+        }else{
+            stateText = "Lädt...";
         }
         stateView.setText(stateText);
     }
