@@ -1,8 +1,11 @@
 package de.zenonet.stundenplan.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -153,6 +156,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
             loadPreviewTimeTable();
 
         updateWindowFlags();
+
+        ConnectivityManager cm = (ConnectivityManager) this
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        cm.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback(){
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                runOnUiThread(() -> checkForUpdatesAsync());
+            }
+        });
+
     }
 
     private void initializeTimeTableManagement() {
