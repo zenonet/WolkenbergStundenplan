@@ -150,6 +150,7 @@ public class TimeTableManager {
         timeTable.source = source;
         timeTable.CounterValue = counter;
         timeTable.isCacheStateConfirmed = isConfirmed;
+        timeTable.timeOfConfirmation = apiClient.timeOfConfirmation;
         cacheClient.cacheTimetableForWeek(week, timeTable);
         return timeTable;
     }
@@ -225,6 +226,7 @@ public class TimeTableManager {
                 } else if (stage.get() == 1 && apiClient.isCounterConfirmed) {
                     // If the cache thread already returned a value, we want to re-return with the addition of it being confirmed
                     timeTableFromCache.get().isCacheStateConfirmed = true;
+                    timeTableFromCache.get().timeOfConfirmation = apiClient.timeOfConfirmation;
                     callback.timeTableLoaded(timeTableFromCache.get());
                 }
 
@@ -242,7 +244,7 @@ public class TimeTableManager {
                 TimeTable timeTable = cacheClient.getTimeTableForWeek(week);
 
                 timeTable.isCacheStateConfirmed = timeTable.CounterValue == confirmedCounter.get();
-
+                timeTable.timeOfConfirmation = apiClient.timeOfConfirmation;
                 callback.timeTableLoaded(timeTable);
 
                 // This is just for the astronomically small chance, that the API is faster than the cache, maybe remove later

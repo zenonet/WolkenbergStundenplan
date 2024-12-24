@@ -319,6 +319,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             if (latestCounterValue == currentTimeTable.CounterValue) {
                 // Counter state is always confirmed here
                 currentTimeTable.isCacheStateConfirmed = true;
+                currentTimeTable.timeOfConfirmation = manager.apiClient.timeOfConfirmation;
                 runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
                 Log.i(LogTags.UI, "Update check completed! (no changes)");
                 return;
@@ -438,7 +439,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private void setTimetableSourceText(TimeTable timeTable, boolean isRefetching) {
         String stateText;
-        String timeText = Timing.getCurrentTime().format(Timing.TimeFormatter);
+        String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
         switch (timeTable.source) {
             case Api:
                 stateText = "Vom Server (" + timeText + ")";

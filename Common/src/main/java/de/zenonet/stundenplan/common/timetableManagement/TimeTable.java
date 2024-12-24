@@ -5,7 +5,6 @@ import androidx.annotation.Keep;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Objects;
 
 import de.zenonet.stundenplan.common.TimeTableSource;
 
@@ -15,6 +14,7 @@ public final class TimeTable {
     public LocalDateTime lastConfirmedDate;
     public transient TimeTableSource source;
     public transient boolean isCacheStateConfirmed;
+    public transient LocalDateTime timeOfConfirmation;
     public long CounterValue;
     @Keep
     public TimeTable(){

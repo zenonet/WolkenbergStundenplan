@@ -16,12 +16,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.util.Locale;
 
 import de.zenonet.stundenplan.common.DataNotAvailableException;
-import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
+import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.models.User;
 import okhttp3.MediaType;
@@ -166,6 +167,7 @@ public class TimeTableApiClient {
      * Get the latest currently available counter value from API or from storage
      */
     private long latestCounter = -1;
+    public LocalDateTime timeOfConfirmation;
     public boolean isCounterConfirmed;
     public String postsHash;
     public long getLatestCounterValue() {
@@ -187,6 +189,7 @@ public class TimeTableApiClient {
             latestCounter = Long.parseLong(responseJson.getString("COUNTER").replace("-", ""));
             latestCounter += CounterOffset;
             isCounterConfirmed = true;
+            timeOfConfirmation = LocalDateTime.now();
 
             // while we're here, also use the posts hash
             postsHash = responseJson.getString("POSTS_HASH");
