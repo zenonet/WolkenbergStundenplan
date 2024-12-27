@@ -134,9 +134,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
             previousWeekButton.setImageAlpha(0x6F);
             nextWeekButton.setEnabled(false);
             nextWeekButton.setImageAlpha(0x6F);
+        }else{
+            updateWeekNavButtonEnabledStates();
         }
-
-        updateWeekNavButtonEnabledStates();
 
         nextWeekButton.setOnClickListener((sender) -> {
             selectedWeek++;
