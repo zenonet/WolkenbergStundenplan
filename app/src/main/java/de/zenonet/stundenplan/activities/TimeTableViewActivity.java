@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -180,6 +181,20 @@ public class TimeTableViewActivity extends AppCompatActivity {
         previousWeekButton.setImageAlpha(selectedWeek != 0 ? 0xFF : 0x6F);
         nextWeekButton.setEnabled(selectedWeek != 52);
         nextWeekButton.setImageAlpha(selectedWeek != 52 ? 0xFF : 0x6F);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode){
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if(nextWeekButton.isEnabled()) nextWeekButton.callOnClick();
+                return true;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                if(previousWeekButton.isEnabled()) previousWeekButton.callOnClick();
+                return true;
+            default:
+                return super.onKeyUp(keyCode, event);
+        }
     }
 
     private void initializeTimeTableManagement() {
