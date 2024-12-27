@@ -68,6 +68,9 @@ public class TimeTableViewActivity extends AppCompatActivity {
     TableLayout table;
     TextView stateView;
 
+    ImageButton previousWeekButton;
+    ImageButton nextWeekButton;
+
     int selectedWeek = Timing.getRelevantWeekOfYear();
     private TimeTable currentTimeTable;
 
@@ -120,32 +123,35 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
 
-        ImageButton previousWeekButton = findViewById(R.id.previousWeekButton);
-        ImageButton nextWeekButton = findViewById(R.id.nextWeekButton);
+        previousWeekButton = findViewById(R.id.previousWeekButton);
+        nextWeekButton = findViewById(R.id.nextWeekButton);
         ImageButton currentWeekButton = findViewById(R.id.currentWeekButton);
         ImageButton mailButton = findViewById(R.id.mailButton);
 
         if (isPreview) {
             previousWeekButton.setEnabled(false);
+            previousWeekButton.setImageAlpha(0x6F);
             nextWeekButton.setEnabled(false);
+            nextWeekButton.setImageAlpha(0x6F);
         }
+
+        updateWeekNavButtonEnabledStates();
 
         nextWeekButton.setOnClickListener((sender) -> {
             selectedWeek++;
-            nextWeekButton.setEnabled(selectedWeek != 52);
+            updateWeekNavButtonEnabledStates();
             loadTimeTableAsync();
         });
 
         previousWeekButton.setOnClickListener((sender) -> {
             selectedWeek--;
-            previousWeekButton.setEnabled(selectedWeek != 0);
+            updateWeekNavButtonEnabledStates();
             loadTimeTableAsync();
         });
 
         currentWeekButton.setOnClickListener((sender) -> {
             selectedWeek = Timing.getRelevantWeekOfYear();
-            previousWeekButton.setEnabled(selectedWeek != 0);
-            nextWeekButton.setEnabled(selectedWeek != 52);
+            updateWeekNavButtonEnabledStates();
             loadTimeTableAsync();
         });
 
@@ -167,6 +173,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void updateWeekNavButtonEnabledStates() {
+        previousWeekButton.setEnabled(selectedWeek != 0);
+        previousWeekButton.setImageAlpha(selectedWeek != 0 ? 0xFF : 0x6F);
+        nextWeekButton.setEnabled(selectedWeek != 52);
+        nextWeekButton.setImageAlpha(selectedWeek != 52 ? 0xFF : 0x6F);
     }
 
     private void initializeTimeTableManagement() {
