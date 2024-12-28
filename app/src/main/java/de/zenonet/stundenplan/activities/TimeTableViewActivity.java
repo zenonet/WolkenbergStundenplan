@@ -65,6 +65,10 @@ import de.zenonet.stundenplan.common.timetableManagement.UserLoadException;
 import de.zenonet.stundenplan.homework.HomeworkEditorActivity;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialUiKt;
 import de.zenonet.stundenplan.nonCrucialUi.NonCrucialViewModel;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 public class TimeTableViewActivity extends AppCompatActivity {
 
@@ -270,7 +274,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         homeworkEditorLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> updateHomeworkAnnotations()
+                result -> onHomeworkDataChanged()
         );
     }
 
@@ -605,7 +609,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             }
             if (id == R.id.clearHomework) {
                 HomeworkManager.INSTANCE.deleteNoteFor(selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
-                runOnUiThread(TimeTableViewActivity.this::updateHomeworkAnnotations);
+                runOnUiThread(TimeTableViewActivity.this::onHomeworkDataChanged);
                 return true;
             }
             return true;
@@ -702,6 +706,19 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
     }
 
+    private void onHomeworkDataChanged(){
+        updateHomeworkAnnotations();
+        if(nonCrucialViewModel != null) nonCrucialViewModel.loadHomework(new Continuation<Unit>() {
+            @NonNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(@NonNull Object o) {}
+        });
+    }
     private SharedPreferences getSharedPreferences() {
         return PreferenceManager.getDefaultSharedPreferences(this);
         //return getSharedPreferences("de.zenonet.stundenplan", MODE_PRIVATE);
@@ -711,6 +728,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private boolean isLoadingNonCrucialUi = false;
 
+    NonCrucialViewModel nonCrucialViewModel;
     private void loadNonCrucialUi() {
 
         Log.i(LogTags.Timing, String.format("Time from application start to started loading non-crucial-ui : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
@@ -724,18 +742,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
             l.addView(cv);
         }
 
-        NonCrucialViewModel vm;
+
         if (isPreview) {
             try {
-                vm = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this));
+                nonCrucialViewModel = new NonCrucialViewModel(null, null, Utils.getPreviewTimeTable(this));
             } catch (IOException e) {
                 return;
             }
         } else {
-            vm = new NonCrucialViewModel(manager, null, null);
+            nonCrucialViewModel = new NonCrucialViewModel(manager, null, null);
         }
 
-        NonCrucialUiKt.applyUiToComposeView(cv, vm);
+        NonCrucialUiKt.applyUiToComposeView(cv, nonCrucialViewModel);
         nonCrucialUiLoaded = true;
 
         Log.i(LogTags.Timing, String.format("Time from application start to non-crucial-ui loaded : %d ms", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
