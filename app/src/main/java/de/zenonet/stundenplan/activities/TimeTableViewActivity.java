@@ -537,7 +537,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         Calendar cal = week.getMonday();
 
-        boolean isCurrentWeek = Timing.getRelevantWeekOfYear() == week;
+        boolean isCurrentWeek = Timing.getRelevantWeekOfYear().equals(week);
 
         // Update all the textViews:
         for (int i = 444; i < 444 + 5; i++) {
