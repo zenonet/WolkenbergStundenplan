@@ -344,6 +344,7 @@ class NonCrucialViewModel(
     suspend fun loadHomework() {
         val currentWeek = Timing.getRelevantWeekOfYear()
         val dayOfWeek = Timing.getCurrentDayOfWeek()
+        val isWeekend = dayOfWeek < 0 || dayOfWeek > 4
         val period = Utils.getCurrentPeriod(Timing.getCurrentTime())
         // load homework for these weeks
         val weekFields = WeekFields.of(Locale.GERMANY)
@@ -361,7 +362,7 @@ class NonCrucialViewModel(
 
         homeworkEntries = timeTables.flatMapIndexed { weekOffset, tt ->
             tt.Lessons.flatMapIndexed { dayIndex, day ->
-                if(dayIndex < dayOfWeek && weekOffset == 0) return@flatMapIndexed emptyList()
+                if(dayIndex < dayOfWeek && weekOffset == 0 && !isWeekend) return@flatMapIndexed emptyList()
                 day.filterIndexed { li, l ->
                     l != null && l.HasHomeworkAttached
                 }
@@ -382,6 +383,7 @@ class NonCrucialViewModel(
 
     fun openHomeworkEditor(entry: HomeworkEntry, context: Context) {
         val intent = Intent(context, HomeworkEditorActivity::class.java)
+            .putExtra("year", entry.day.year)
             .putExtra("week", entry.day.get(WeekFields.of(Locale.GERMANY).weekOfYear()))
             .putExtra("dayOfWeek", entry.day.dayOfWeek.value - 1)
             .putExtra(
