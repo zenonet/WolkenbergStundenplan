@@ -226,20 +226,34 @@ fun Homework(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
         Widget(NonCrucialWidgetKeys.HOMEWORK) {
             Heading("Hausaufgaben")
             Spacer(Modifier.height(10.dp))
-            for (homeworkEntry in vm.homeworkEntries!!) {
-                val dayOfWeek = Utils.getWordForDayOfWeek(homeworkEntry.day.dayOfWeek.value - 1)
+            if(!(vm.homeworkEntries!!.isEmpty())) {
+                for (homeworkEntry in vm.homeworkEntries!!) {
+                    val dayOfWeek = Utils.getWordForDayOfWeek(homeworkEntry.day.dayOfWeek.value - 1)
 
-                Text(buildAnnotatedString {
-                    withLink(LinkAnnotation.Clickable("yeah", linkInteractionListener = {
-                        vm.openHomeworkEditor(homeworkEntry, context)
-                    })) {
-                        append("${homeworkEntry.lesson.Subject} für ${dayOfWeek.substring(0..1)}. ${
-                            homeworkEntry.day.format(
-                                fmt
-                            )
-                        }")
-                    }
-                }, textDecoration = TextDecoration.Underline, overflow = TextOverflow.Ellipsis, maxLines = 1)
+                    Text(
+                        buildAnnotatedString {
+                            withLink(LinkAnnotation.Clickable("yeah", linkInteractionListener = {
+                                vm.openHomeworkEditor(homeworkEntry, context)
+                            })) {
+                                append(
+                                    "${homeworkEntry.lesson.Subject} für ${dayOfWeek.substring(0..1)}. ${
+                                        homeworkEntry.day.format(
+                                            fmt
+                                        )
+                                    }"
+                                )
+                            }
+                        },
+                        textDecoration = TextDecoration.Underline,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
+                    )
+                }
+            }
+            else{
+                Text("Um Hausaufgaben einzutragen:")
+                Text("- Tippe auf eine Unterrichtsstunde")
+                Text("- Tippe auf 'Hausaufgaben eintragen'")
             }
 
         }
