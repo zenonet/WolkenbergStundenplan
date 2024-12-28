@@ -22,10 +22,12 @@ public abstract class Timing {
     }
 
     public static int getRelevantWeekOfYear(){
-        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
+        Calendar cal = Calendar.getInstance();
 
         int dayOfWeek = getCurrentDayOfWeek();
-        if (dayOfWeek > 4 || dayOfWeek < 0) weekOfYear++;
-        return weekOfYear;
+        if (dayOfWeek > 4 || dayOfWeek < 0) {
+            cal.add(Calendar.DAY_OF_WEEK, 6);
+        }
+        return cal.get(Calendar.WEEK_OF_YEAR);
     }
 }
