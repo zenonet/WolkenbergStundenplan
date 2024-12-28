@@ -148,11 +148,6 @@ public class TimeTableParser {
 
     private void applySubstitutions(TimeTable timeTable, String json, Week week) throws TimeTableLoadException {
         try {
-
-            // TODO: Is that even still the case? I am too dead inside to even understand this
-            /* BUG: Because the current week is used here but getTimeTableForWeek() uses the data from the timetable in whose time span the current date is in,
-                it could happen that the substitution of week t-1 are shown as a modification of the timetable of the week t on weekends.
-                 */
             JSONArray substitutions = new JSONObject(json).getJSONObject("substitutions").getJSONArray(String.format(Locale.GERMANY, "%d-%02d", week.Year, week.WeekOfYear));
             for (int dayI = 0; dayI < 5; dayI++) {
 
