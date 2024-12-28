@@ -221,12 +221,13 @@ fun Homework(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         vm.loadHomework()
     }
+    val showTutorialState = rememberPreferenceState("nonCrucialUi.showHomeworkTutorial", true)
 
-    AnimatedVisibility(vm.homeworkEntries != null) {
+    AnimatedVisibility(vm.homeworkEntries != null && (showTutorialState.value || vm.homeworkEntries!!.isNotEmpty())) {
         Widget(NonCrucialWidgetKeys.HOMEWORK) {
             Heading("Hausaufgaben")
             Spacer(Modifier.height(10.dp))
-            if(!(vm.homeworkEntries!!.isEmpty())) {
+            if (!(vm.homeworkEntries!!.isEmpty())) {
                 for (homeworkEntry in vm.homeworkEntries!!) {
                     val dayOfWeek = Utils.getWordForDayOfWeek(homeworkEntry.day.dayOfWeek.value - 1)
 
@@ -249,11 +250,18 @@ fun Homework(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
                         maxLines = 1
                     )
                 }
-            }
-            else{
-                Text("Um Hausaufgaben einzutragen:")
-                Text("- Tippe auf eine Unterrichtsstunde")
-                Text("- Tippe auf 'Hausaufgaben eintragen'")
+            } else {
+                if (showTutorialState.value) {
+                    Text("Um Hausaufgaben einzutragen:")
+                    Text("- Tippe auf eine Unterrichtsstunde")
+                    Text("- Tippe auf 'Hausaufgaben eintragen'")
+                    Spacer(Modifier.height(5.dp))
+                    Button({
+                        showTutorialState.value = false
+                    }) {
+                        Text("Nicht mehr anzeigen");
+                    }
+                }
             }
 
         }
