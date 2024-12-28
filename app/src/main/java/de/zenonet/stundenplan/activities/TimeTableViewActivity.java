@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.preference.PreferenceManager;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -114,12 +116,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
             return;
         }
 
-        if (!isPreview)
-            loadTimeTableAsync();
-
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
         formatter = new Formatter(this);
+
+        if (!isPreview)
+            loadTimeTableAsync();
+
         createTableLayout();
 
         findViewById(R.id.settingsButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
@@ -339,10 +342,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     }else if(error == ResultType.CantLoadTimeTable){
                         runOnUiThread(() -> {
                             Toast.makeText(this, "Stundenplan konnte nicht geladen werdern", Toast.LENGTH_SHORT).show();
+                            updateTimeTableView(null);
                         });
                     }
                 }
         );
+        setTimetableSourceText(null, true);
     }
 
     private void checkForUpdatesAsync(){
@@ -358,7 +363,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 return;
             }
 
-            if (latestCounterValue == currentTimeTable.CounterValue) {
+            if (currentTimeTable != null && latestCounterValue == currentTimeTable.CounterValue) {
                 // Counter state is always confirmed here
                 currentTimeTable.isCacheStateConfirmed = true;
                 currentTimeTable.timeOfConfirmation = manager.apiClient.timeOfConfirmation;
@@ -371,6 +376,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 currentTimeTable = manager.getTimetableForWeekFromRawCacheOrApi(selectedWeek);
                 runOnUiThread(() -> updateTimeTableView(currentTimeTable));
             } catch (TimeTableLoadException e) {
+                runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
                 Log.e(LogTags.Api, "Unable to re-fetch timetable");
             }finally {
                 runOnUiThread(() -> setTimetableSourceText(currentTimeTable, false));
@@ -389,12 +395,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
         updateTimeTableView(currentTimeTable);
     }
 
-    private void updateTimeTableView(TimeTable timeTable) {
+    private void updateTimeTableView(@Nullable TimeTable timeTable) {
 
         if (popup != null) popup.dismiss();
 
         setTimetableSourceText(timeTable, false);
 
+        if(timeTable == null) {
+            timeTable = new TimeTable();
+            timeTable.Lessons = new Lesson[5][0];
+        }
         boolean hasData = false;
         for (int dayI = 0; dayI < timeTable.Lessons.length; dayI++) {
             hasData |= timeTable.Lessons[dayI].length != 0;
@@ -479,7 +489,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart());
     }
 
-    private void setTimetableSourceText(TimeTable timeTable, boolean isRefetching) {
+    private void setTimetableSourceText(@Nullable TimeTable timeTable, boolean isRefetching) {
         String stateText;
         if(timeTable != null){
             String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
@@ -503,7 +513,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 stateText += "(neu-laden...)";
             }
         }else{
-            stateText = "Lädt...";
+            stateText = isRefetching ? "Lädt..." : "Fehler (" + LocalTime.now().format(Timing.TimeFormatter) + ")";
         }
         stateView.setText(stateText);
     }
