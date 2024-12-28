@@ -11,7 +11,6 @@ import androidx.preference.PreferenceManager;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -22,6 +21,7 @@ import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.ResultType;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
+import de.zenonet.stundenplan.common.Week;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadFailedCallback;
 import de.zenonet.stundenplan.common.callbacks.TimeTableLoadedCallback;
 import de.zenonet.stundenplan.common.models.User;
@@ -79,9 +79,7 @@ public class TimeTableManager {
         return ResultType.Success;
     }
 
-    public TimeTable getTimetableForWeekFromRawCacheOrApi(int week) throws TimeTableLoadException {
-        if (week < 1 || week > 52) throw new TimeTableLoadException();
-
+    public TimeTable getTimetableForWeekFromRawCacheOrApi(Week week) throws TimeTableLoadException {
         long cacheCounter = sharedPreferences.getLong("rawCacheCounter", -1);
 
         if(login() != ResultType.Success && cacheCounter == -1)throw new TimeTableLoadException("Failed to log in and cache miss");
@@ -170,7 +168,7 @@ public class TimeTableManager {
         return masterDataFetchThread;
     }
 
-    public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
+    public TimeTable getTimeTableForWeek(Week week) throws TimeTableLoadException {
         long counter = apiClient.getLatestCounterValue();
         try {
             // Get timetable from cache
@@ -192,11 +190,11 @@ public class TimeTableManager {
     public TimeTable getCurrentTimeTable() throws TimeTableLoadException {
         return getTimeTableForWeek(Timing.getRelevantWeekOfYear());
     }
-    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback) {
+    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(Week week, TimeTableLoadedCallback callback) {
         return getTimeTableAsyncWithAdjustments(week, callback, null);
     }
 
-    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(int week, TimeTableLoadedCallback callback, TimeTableLoadFailedCallback errorCallback) {
+    public AtomicReference<TimeTable> getTimeTableAsyncWithAdjustments(Week week, TimeTableLoadedCallback callback, TimeTableLoadFailedCallback errorCallback) {
 
         AtomicInteger stage = new AtomicInteger();
 
@@ -261,13 +259,6 @@ public class TimeTableManager {
         }).start();
         return timeTableFromCache;
     }
-
-    public AtomicReference<TimeTable> getCurrentTimeTableAsyncWithAdjustments(TimeTableLoadedCallback callback) {
-        int weekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
-        if (Timing.getCurrentDayOfWeek() > 4) weekOfYear++;
-        return getTimeTableAsyncWithAdjustments(weekOfYear, callback);
-    }
-
 
     public TimeTable getTimeTableForWeekForPerson() {
         return null;

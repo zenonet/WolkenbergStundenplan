@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +22,7 @@ import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.Week;
 import de.zenonet.stundenplan.common.models.User;
 
 
@@ -35,11 +37,9 @@ public class TimeTableCacheClient {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public TimeTable getTimeTableForWeek(int week) throws TimeTableLoadException {
-        if(week < 1 || week > 52) throw new TimeTableLoadException();
-
+    public TimeTable getTimeTableForWeek(Week week) throws TimeTableLoadException {
         try {
-            File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
+            File cacheFile = new File(Utils.CachePath, "/" + week.getCacheKey() + ".json");
 
             int length = (int) cacheFile.length();
             byte[] bytes = new byte[length];
@@ -78,12 +78,12 @@ public class TimeTableCacheClient {
         }
     }
 
-    public void cacheTimetableForWeek(int week, TimeTable timetable) {
+    public void cacheTimetableForWeek(Week week, TimeTable timetable) {
         try {
 
             Log.i(LogTags.Caching, "Caching timetable for week " + week + "...");
             String json = new Gson().toJson(timetable);
-            File cacheFile = new File(Utils.CachePath, "/" + week + ".json");
+            File cacheFile = new File(Utils.CachePath, "/" + week.getCacheKey() + ".json");
 
             try (FileOutputStream stream = new FileOutputStream(cacheFile)) {
                 stream.write(json.getBytes(StandardCharsets.UTF_8));
@@ -94,25 +94,26 @@ public class TimeTableCacheClient {
         }
     }
 
-    public long getCounterForCacheEntry(int week) {
+    public long getCounterForCacheEntry(Week week) {
         File cacheRegistryFile = new File(Utils.CachePath, "/registry.json");
 
         try {
             JSONObject entries = new JSONObject(Utils.readAllText(cacheRegistryFile));
 
-            if (!entries.has(String.valueOf(week))) return -1;
+            String cacheKey = week.getCacheKey();
+            if (!entries.has(cacheKey)) return -1;
 
-            return entries.getLong(String.valueOf(week));
+            return entries.getLong(cacheKey);
         } catch (IOException | JSONException e) {
             return -1;
         }
     }
-    public void putCounterForCacheEntry(int week, long counter){
+    public void putCounterForCacheEntry(Week week, long counter){
         File cacheRegistryFile = new File(Utils.CachePath, "/registry.json");
 
         try {
             JSONObject entries = cacheRegistryFile.exists() ? new JSONObject(Utils.readAllText(cacheRegistryFile)) : new JSONObject();
-            entries.put(String.valueOf(week), counter);
+            entries.put(week.getCacheKey(), counter);
             Utils.writeAllText(cacheRegistryFile, entries.toString());
         } catch (IOException | JSONException e) {
         }

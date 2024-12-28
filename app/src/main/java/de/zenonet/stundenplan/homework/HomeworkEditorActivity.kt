@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.preference.PreferenceManager
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.Week
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.nonCrucialUi.Heading
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
@@ -43,11 +44,14 @@ class HomeworkEditorActivity : ComponentActivity() {
 
         if (intent.extras == null) finish()
 
-        val week = intent.extras?.getInt("week")
+        val year = intent.extras?.getInt("year")
+        val weekOfYear = intent.extras?.getInt("week")
         val dayOfWeek = intent.extras?.getInt("dayOfWeek")
         val subjectHashCode = intent.extras?.getInt("subjectAbbreviationHash")
 
-        if (week == null || dayOfWeek == null || subjectHashCode == null) finish()
+        if (weekOfYear == null || dayOfWeek == null || subjectHashCode == null || year == null) finish()
+
+        val week = Week(year!!, weekOfYear!!);
 
         val ttm =
             if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("showPreview", false)) null
@@ -55,7 +59,7 @@ class HomeworkEditorActivity : ComponentActivity() {
         ttm?.init(this)
 
         val viewModelFactory: () -> HomeworkEditorViewModel = {
-            HomeworkEditorViewModel(week!!, dayOfWeek!!, subjectHashCode!!, ttm, Utils.getPreviewTimeTable(this))
+            HomeworkEditorViewModel(week, dayOfWeek!!, subjectHashCode!!, ttm, Utils.getPreviewTimeTable(this))
         }
 
         enableEdgeToEdge()
@@ -121,7 +125,7 @@ fun Editor(vm: HomeworkEditorViewModel, modifier: Modifier = Modifier) {
 fun HomeworkEditorPreview() {
     StundenplanTheme {
         val vm =
-            HomeworkEditorViewModel(42, 3, 2, null, Utils.getPreviewTimeTable(LocalContext.current))
+            HomeworkEditorViewModel(Week(2024, 42), 3, 2, null, Utils.getPreviewTimeTable(LocalContext.current))
         Editor(vm)
     }
 }

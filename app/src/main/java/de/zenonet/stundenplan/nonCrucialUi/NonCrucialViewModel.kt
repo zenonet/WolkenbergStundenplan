@@ -3,7 +3,6 @@ package de.zenonet.stundenplan.nonCrucialUi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.icu.util.Calendar
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -20,6 +19,7 @@ import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.Week
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
 import de.zenonet.stundenplan.common.quoteOfTheDay.QuoteProvider
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
@@ -42,9 +42,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjuster
-import java.time.temporal.TemporalField
 import java.time.temporal.WeekFields
 import java.util.Locale
 import kotlin.math.abs
@@ -84,7 +81,7 @@ class NonCrucialViewModel(
     private var timeTableLoadingJob: Job? = null;
 
     suspend fun loadTimeTableAsync(
-        week: Int = Timing.getRelevantWeekOfYear()
+        week: Week = Timing.getRelevantWeekOfYear()
     ): Deferred<TimeTable?> = coroutineScope {
         async {
             if (ttm == null) return@async previewTimeTable
@@ -346,19 +343,17 @@ class NonCrucialViewModel(
     var homeworkEntries: List<HomeworkEntry>? by mutableStateOf(null)
     suspend fun loadHomework() {
         val currentWeek = Timing.getRelevantWeekOfYear()
-        val year = Calendar.getInstance().get(Calendar.YEAR)
         val dayOfWeek = Timing.getCurrentDayOfWeek()
         val period = Utils.getCurrentPeriod(Timing.getCurrentTime())
         // load homework for these weeks
         val weekFields = WeekFields.of(Locale.GERMANY)
 
         val timeTables =
-            (currentWeek..currentWeek + 1).map { loadTimeTableAsync(it) }.awaitAll().filterNotNull()
+            arrayOf(currentWeek, currentWeek.succeedingWeek).map { loadTimeTableAsync(it) }.awaitAll().filterNotNull()
                 .also {
                     it.forEachIndexed { week, tt ->
                         HomeworkManager.populateTimeTable(
-                            year,
-                            currentWeek + week,
+                            currentWeek.plusWeeks(week),
                             tt
                         )
                     }
@@ -373,12 +368,11 @@ class NonCrucialViewModel(
                     .distinctBy { it.SubjectShortName }.map { l ->
                         HomeworkEntry(
                             HomeworkManager.getNoteFor(
-                                year,
-                                currentWeek + weekOffset,
+                                currentWeek.plusWeeks(weekOffset),
                                 dayIndex,
                                 l.SubjectShortName.hashCode()
-                            ), l, LocalDate.of(year, 1, 1).with(
-                                weekFields.weekOfYear(), (currentWeek + weekOffset).toLong()
+                            ), l, LocalDate.of(currentWeek.plusWeeks(weekOffset).Year, 1, 1).with(
+                                weekFields.weekOfYear(), (currentWeek.plusWeeks(weekOffset)).WeekOfYear.toLong()
                             ).with(weekFields.dayOfWeek(), 1).plusDays(dayIndex.toLong())
                         )
                     }
@@ -405,6 +399,12 @@ class NonCrucialViewModel(
         }
     }
 }
+
+/*operator fun Week.rangeTo(other:Week): Array<Week>{
+    val c = this.monday
+    val weeks = ArrayList<Week>()
+    while(c.)
+}*/
 
 data class HomeworkEntry(
     val text: String,

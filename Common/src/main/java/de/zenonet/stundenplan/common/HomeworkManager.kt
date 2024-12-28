@@ -5,30 +5,30 @@ import org.json.JSONObject
 import java.io.File
 
 object HomeworkManager {
-    fun putNoteFor(year:Int, week:Int, dayOfWeek:Int, subjectAbbreviationHash:Int, note:String){
-        val (file, root, day) = getJSONObjectForThisDay(year, week, dayOfWeek)
+    fun putNoteFor(week:Week, dayOfWeek:Int, subjectAbbreviationHash:Int, note:String){
+        val (file, root, day) = getJSONObjectForThisDay(week, dayOfWeek)
         day.put(subjectAbbreviationHash.toString(), note)
         Utils.writeAllText(file, root.toString())
     }
 
-    fun deleteNoteFor(year:Int, week:Int, dayOfWeek:Int, subjectAbbreviationHash:Int){
-        val (file, root, day) = getJSONObjectForThisDay(year, week, dayOfWeek)
+    fun deleteNoteFor(week:Week, dayOfWeek:Int, subjectAbbreviationHash:Int){
+        val (file, root, day) = getJSONObjectForThisDay(week, dayOfWeek)
         day.remove(subjectAbbreviationHash.toString())
         Utils.writeAllText(file, root.toString())
     }
 
-    fun getNoteFor(year:Int, week:Int, dayOfWeek:Int, subjectAbbreviationHash:Int): String{
-        val (_, _, day) = getJSONObjectForThisDay(year, week, dayOfWeek)
+    fun getNoteFor(week:Week, dayOfWeek:Int, subjectAbbreviationHash:Int): String{
+        val (_, _, day) = getJSONObjectForThisDay(week, dayOfWeek)
         if (!day.has(subjectAbbreviationHash.toString())) return ""
 
         return day.getString(subjectAbbreviationHash.toString())
     }
 
-    fun populateTimeTable(year: Int, week: Int, tt:TimeTable){
+    fun populateTimeTable(week: Week, tt:TimeTable){
         val (_, root) = loadJsonObject()
 
-        val thisYear = Utils.getOrAppendJSONObject(root, year.toString())
-        val thisWeek = Utils.getOrAppendJSONObject(thisYear, week.toString())
+        val thisYear = Utils.getOrAppendJSONObject(root, week.Year.toString())
+        val thisWeek = Utils.getOrAppendJSONObject(thisYear, week.WeekOfYear.toString())
 
         for (day in tt.Lessons.indices) {
             if(!thisWeek.has(day.toString())) continue
@@ -43,12 +43,12 @@ object HomeworkManager {
 
     }
 
-    private fun getJSONObjectForThisDay(year:Int, week:Int, dayOfWeek:Int): Triple<File, JSONObject, JSONObject> {
+    private fun getJSONObjectForThisDay(week:Week, dayOfWeek:Int): Triple<File, JSONObject, JSONObject> {
         // Structure of homework.json: year->week->day->subjectHashCode
         val (file, root) = loadJsonObject()
 
-        val thisYear = Utils.getOrAppendJSONObject(root, year.toString())
-        val thisWeek = Utils.getOrAppendJSONObject(thisYear, week.toString())
+        val thisYear = Utils.getOrAppendJSONObject(root, week.Year.toString())
+        val thisWeek = Utils.getOrAppendJSONObject(thisYear, week.WeekOfYear.toString())
         val thisDay = Utils.getOrAppendJSONObject(thisWeek, dayOfWeek.toString())
         return Triple(file, root, thisDay)
     }

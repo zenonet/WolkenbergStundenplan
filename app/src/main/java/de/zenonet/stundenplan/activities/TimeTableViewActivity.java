@@ -54,6 +54,7 @@ import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.TimeTableSource;
 import de.zenonet.stundenplan.common.Timing;
 import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.Week;
 import de.zenonet.stundenplan.common.callbacks.AuthCodeRedeemedCallback;
 import de.zenonet.stundenplan.common.timetableManagement.Lesson;
 import de.zenonet.stundenplan.common.timetableManagement.LessonType;
@@ -74,7 +75,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     ImageButton previousWeekButton;
     ImageButton nextWeekButton;
 
-    int selectedWeek = Timing.getRelevantWeekOfYear();
+    Week selectedWeek = Timing.getRelevantWeekOfYear();
     private TimeTable currentTimeTable;
 
     private boolean isPreview;
@@ -142,13 +143,13 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
 
         nextWeekButton.setOnClickListener((sender) -> {
-            selectedWeek++;
+            selectedWeek = selectedWeek.getSucceedingWeek();
             updateWeekNavButtonEnabledStates();
             loadTimeTableAsync();
         });
 
         previousWeekButton.setOnClickListener((sender) -> {
-            selectedWeek--;
+            selectedWeek = selectedWeek.getPreceedingWeek();
             updateWeekNavButtonEnabledStates();
             loadTimeTableAsync();
         });
@@ -180,10 +181,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void updateWeekNavButtonEnabledStates() {
-        previousWeekButton.setEnabled(selectedWeek != 0);
+        /*previousWeekButton.setEnabled(selectedWeek != 0);
         previousWeekButton.setImageAlpha(selectedWeek != 0 ? 0xFF : 0x6F);
         nextWeekButton.setEnabled(selectedWeek != 52);
-        nextWeekButton.setImageAlpha(selectedWeek != 52 ? 0xFF : 0x6F);
+        nextWeekButton.setImageAlpha(selectedWeek != 52 ? 0xFF : 0x6F);*/
     }
 
     @Override
@@ -274,7 +275,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void updateHomeworkAnnotations() {
-        HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, currentTimeTable);
+        HomeworkManager.INSTANCE.populateTimeTable(selectedWeek, currentTimeTable);
         updateTimeTableView(currentTimeTable);
     }
 
@@ -322,7 +323,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     // add annotations for lessons with homework attached
                     int timeTableIndex = timeTableVersionsReceived[0];
 
-                    HomeworkManager.INSTANCE.populateTimeTable(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, timeTable);
+                    HomeworkManager.INSTANCE.populateTimeTable(selectedWeek, timeTable);
                     if (timeTableIndex == timeTableVersionsReceived[0]) {
                         // update view to show homework annotations
                         runOnUiThread(() -> {
@@ -529,15 +530,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     private final SimpleDateFormat format = new SimpleDateFormat("dd.MM.", Locale.GERMANY);
 
-    private void updateDayDisplayForWeek(int week) {
-        Calendar cal = Calendar.getInstance();
-        int dayOfWeek = Timing.getCurrentDayOfWeek();
-        int year = cal.get(Calendar.YEAR);
-        cal.clear(); // Reset the calendar
-        cal.setFirstDayOfWeek(Calendar.MONDAY);
-        cal.set(Calendar.YEAR, year); // Recover the year
-        cal.set(Calendar.WEEK_OF_YEAR, week); // Set the desired week of year
-        // Now, the calendar points at the first day of the desired week
+    private void updateDayDisplayForWeek(Week week) {
+        Calendar c = Calendar.getInstance();
+        c.setFirstDayOfWeek(Calendar.MONDAY);
+        int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+
+        Calendar cal = week.getMonday();
 
         boolean isCurrentWeek = Timing.getRelevantWeekOfYear() == week;
 
@@ -545,7 +543,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
         for (int i = 444; i < 444 + 5; i++) {
             TextView view = findViewById(i);
             view.setText(format.format(cal.getTime()));
-            if (isCurrentWeek  && (cal.get(Calendar.DAY_OF_WEEK) - 2) % 7 == dayOfWeek) {
+            if (isCurrentWeek  && cal.get(Calendar.DAY_OF_WEEK) == dayOfWeek) {
                 view.setTextColor(MaterialColors.getColor(view, R.attr.lessonForeground));
                 view.setBackgroundColor(MaterialColors.getColor(view, R.attr.lessonBackground));
             } else {
@@ -597,7 +595,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
             final int id = item.getItemId();
             if (id == R.id.menuInsertHomework) {
                 Intent intent = new Intent(TimeTableViewActivity.this, HomeworkEditorActivity.class);
-                intent.putExtra("week", selectedWeek);
+                intent.putExtra("year", selectedWeek.Year);
+                intent.putExtra("week", selectedWeek.WeekOfYear);
                 intent.putExtra("dayOfWeek", dayOfWeek);
                 intent.putExtra("subjectAbbreviationHash", currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
 
@@ -605,7 +604,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 return true;
             }
             if (id == R.id.clearHomework) {
-                HomeworkManager.INSTANCE.deleteNoteFor(Calendar.getInstance().get(Calendar.YEAR), selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
+                HomeworkManager.INSTANCE.deleteNoteFor(selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
                 runOnUiThread(TimeTableViewActivity.this::updateHomeworkAnnotations);
                 return true;
             }

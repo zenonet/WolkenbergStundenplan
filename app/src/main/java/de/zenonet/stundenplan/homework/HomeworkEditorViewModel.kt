@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.Week
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
@@ -24,7 +25,7 @@ import java.io.File
 import java.util.Calendar
 
 class HomeworkEditorViewModel(
-    val week: Int,
+    val week: Week,
     val dayOfWeek: Int,
     val subjectAbbreviationHash: Int,
     private val ttm: TimeTableManager?,
@@ -69,14 +70,14 @@ class HomeworkEditorViewModel(
     suspend fun loadExistingText(){
         if(isTextLoaded) return
         withContext(Dispatchers.IO) {
-            text = HomeworkManager.getNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash)
+            text = HomeworkManager.getNoteFor(week, dayOfWeek, subjectAbbreviationHash)
             isTextLoaded = true
         }
     }
 
     suspend fun save() {
         withContext(Dispatchers.IO) {
-            HomeworkManager.putNoteFor(Calendar.getInstance().get(Calendar.YEAR), week, dayOfWeek, subjectAbbreviationHash, text)
+            HomeworkManager.putNoteFor(week, dayOfWeek, subjectAbbreviationHash, text)
         }
     }
 

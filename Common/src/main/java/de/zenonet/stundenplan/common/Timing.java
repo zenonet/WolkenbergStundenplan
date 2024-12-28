@@ -21,13 +21,13 @@ public abstract class Timing {
         return (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 2) % 7;
     }
 
-    public static int getRelevantWeekOfYear(){
+    public static Week getRelevantWeekOfYear(){
         Calendar cal = Calendar.getInstance();
 
         int dayOfWeek = getCurrentDayOfWeek();
         if (dayOfWeek > 4 || dayOfWeek < 0) {
             cal.add(Calendar.DAY_OF_WEEK, 6);
         }
-        return cal.get(Calendar.WEEK_OF_YEAR);
+        return Week.fromCalendar(cal);
     }
 }

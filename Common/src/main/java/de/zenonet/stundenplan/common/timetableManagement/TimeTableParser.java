@@ -19,6 +19,7 @@ import java.util.Locale;
 
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
+import de.zenonet.stundenplan.common.Week;
 
 /**
  * TimeTableParser is a timetable provider that uses data sources with raw json data.
@@ -37,11 +38,9 @@ public class TimeTableParser {
         this.rawCacheClient = new RawTimeTableCacheClient();
     }
 
-    public TimeTable parseWeek(String json, String substitutionJson, int week) throws TimeTableLoadException {
+    public TimeTable parseWeek(String json, String substitutionJson, Week week) throws TimeTableLoadException {
 
-        Calendar time = Calendar.getInstance();
-        // Set the week of year
-        time.set(Calendar.WEEK_OF_YEAR, week);
+        Calendar time = week.getMonday();
         // Ensure the day of week is not a day on the weekend (which may not have a valid timetable)
         time.set(Calendar.DAY_OF_WEEK, 2);
 
@@ -147,13 +146,14 @@ public class TimeTableParser {
         } catch (Exception ignored) {}
     }
 
-    private void applySubstitutions(TimeTable timeTable, String json, int week) throws TimeTableLoadException {
+    private void applySubstitutions(TimeTable timeTable, String json, Week week) throws TimeTableLoadException {
         try {
 
+            // TODO: Is that even still the case? I am too dead inside to even understand this
             /* BUG: Because the current week is used here but getTimeTableForWeek() uses the data from the timetable in whose time span the current date is in,
                 it could happen that the substitution of week t-1 are shown as a modification of the timetable of the week t on weekends.
                  */
-            JSONArray substitutions = new JSONObject(json).getJSONObject("substitutions").getJSONArray(String.format("%s-%s", Calendar.getInstance().get(Calendar.YEAR), week));
+            JSONArray substitutions = new JSONObject(json).getJSONObject("substitutions").getJSONArray(String.format(Locale.GERMANY, "%d-%02d", week.Year, week.WeekOfYear));
             for (int dayI = 0; dayI < 5; dayI++) {
 
                 if (substitutions.isNull(dayI)) continue;
@@ -184,7 +184,7 @@ public class TimeTableParser {
                             continue;
                         }
 
-                        if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson) {
+                        if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson && timeTable.Lessons[dayI][period].Type != LessonType.Substitution) {
                             timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
                             continue;
                         }
