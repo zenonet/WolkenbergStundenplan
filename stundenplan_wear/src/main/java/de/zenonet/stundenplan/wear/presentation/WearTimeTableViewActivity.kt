@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -179,7 +179,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                                 LessonView(
                                     lesson = timeTable!!.Lessons[day][period],
                                     formatter = viewModel.formatter,
-                                    day == dayOfWeek && currentPeriod == period && viewModel.weekOfYear == viewModel.currentWeekOfYear,
+                                    day == dayOfWeek && currentPeriod == period && viewModel.selectedWeek == viewModel.currentWeek,
                                     period + 1
                                 )
 
@@ -239,7 +239,7 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
 
             item {
                 Text(
-                    "${viewModel.weekOfYear}. Woche",
+                    "${viewModel.selectedWeek.WeekOfYear}. Woche",
                     Modifier
                         .fillMaxWidth()
                         .padding(5.dp), textAlign = TextAlign.Center
@@ -253,9 +253,12 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                     text = "Lädt..."
                 else if (timeTable == null)
                     text = "Fehler beim Laden"
+                else if(timeTable!!.isCacheStateConfirmed) {
+                    text = "Bestätigt (${Timing.TimeFormatter.format(timeTable!!.timeOfConfirmation)})"
+                }
                 else
                     text =
-                        "Quelle: ${timeTable!!.source} ${if (timeTable!!.isCacheStateConfirmed) "(confirmed)" else ""}"
+                        "Quelle: ${timeTable!!.source}"
 
                 if (timeTable != null)
                     Text(
@@ -276,10 +279,9 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                     Button(
                         onClick = { viewModel.previousWeek() },
                         Modifier.padding(2.dp),
-                        enabled = viewModel.weekOfYear != 1
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Vorherige Woche anzeigen"
                         )
                     }
@@ -287,7 +289,6 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                     Button(
                         onClick = { viewModel.nextWeek() },
                         Modifier.padding(2.dp),
-                        enabled = viewModel.weekOfYear != 51
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
@@ -297,7 +298,7 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                 }
             }
             item {
-                AnimatedVisibility(viewModel.weekOfYear != viewModel.currentWeekOfYear) {
+                AnimatedVisibility(viewModel.selectedWeek != viewModel.currentWeek) {
                     Button(
                         onClick = {
                             viewModel.backToCurrentWeek()

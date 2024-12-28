@@ -1,26 +1,21 @@
 package de.zenonet.stundenplan.wear.presentation
 
-import android.icu.util.Calendar
 import android.preference.PreferenceManager
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
+import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -30,8 +25,8 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
     val formatter = Formatter(StundenplanApplication.application)
 
     private var timeTableManager: TimeTableManager? = null;
-    var weekOfYear by mutableIntStateOf(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR))
-    val currentWeekOfYear = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)
+    val currentWeek = Timing.getRelevantWeekOfYear()
+    var selectedWeek by mutableStateOf(currentWeek)
 
     private val _timeTable: MutableLiveData<TimeTable?> = MutableLiveData<TimeTable?> (null)
     val timeTable: Flow<TimeTable?> = _timeTable.asFlow()
@@ -45,17 +40,17 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
     }
 
     fun nextWeek() {
-        weekOfYear++
+        selectedWeek = selectedWeek.succeedingWeek
         loadTimetable()
     }
 
     fun previousWeek() {
-        weekOfYear--
+        selectedWeek = selectedWeek.preceedingWeek
         loadTimetable()
     }
 
     fun backToCurrentWeek() {
-        weekOfYear = currentWeekOfYear
+        selectedWeek = currentWeek
         loadTimetable()
     }
     fun loadTimetable() {
@@ -81,7 +76,7 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
             }ms"
         )
 
-        timeTableManager!!.getTimeTableAsyncWithAdjustments(weekOfYear) {
+        timeTableManager!!.getTimeTableAsyncWithAdjustments(selectedWeek) {
             if(it == null) {
                 Log.i(LogTags.Debug, "Got null timetable")
                 return@getTimeTableAsyncWithAdjustments
