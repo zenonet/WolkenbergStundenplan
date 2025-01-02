@@ -46,6 +46,7 @@ import de.zenonet.stundenplan.TokenViewerViewModel
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
 import de.zenonet.stundenplan.homework.ViewModelFactory
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import de.zenonet.stundenplan.ui.theme.Typography
 
 class TokenViewerActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +93,7 @@ fun TokenViewer(vm: TokenViewerViewModel, modifier: Modifier = Modifier) {
     Column(modifier.padding(15.dp).verticalScroll(rememberScrollState())) {
         LaunchedEffect(null) {
             vm.loadRefreshToken()
+            vm.loadUserData()
         }
 
         ExpandableCard(header = {
@@ -128,6 +130,12 @@ fun TokenViewer(vm: TokenViewerViewModel, modifier: Modifier = Modifier) {
                 Text(vm.accessTokenErrorMessage!!)
             }
         }
+
+        Spacer(Modifier.height(20.dp))
+        Text("Weitere Informationen von API", style = Typography.headlineSmall)
+        Text("Dein Name: ${vm.fullName}")
+        Text("Deine ID: ${if(vm.studentId != -1)  vm.studentId else "nicht verfügbar"}")
+        Text("Dein User-Typ: ${vm.userType}")
     }
 }
 
