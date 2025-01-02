@@ -171,17 +171,35 @@ public class TimeTableApiClient {
     public boolean isCounterConfirmed;
     public String postsHash;
     public long getLatestCounterValue() {
-        return getLatestCounterValue(false);
+        return getLatestCounterValue(false, true);
+    }
+    public long getLatestCounterValue(boolean forceRefetch) {
+        return getLatestCounterValue(forceRefetch, true);
     }
 
     OkHttpClient client = new OkHttpClient();
-    public long getLatestCounterValue(boolean forceRefetch) {
+    public long getLatestCounterValue(boolean forceRefetch, boolean retry) {
         // If the counter has already been fetched, just return it
         if (latestCounter != -1 && !forceRefetch) // TODO: Add expiration and re-fetching
             return latestCounter;
 
         Request request = getAuthenticatedRequestBuilder("counter").get().build();
         try (Response response = client.newCall(request).execute()) {
+            if(response.code() != 200){
+                if(!retry){// NEVER remove this. Otherwise recursion won't be stopped!
+                    Log.i(LogTags.Api, "Fetching counter failed again! (code:" + response.code() + ") what is going on?");
+                    return latestCounter;
+                }
+
+                Log.i(LogTags.Api, "Got response code " + response.code() + " while fetching counter value. Trying to relogin...");
+                ResultType result = login();
+                if(result != ResultType.Success){
+                    Log.i(LogTags.Api, "Relogin failed. Giving up");
+                    return latestCounter;
+                }
+                Log.i(LogTags.Api, "Relogin succeeded! Fetching counter value...");
+                return getLatestCounterValue(true, false);
+            }
             assert response.body() != null;
             JSONObject responseJson = new JSONObject(response.body().string());
 
