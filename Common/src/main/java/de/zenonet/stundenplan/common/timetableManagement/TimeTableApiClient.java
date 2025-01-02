@@ -37,7 +37,7 @@ public class TimeTableApiClient {
      */
     private final int CounterOffset = 3;
 
-    private String accessToken;
+    public String accessToken;
     public User user;
 
     public NameLookup lookup;

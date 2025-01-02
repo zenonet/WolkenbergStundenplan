@@ -26,6 +26,11 @@
         android:theme="@style/Theme.Stundenplan"
         tools:targetApi="34">
         <activity
+            android:name=".activities.TokenViewerActivity"
+            android:exported="false"
+            android:label="Token Viewer"
+            android:theme="@style/Theme.Stundenplan" />
+        <activity
             android:name=".activities.OutlookWebView"
             android:exported="true"
             android:taskAffinity="@string/mail_task_affinity"
@@ -77,20 +82,23 @@
             android:exported="false" />
 
         <receiver android:name=".broadcastReceivers.BackgroundUpdater" />
-        <receiver android:name=".broadcastReceivers.BootCompletedReceiver"
+        <receiver
+            android:name=".broadcastReceivers.BootCompletedReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".glance.WidgetReceiver"
+        <receiver
+            android:name=".glance.WidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
+
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/app_widget_info" />

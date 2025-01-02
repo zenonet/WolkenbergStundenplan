@@ -4,9 +4,9 @@ package de.zenonet.stundenplan
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.KeyguardManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources.Theme
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +14,7 @@ import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,13 +22,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
@@ -49,28 +47,33 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.glance.appwidget.updateAll
 import androidx.preference.PreferenceManager
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import de.zenonet.stundenplan.activities.TokenViewerActivity
 import de.zenonet.stundenplan.common.StundenplanApplication
-import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.glance.TimetableWidget
 import de.zenonet.stundenplan.nonCrucialUi.PreviewPermissionState
-import de.zenonet.stundenplan.ui.theme.BackgroundBlue
-import de.zenonet.stundenplan.ui.theme.CalendarRed
-import de.zenonet.stundenplan.ui.theme.CloudWhite
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import kotlinx.coroutines.launch
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
 import me.zhanghai.compose.preference.switchPreference
-import me.zhanghai.compose.preference.textFieldPreference
 
 class SettingsActivity : ComponentActivity() {
+    lateinit var tokenViewerLauncher: ActivityResultLauncher<Intent>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+        tokenViewerLauncher = this.registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ){
+            if(it.resultCode == RESULT_OK){
+                val intent = Intent(this@SettingsActivity, TokenViewerActivity::class.java)
+                startActivity(intent)
+            }
+        }
 
         // If notifications are enabled but the permission is not
         if ((ActivityCompat.checkSelfPermission(
@@ -254,6 +257,18 @@ fun View(activity: SettingsActivity?) {
                 title = {Text("Stundenplan über Sperrbildschirm anzeigen")},
                 summary = { Text(text = if (it) "Stunenplan wird über Sperrbildschirm angezeigt" else "Stunenplan wird nicht über Sperrbildschirm angezeigt") }
             )
+            preferenceCategory("gn", title = {Text("Für Entwickler")})
+            preference("showToken", {
+                Text("RefreshToken anzeigen")
+            },
+                summary = {
+                    Text("Zeige den API-refreshToken an, der zur Authentifizierung verwendet wird")
+                },
+                onClick = {
+                    if(activity == null) return@preference
+                    val confirmationIntent = activity.getSystemService(KeyguardManager::class.java).createConfirmDeviceCredentialIntent("", "");
+                    activity.tokenViewerLauncher.launch(confirmationIntent)
+                })
 /*            switchPreference(
                 key = "useCursedLayout",
                 defaultValue = false,
