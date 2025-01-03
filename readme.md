@@ -1,6 +1,5 @@
+[Deutsch](readme-de.md)
 # Wolkenberg Stundenplan
-
-[Deutsches Readme](readme-de.md)
 
 [Play Store](https://play.google.com/store/apps/details?id=de.zenonet.stundenplan)
 
