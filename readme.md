@@ -1,7 +1,8 @@
 # Wolkenberg Stundenplan
 
-[Play Store](https://play.google.com/store/apps/details?id=de.zenonet.stundenplan)
 [Deutsches Readme](readme-de.md)
+
+[Play Store](https://play.google.com/store/apps/details?id=de.zenonet.stundenplan)
 
 This is a native android client for the (private) TimeTable API of the Wolkenberg Gymnasium Michendorf, Germany. 
 It runs natively on the JVM to ensure the best startup performance even under extreme conditions like the awfully slow internet in the school building or very old/cheap smartphones.
