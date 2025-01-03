@@ -62,6 +62,7 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
         isLoading = true
 
         if (isPreview) {
+            isLoading = false
             _timeTable.postValue(Utils.getPreviewTimeTable(StundenplanApplication.application))
             return
         }
