@@ -173,67 +173,62 @@ public class TimeTableParser {
 
                         applyDataModifications(substitution, timeTable.Lessons[dayI][period]);
 
-                        if (type.equals("ASSIGNMENT")) {
-                            timeTable.Lessons[dayI][period].Text = "Aufgaben";
-                            timeTable.Lessons[dayI][period].Type = LessonType.Assignment;
-                            continue;
-                        }
+                        switch (type) {
+                            case "ASSIGNMENT":
+                                timeTable.Lessons[dayI][period].Text = "Aufgaben";
+                                timeTable.Lessons[dayI][period].Type = LessonType.Assignment;
+                                continue;
+                            case "ELIMINATION":
+                                if (timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson && timeTable.Lessons[dayI][period].Type != LessonType.Substitution) {
+                                    timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
+                                }
+                                continue;
+                            case "SUPERVISION":
+                                if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
+                                    timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+                                }
+                                continue;
+                            case "SUBSTITUTION":
+                            case "SWAP":
+                            case "ROOM_SUBSTITUTION":
+                                // Update the timetable according to the substitutions
+                                if (substitution.has("SUBJECT_ID_NEW") && substitution.getInt("SUBJECT_ID_NEW") != 0) {
+                                    timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
+                                    timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
+                                }
+                                if (substitution.has("ROOM_ID_NEW") && substitution.getInt("ROOM_ID_NEW") != 0) {
+                                    timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
+                                }
+                                if (substitution.has("TEACHER_ID_NEW") && substitution.getInt("TEACHER_ID_NEW") != 0) {
+                                    timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
+                                }
+                                if (type.equals("ROOM_SUBSTITUTION"))
+                                    timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
+                                else
+                                    timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
 
-                        if (type.equals("ELIMINATION") && timeTable.Lessons[dayI][period].Type != LessonType.ExtraLesson && timeTable.Lessons[dayI][period].Type != LessonType.Substitution) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.Cancelled;
-                            continue;
-                        }
+                                continue;
+                            case "EXTRA_LESSON":
 
-                        if (type.equals("SUPERVISION") && timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
-                            timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                            continue;
-                        }
+                                // Determine if the period array needs to be resized (Hopefully this will never have to happen)
+                                if (period >= timeTable.Lessons[dayI].length) {
+                                    // Resize the period array
+                                    timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
+                                }
 
-                        if (type.equals("SUBSTITUTION") || type.equals("SWAP") || type.equals("ROOM_SUBSTITUTION")) {
-                            // Update the timetable according to the substitutions
-                            if (substitution.has("SUBJECT_ID_NEW") && substitution.getInt("SUBJECT_ID_NEW") != 0) {
-                                timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                                timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                            }
-                            if (substitution.has("ROOM_ID_NEW") && substitution.getInt("ROOM_ID_NEW") != 0) {
-                                timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                            }
-                            if (substitution.has("TEACHER_ID_NEW") && substitution.getInt("TEACHER_ID_NEW") != 0) {
-                                timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                            }
-                            if (type.equals("ROOM_SUBSTITUTION"))
-                                timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
-                            else
-                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-
-                            continue;
-                        }
-
-                        if (type.equals("EXTRA_LESSON")) {
-
-                            // Determine if the period array needs to be resized (Hopefully this will never have to happen)
-                            if (period >= timeTable.Lessons[dayI].length) {
-                                // Resize the period array
-                                timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
-                            }
-
-                            if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
-                                // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
-                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
-                            } else {
-                                timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
-                            }
-                            continue;
-                        }
-
-                        if (type.equals("CLASS_SUBSTITUTION")) {
-                            // This is only interesting from a teachers perspective and I doubt a teacher will ever use this app.
-                            continue;
-                        }
-
-                        if (type.equals("REDUNDANCY")) {
-                            // Pretty funny that giving information about redundancies is actually completely redundant.
-                            continue;
+                                if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
+                                    // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
+                                    timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
+                                } else {
+                                    timeTable.Lessons[dayI][period].Type = LessonType.ExtraLesson;
+                                }
+                                continue;
+                            case "CLASS_SUBSTITUTION":
+                                // This is only interesting from a teachers perspective and I doubt a teacher will ever use this app.
+                                continue;
+                            case "REDUNDANCY":
+                                // Pretty funny that giving information about redundancies is actually completely redundant.
+                                continue;
                         }
 
                         Log.w("timetableloading", String.format("Unknown substitution type '%s'", type));
