@@ -54,7 +54,7 @@ public class TimeTableManager {
         cacheClient.lookup = lookup;
         cacheClient.init(context);
 
-        parser = new TimeTableParser(lookup, sharedPreferences);
+        parser = new TimeTableParser(lookup);
     }
 
     public ResultType login() {

@@ -1,6 +1,5 @@
 package de.zenonet.stundenplan.common.timetableManagement;
 
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
@@ -28,14 +27,8 @@ import de.zenonet.stundenplan.common.Week;
 public class TimeTableParser {
     public NameLookup lookup;
 
-    public RawTimeTableCacheClient rawCacheClient;
-    public SharedPreferences sharedPreferences;
-
-
-    public TimeTableParser(NameLookup lookup, SharedPreferences sharedPreferences) {
+    public TimeTableParser(NameLookup lookup) {
         this.lookup = lookup;
-        this.sharedPreferences = sharedPreferences;
-        this.rawCacheClient = new RawTimeTableCacheClient();
     }
 
     public TimeTable parseWeek(String json, String substitutionJson, Week week) throws TimeTableLoadException {
