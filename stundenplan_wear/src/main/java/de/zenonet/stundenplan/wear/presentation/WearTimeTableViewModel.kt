@@ -76,23 +76,27 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
             }ms"
         )
 
-        timeTableManager!!.getTimeTableAsyncWithAdjustments(selectedWeek) {
-            if(it == null) {
+        timeTableManager!!.getTimeTableAsyncWithAdjustments(selectedWeek, { timeTable ->
+            if(timeTable == null) {
                 Log.i(LogTags.Debug, "Got null timetable")
                 return@getTimeTableAsyncWithAdjustments
             }
             Log.i(
                 LogTags.Timing,
-                "Got timetable from ${it.source}${if (it.isCacheStateConfirmed) " (confirmed)" else ""} (${
+                "Got timetable from ${timeTable.source}${if (timeTable.isCacheStateConfirmed) " (confirmed)" else ""} (${
                     ChronoUnit.MILLIS.between(
                         StundenplanApplication.applicationEntrypointInstant!!,
                         Instant.now()
                     )
                 }ms after app start)"
             )
-            timeTableDirect = it
-            _timeTable.postValue(it)
+            timeTableDirect = timeTable
+            _timeTable.postValue(timeTable)
             isLoading = false
-        }
+        },{ error ->
+            isLoading = false
+            timeTableDirect = null
+            _timeTable.postValue(null)
+        })
     }
 }

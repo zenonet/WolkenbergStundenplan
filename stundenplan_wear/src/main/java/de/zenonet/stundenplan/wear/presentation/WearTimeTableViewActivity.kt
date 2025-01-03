@@ -101,6 +101,8 @@ class WearTimeTableViewActivity : ComponentActivity() {
         startActivity(intent)
         finish()
     }
+
+
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -246,29 +248,15 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                 )
             }
             item {
-                val text: String
-                if(viewModel.isPreview)
-                    text = "Quelle: Vorschau"
-                else if (viewModel.isLoading)
-                    text = "Lädt..."
-                else if (timeTable == null)
-                    text = "Fehler beim Laden"
-                else if(timeTable!!.isCacheStateConfirmed) {
-                    text = "Bestätigt (${Timing.TimeFormatter.format(timeTable!!.timeOfConfirmation)})"
-                }
-                else
-                    text =
-                        "Quelle: ${timeTable!!.source}"
-
-                if (timeTable != null)
-                    Text(
-                        text,
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(5.dp),
-                        textAlign = TextAlign.Center,
-                        fontSize = 10.sp
-                    )
+                val text = Utils.getSourceText(timeTable, viewModel.isLoading)
+                 Text(
+                     text,
+                     Modifier
+                         .fillMaxWidth()
+                         .padding(5.dp),
+                     textAlign = TextAlign.Center,
+                     fontSize = 10.sp
+                 )
             }
             item {
                 Row(
