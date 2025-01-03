@@ -99,12 +99,13 @@ public class TimeTableParser {
                 timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], lessonsThisDay);
             }
 
-            try {
-                applySubstitutions(timeTable, substitutionJson, week);
-            } catch (TimeTableLoadException ignored) {
-            }
+            applySubstitutions(timeTable, substitutionJson, week);
             return timeTable;
-        } catch (Exception e) {
+        }
+        catch (TimeTableLoadException e){
+            throw e;
+        }
+        catch (Exception e) {
             throw new TimeTableLoadException(e);
         }
     }
