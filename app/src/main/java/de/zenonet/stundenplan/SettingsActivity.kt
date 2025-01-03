@@ -16,7 +16,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -41,7 +43,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.glance.appwidget.updateAll
@@ -285,6 +295,19 @@ fun View(activity: SettingsActivity?) {
                             summary = { Text(text = if (it) "Bsp: M. Storch" else "Bsp: Storch") }
                         )
             */
+            item {
+                Row(Modifier.padding(15.dp, 15.dp, 15.dp, 2.dp).fillMaxWidth()) {
+                    Text(buildAnnotatedString {
+                        append("Diese App ist vollständig Open Source. ")
+                        val style = SpanStyle(textDecoration = TextDecoration.Underline)
+                        withStyle(style = style) {
+                            withLink(LinkAnnotation.Url("https://github.com/zenonet/WolkenbergStundenplan")) {
+                                append("Quellcode")
+                            }
+                        }
+                    }, fontSize = 12.sp)
+                }
+            }
         }
     }
 }
