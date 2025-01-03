@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -495,32 +494,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     private void setTimetableSourceText(@Nullable TimeTable timeTable, boolean isRefetching) {
-        String stateText;
-        if(timeTable != null){
-            String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
-            switch (timeTable.source) {
-                case Api:
-                    stateText = "Vom Server (" + timeText + ")";
-                    break;
-                case Cache:
-                    stateText = "Aus cache";
-                    break;
-                case RawCache:
-                    stateText = "Aus sekundar-cache";
-                    break;
-                default:
-                    stateText = "From " + timeTable.source;
-            }
-            if (timeTable.isCacheStateConfirmed) {
-                stateText = "Bestätigt (" + timeText + ")";
-            }
-            if(isRefetching){
-                stateText += "(neu-laden...)";
-            }
-        }else{
-            stateText = isRefetching ? "Lädt..." : "Fehler (" + LocalTime.now().format(Timing.TimeFormatter) + ")";
-        }
-        stateView.setText(stateText);
+        stateView.setText(Utils.getSourceText(timeTable, isRefetching));
     }
 
     @Override

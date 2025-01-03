@@ -3,8 +3,6 @@ package de.zenonet.stundenplan.common;
 import android.content.Context;
 import android.util.Pair;
 
-import androidx.annotation.Nullable;
-
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -157,5 +155,34 @@ public class Utils {
                 timeTable.Lessons[dayI][periodI].EndTime = times.second;
             }
         }
+    }
+
+    public static String getSourceText(TimeTable timeTable, boolean isRefetching){
+        String stateText;
+        if(timeTable != null){
+            String timeText = timeTable.timeOfConfirmation != null ? timeTable.timeOfConfirmation.format(Timing.TimeFormatter) : "";
+            switch (timeTable.source) {
+                case Api:
+                    stateText = "Vom Server (" + timeText + ")";
+                    break;
+                case Cache:
+                    stateText = "Aus cache";
+                    break;
+                case RawCache:
+                    stateText = "Aus sekundar-cache";
+                    break;
+                default:
+                    stateText = "From " + timeTable.source;
+            }
+            if (timeTable.isCacheStateConfirmed) {
+                stateText = "Bestätigt (" + timeText + ")";
+            }
+            if(isRefetching){
+                stateText += "(neu-laden...)";
+            }
+        }else{
+            stateText = isRefetching ? "Lädt..." : "Fehler (" + LocalTime.now().format(Timing.TimeFormatter) + ")";
+        }
+        return stateText;
     }
 }
