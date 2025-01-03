@@ -1,6 +1,8 @@
 package de.zenonet.stundenplan.wear.presentation
 
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
@@ -64,10 +66,13 @@ import java.time.temporal.ChronoUnit
 import de.zenonet.stundenplan.common.R as CommonR
 
 class WearTimeTableViewActivity : ComponentActivity() {
+    var viewmodel: WearTimeTableViewModel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
 
         if (!PreferenceManager.getDefaultSharedPreferences(this)
                 .contains("refreshToken") && !PreferenceManager.getDefaultSharedPreferences(this)
@@ -78,13 +83,21 @@ class WearTimeTableViewActivity : ComponentActivity() {
         }
 
         setTheme(android.R.style.Theme_DeviceDefault)
-        var viewmodel: WearTimeTableViewModel? = null
         val vmTime = measureTime {
             viewmodel = WearTimeTableViewModel {
                 startLoginActivity()
             }
             viewmodel!!.loadTimetable()
         }
+
+        // Register network available listener
+        val cm = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager;
+        cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                viewmodel?.checkForUpdates()
+            }
+
+        })
 
         Log.i(
             LogTags.UI,
@@ -102,6 +115,11 @@ class WearTimeTableViewActivity : ComponentActivity() {
         finish()
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        viewmodel?.checkForUpdates()
+    }
 
 }
 
@@ -249,13 +267,13 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
             }
             item {
                 val text = Utils.getSourceText(timeTable, viewModel.isLoading)
-                 Text(
-                     text,
-                     Modifier
-                         .fillMaxWidth()
-                         .padding(5.dp),
-                     textAlign = TextAlign.Center,
-                     fontSize = 10.sp
+                Text(
+                    text,
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 10.sp
                  )
             }
             item {

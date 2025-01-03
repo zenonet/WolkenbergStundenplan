@@ -8,14 +8,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
 import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
+import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -98,5 +103,56 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
             timeTableDirect = null
             _timeTable.postValue(null)
         })
+    }
+
+    fun checkForUpdates(){
+        viewModelScope.launch{
+            if(timeTableManager == null || isLoading) return@launch
+
+            Log.i(LogTags.UI, "checking for updates...");
+
+            if(!timeTableManager!!.apiClient.isLoggedIn) {
+                withContext(Dispatchers.IO) {
+                    timeTableManager!!.login()
+                }
+            }
+            val latestCounterValue = withContext(Dispatchers.IO) {
+                timeTableManager!!.apiClient.getLatestCounterValue(true)
+            }
+
+            if(!timeTableManager!!.apiClient.isCounterConfirmed){
+                Log.i(LogTags.UI, "Update check failed!");
+                isLoading = false
+                return@launch
+            }
+
+            if (_timeTable.value != null && latestCounterValue == timeTableDirect!!.CounterValue) {
+                // Counter state is always confirmed here
+                val tt = _timeTable.value?.apply {
+                    isCacheStateConfirmed = true
+                    timeOfConfirmation = timeTableManager!!.apiClient.timeOfConfirmation
+                }
+                // This actually causes a recomposition (I am so glad I found this, yay)
+                _timeTable.value = null
+                _timeTable.postValue(tt)
+                isLoading = false
+                Log.i(LogTags.UI, "Update check completed! (no changes)");
+                return@launch
+            }
+
+            try {
+                val newTt = withContext(Dispatchers.IO) {
+                    timeTableManager!!.getTimetableForWeekFromRawCacheOrApi(selectedWeek)
+                }
+                _timeTable.postValue(newTt)
+            } catch (e:TimeTableLoadException) {
+                isLoading = false
+                Log.e(LogTags.Api, "Unable to re-fetch timetable");
+            }finally {
+                isLoading = false
+                Log.i(LogTags.UI, "Update check completed!");
+            }
+        }
+
     }
 }
