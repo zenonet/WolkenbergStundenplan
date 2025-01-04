@@ -179,9 +179,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         state = listState,
                     ) {
 
-                        if (timeTable != null && !timeTable!!.Lessons[day].isEmpty()) {
-
-
+                        if (timeTable != null && !timeTable!!.Lessons[day].isEmpty() && timeTable!!.Lessons[day].none { it == null || !it.isTakingPlace }) {
                             val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
                             //items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
                             items(8) { period ->
@@ -213,7 +211,14 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                                     }
                                 }
                             }
-                        } else {
+                        } else if(timeTable == null){
+                            item{
+                                Text("Fehler",
+                                    color = colorResource(id = CommonR.color.substituted_lesson),
+                                    fontSize = 20.sp
+                                )
+                            }
+                        }else{
                             item {
                                 Text("Frei",
                                     color = colorResource(id = CommonR.color.cancelled_lesson),

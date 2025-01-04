@@ -82,11 +82,13 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
             }ms"
         )
 
+        var gotData = false
         timeTableManager!!.getTimeTableAsyncWithAdjustments(selectedWeek, { timeTable ->
             if(timeTable == null) {
                 Log.i(LogTags.Debug, "Got null timetable")
                 return@getTimeTableAsyncWithAdjustments
             }
+            gotData = true
             Log.i(
                 LogTags.Timing,
                 "Got timetable from ${timeTable.source}${if (timeTable.isCacheStateConfirmed) " (confirmed)" else ""} (${
@@ -100,9 +102,11 @@ class WearTimeTableViewModel(val startLoginActivity: () -> Unit) : ViewModel() {
             _timeTable.postValue(timeTable)
             isLoading = false
         },{ error ->
-            isLoading = false
-            timeTableDirect = null
-            _timeTable.postValue(null)
+            if(!gotData) {
+                isLoading = false
+                timeTableDirect = null
+                _timeTable.postValue(null)
+            }
         })
     }
 
