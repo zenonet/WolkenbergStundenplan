@@ -218,6 +218,19 @@ fun View(activity: SettingsActivity?) {
 
             preferenceCategory("df", title = { Text("Benachrichtigungen") })
             switchPreference(
+                key = "showChangeNotifications",
+                defaultValue = false,
+                title = { Text("Zeige Benachrichtigungen wenn sich Dein Stundenplan ändert") },
+                summary = {
+                    LaunchedEffect(it) {
+                        if (it && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermission.status.isGranted) {
+                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                    Text(if (it) (if (notificationPermission.status.isGranted) "Benachrichtigungen werden angezeigt." else "Fehler: Benachrichtigungs-Berechtigung nicht erteilt") else "Keine Benachrichtigungen werden angezeigt.")
+                }
+            )
+            switchPreference(
                 key = "showNotifications",
                 defaultValue = false,
                 title = { Text("Zeige Status-Benachrichtigungen für die nächsten Stunden") },
@@ -231,19 +244,7 @@ fun View(activity: SettingsActivity?) {
                     Text(if (it) (if (notificationPermission.status.isGranted) "Benachrichtigungen werden angezeigt." else "Fehler: Benachrichtigungs-Berechtigung nicht erteilt") else "Keine Benachrichtigungen werden angezeigt.")
                 }
             )
-            switchPreference(
-                key = "showChangeNotifications",
-                defaultValue = false,
-                title = { Text("Zeige Benachrichtigungen wenn sich Dein Stundenplan ändert (Beta)") },
-                summary = {
-                    LaunchedEffect(it) {
-                        if (it && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermission.status.isGranted) {
-                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    }
-                    Text(if (it) (if (notificationPermission.status.isGranted) "Benachrichtigungen werden angezeigt." else "Fehler: Benachrichtigungs-Berechtigung nicht erteilt") else "Keine Benachrichtigungen werden angezeigt.")
-                }
-            )
+
             preferenceCategory("jf", title = { Text("Formattierung") })
             switchPreference(
                 key = "showTeacherFirstNameInitial",
