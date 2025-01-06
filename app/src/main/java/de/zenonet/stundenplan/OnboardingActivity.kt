@@ -166,6 +166,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                             val mainActivityIntent =
                                 Intent(activity, TimeTableViewActivity::class.java)
+                            mainActivityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
                             activity.startActivity(mainActivityIntent)
                             activity.finish()
 

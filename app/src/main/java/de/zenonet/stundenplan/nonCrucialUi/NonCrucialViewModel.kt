@@ -15,6 +15,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewManagerFactory
+import de.zenonet.stundenplan.OnboardingActivity
 import de.zenonet.stundenplan.common.HomeworkManager
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
@@ -60,6 +61,9 @@ class NonCrucialViewModel(
     private val quoteProvider: QuoteProvider = QuoteProvider()
     private val _quoteOfTheDay = MutableStateFlow<Quote?>(Quote())
     val quoteOfTheDay: StateFlow<Quote?> = _quoteOfTheDay.asStateFlow()
+
+    var isPreview by mutableStateOf(false)
+
     suspend fun loadQuoteOfTheDay() {
         if (quote != null) return
         val q = withContext(Dispatchers.IO) {
@@ -84,7 +88,10 @@ class NonCrucialViewModel(
         week: Week = Timing.getRelevantWeekOfYear()
     ): Deferred<TimeTable?> = coroutineScope {
         async {
-            if (ttm == null) return@async previewTimeTable
+            if (ttm == null) {
+                isPreview = true
+                return@async previewTimeTable
+            }
 
             val tt = withContext(Dispatchers.IO) {
                 try {
@@ -135,6 +142,12 @@ class NonCrucialViewModel(
             ttm?.getPosts()
         }
         _posts.value = p
+    }
+
+    fun startLogin(context: Context){
+        val intent = Intent(context, OnboardingActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        context.startActivity(intent)
     }
 
     //region staircase analysis

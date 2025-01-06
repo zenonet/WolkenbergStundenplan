@@ -64,6 +64,8 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
             ProvidePreferenceLocals {
                 Column {
 
+                    if(viewModel.isPreview)
+                        LoginReminder(viewModel)
                     CurrentLessonInfo(viewModel)
                     UpdateNotices(viewModel)
 
@@ -313,6 +315,22 @@ fun Posts(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
                 Text(it.Text)
             }
+        }
+    }
+}
+
+@Composable
+fun LoginReminder(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    Widget(NonCrucialWidgetKeys.LOGIN_REMINDER) {
+        Heading("Überzeugt?")
+        Spacer(Modifier.height(10.dp))
+
+        val context = LocalContext.current
+        Text("Logge Dich ein, um deinen eigenen Stundenplan zu sehen")
+        Button({
+            vm.startLogin(context)
+        }) {
+            Text("Einloggen")
         }
     }
 }
