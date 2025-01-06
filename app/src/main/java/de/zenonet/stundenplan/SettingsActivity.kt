@@ -299,7 +299,7 @@ fun View(activity: SettingsActivity?) {
                 Row(Modifier.padding(15.dp, 15.dp, 15.dp, 2.dp).fillMaxWidth()) {
                     Text(buildAnnotatedString {
                         withLink(LinkAnnotation.Url("https://github.com/zenonet/WolkenbergStundenplan/tree/v${BuildConfig.VERSION_NAME}")) {
-                            appendLine("v${BuildConfig.VERSION_NAME}")
+                            appendLine("v${BuildConfig.VERSION_NAME}${if(BuildConfig.DEBUG) " (debug)" else ""}")
                         }
                         append("Diese App ist vollständig Open Source. ")
                         val style = SpanStyle(textDecoration = TextDecoration.Underline)
