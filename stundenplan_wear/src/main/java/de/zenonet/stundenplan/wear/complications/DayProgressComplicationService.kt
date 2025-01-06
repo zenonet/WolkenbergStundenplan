@@ -8,6 +8,7 @@ import androidx.wear.complications.data.ComplicationType
 import androidx.wear.complications.data.PlainComplicationText
 import androidx.wear.complications.data.RangedValueComplicationData
 import androidx.wear.complications.data.ShortTextComplicationData
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.timetableManagement.Lesson
@@ -57,14 +58,19 @@ class DayProgressComplicationService : ComplicationProviderService() {
             }
             val day: Array<Lesson?> = timeTable.Lessons[dayOfWeek]
 
-            val firstLessonStart = Utils.getStartAndEndTimeOfPeriod(0).first;
-            val totalSchooltimeTodaySeconds =
-                Utils.getStartAndEndTimeOfPeriod(day.size - 1).second.toSecondOfDay() -
-                        firstLessonStart.toSecondOfDay()
+            val firstLesson = day.first{ it != null && it.isTakingPlace }
+            val lastLesson = day.last{ it != null && it.isTakingPlace }
 
-            val progressInSeconds =
-                Timing.getCurrentTime().toSecondOfDay() - firstLessonStart.toSecondOfDay().toLong()
-            val progress = progressInSeconds.toFloat() / totalSchooltimeTodaySeconds
+            if(firstLesson == null || lastLesson == null){
+                listener.onComplicationData(request.getEmptyData())
+                return@Thread
+            }
+
+            val totalSecondsToday = lastLesson.EndTime.toSecondOfDay() - firstLesson.StartTime.toSecondOfDay()
+
+            val progressInSeconds = Timing.getCurrentTime().toSecondOfDay() - firstLesson.StartTime.toSecondOfDay().toLong()
+            val progress = progressInSeconds.toFloat() / totalSecondsToday
+            Log.i(LogTags.Complications, "Setting complication data to day progress: ${(progress*100).roundToInt()}%")
 
             val data = when (request.complicationType) {
 
