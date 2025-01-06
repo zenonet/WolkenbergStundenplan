@@ -99,6 +99,7 @@ class StundenplanPhoneApplication() : StundenplanApplication() {
             ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
+        Log.i(LogTags.BackgroundWork, "Created/Updated periodic worker")
     }
 
     companion object {

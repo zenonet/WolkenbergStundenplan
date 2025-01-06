@@ -1,6 +1,11 @@
 package de.zenonet.stundenplan.nonCrucialUi
 
+import android.Manifest
 import android.app.Activity
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.zenonet.stundenplan.StundenplanPhoneApplication
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.common.quoteOfTheDay.Quote
@@ -66,6 +73,9 @@ fun Main(viewModel: NonCrucialViewModel, modifier: Modifier = Modifier) {
 
                     if(viewModel.isPreview)
                         LoginReminder(viewModel)
+                    else
+                        NotificationEnableRequest(viewModel)
+
                     CurrentLessonInfo(viewModel)
                     UpdateNotices(viewModel)
 
@@ -331,6 +341,63 @@ fun LoginReminder(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
             vm.startLogin(context)
         }) {
             Text("Einloggen")
+        }
+    }
+}
+
+@Composable
+fun NotificationEnableRequest(vm: NonCrucialViewModel, modifier: Modifier = Modifier) {
+    var showRequest by rememberPreferenceState("nonCrucialUi.showNotificationRequest", true)
+    var notificationsEnabled by rememberPreferenceState("showChangeNotifications", false)
+
+    AnimatedVisibility(showRequest && !notificationsEnabled) {
+        Widget(NonCrucialWidgetKeys.NOTIFICATION_REQUEST) {
+            Heading("Aktiviere Benachrichtigungen")
+            Spacer(Modifier.height(10.dp))
+
+            Text("Aktiviere Benachrichtigungen, um informiert zu werden, wenn sich dein Stundenplan ändert.")
+            Spacer(Modifier.height(5.dp))
+            Row {
+                val context = LocalContext.current
+
+                fun activateNotifications() {
+                    // make sure to actually schedule the work request
+                    showRequest = false
+                    notificationsEnabled = true
+                    (StundenplanApplication.application as StundenplanPhoneApplication).scheduleUpdateRepeating()
+                    Toast.makeText(context, "Benachrichtigungen aktiviert", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                val getPermission = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    if (isGranted) {
+                        activateNotifications()
+                    } else {
+                        //permission not accepted show message
+                        Toast.makeText(context, "Benachrichtigungen abgeleht :(", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+
+
+                Button({
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        getPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }else{
+                        activateNotifications()
+                    }
+                }) {
+                    Text("Aktivieren")
+                }
+                Spacer(Modifier.width(12.dp))
+                Button({
+                    showRequest = false
+                }) {
+                    Text("Nicht mehr anzeigen")
+                }
+            }
         }
     }
 }
