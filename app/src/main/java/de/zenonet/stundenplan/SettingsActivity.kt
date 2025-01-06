@@ -80,8 +80,7 @@ class SettingsActivity : ComponentActivity() {
             ActivityResultContracts.StartActivityForResult()
         ){
             if(it.resultCode == RESULT_OK){
-                val intent = Intent(this@SettingsActivity, TokenViewerActivity::class.java)
-                startActivity(intent)
+                startTokenViewer()
             }
         }
 
@@ -107,6 +106,10 @@ class SettingsActivity : ComponentActivity() {
 
             }
         }
+    }
+    fun startTokenViewer(){
+        val intent = Intent(this@SettingsActivity, TokenViewerActivity::class.java)
+        startActivity(intent)
     }
 }
 
@@ -277,7 +280,10 @@ fun View(activity: SettingsActivity?) {
                 onClick = {
                     if(activity == null) return@preference
                     val confirmationIntent = activity.getSystemService(KeyguardManager::class.java).createConfirmDeviceCredentialIntent("", "");
-                    activity.tokenViewerLauncher.launch(confirmationIntent)
+                    if(confirmationIntent != null)
+                        activity.tokenViewerLauncher.launch(confirmationIntent)
+                    else
+                        activity.startTokenViewer()
                 })
 /*            switchPreference(
                 key = "useCursedLayout",
