@@ -179,7 +179,7 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                         state = listState,
                     ) {
 
-                        if (timeTable != null && !timeTable!!.Lessons[day].isEmpty() && timeTable!!.Lessons[day].none { it == null || !it.isTakingPlace }) {
+                        if (timeTable != null && !timeTable!!.Lessons[day].isEmpty() && !timeTable!!.Lessons[day].all { it == null || !it.isTakingPlace }) {
                             val currentPeriod = Utils.getCurrentPeriod(Timing.getCurrentTime())
                             //items(viewModel.timeTable.value!!.Lessons[day].size) { period ->
                             items(8) { period ->
