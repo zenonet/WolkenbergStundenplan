@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.activity.ConfirmationActivity
+import androidx.wear.compose.foundation.BasicSwipeToDismissBox
 import androidx.wear.compose.foundation.SwipeToDismissValue
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -42,18 +43,14 @@ import androidx.wear.compose.foundation.rememberSwipeToDismissBoxState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
-import androidx.wear.compose.material.SwipeToDismissBox
 import androidx.wear.compose.material.Text
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.tasks.Tasks.await
 import com.google.android.gms.wearable.CapabilityClient
-import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import de.zenonet.stundenplan.common.LogTags
-import de.zenonet.stundenplan.common.Utils
 import de.zenonet.stundenplan.wear.presentation.theme.StundenplanTheme
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -174,9 +171,12 @@ fun WearApp(activity: LoginActivity?) {
             positionIndicator = { PositionIndicator(scalingLazyListState = listState) }
         ) {
             val boxState = rememberSwipeToDismissBoxState();
-            SwipeToDismissBox(state = boxState, onDismissed = {
-                status = -1
-            }) { isBackground ->
+            BasicSwipeToDismissBox(state = boxState,
+                userSwipeEnabled = status != -1,
+                onDismissed = {
+                    status = -1
+                }
+            ) { isBackground ->
                 val showBox = status != -1
                 if(isBackground || !showBox){
                     ScalingLazyColumn(
@@ -218,7 +218,6 @@ fun WearApp(activity: LoginActivity?) {
                         item {
                             Button(onClick = {
                                 if (activity == null) return@Button;
-
                                 PreferenceManager.getDefaultSharedPreferences(activity).edit()
                                     .putBoolean("showPreview", true).apply()
                                 activity.loginSucceeded()
@@ -230,10 +229,10 @@ fun WearApp(activity: LoginActivity?) {
                             }
                         }
                     }
-                    return@SwipeToDismissBox
+                    return@BasicSwipeToDismissBox
                 }
 
-                if (status < 0) return@SwipeToDismissBox
+                if (status < 0) return@BasicSwipeToDismissBox
                 ScalingLazyColumn(Modifier.fillMaxSize()) {
                     item{
                         Spacer(Modifier.height(20.dp))
