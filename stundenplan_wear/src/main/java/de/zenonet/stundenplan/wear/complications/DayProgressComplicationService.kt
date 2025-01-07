@@ -72,6 +72,11 @@ class DayProgressComplicationService : ComplicationProviderService() {
             val progress = progressInSeconds.toFloat() / totalSecondsToday
             Log.i(LogTags.Complications, "Setting complication data to day progress: ${(progress*100).roundToInt()}%")
 
+            if(progress > 1 || progress < 0){
+                listener.onComplicationData(request.getEmptyData())
+                return@Thread
+            }
+
             val data = when (request.complicationType) {
 
                 ComplicationType.RANGED_VALUE -> RangedValueComplicationData.Builder(
