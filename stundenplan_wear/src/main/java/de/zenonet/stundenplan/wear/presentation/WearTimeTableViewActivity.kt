@@ -136,6 +136,8 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
 
         val dayOfWeek = Timing.getCurrentDayOfWeek()
 
+        val timeTable: TimeTable? by viewModel.timeTable.collectAsState(viewModel.timeTableDirect)
+
         HorizontalPager(
             state = pagerState,
             Modifier.fillMaxSize(),
@@ -168,8 +170,6 @@ fun TimeTable(viewModel: WearTimeTableViewModel) {
                     )
 
                     var hasScrolledToCurrentPeriod by remember { mutableStateOf(false) }
-
-                    val timeTable: TimeTable? by viewModel.timeTable.collectAsState(viewModel.timeTableDirect)
 
                     ScalingLazyColumn(
                         Modifier
