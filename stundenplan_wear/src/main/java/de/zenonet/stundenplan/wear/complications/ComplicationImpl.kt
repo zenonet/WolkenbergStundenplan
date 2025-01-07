@@ -64,4 +64,4 @@ fun getCurrentLesson(context:Context):Lesson?{
     return timetable.Lessons[dayOfWeek][currentPeriod]
 }
 
-private val emptyComplicationText = PlainComplicationText.Builder("").build()
+private val emptyComplicationText = PlainComplicationText.Builder("Frei").build()
