@@ -165,7 +165,10 @@ public class TimeTableParser {
 
                         if (timeTable.Lessons[dayI][period] == null) timeTable.Lessons[dayI][period] = new Lesson();
 
-                        applyDataModifications(substitution, timeTable.Lessons[dayI][period]);
+                        // so, we can't apply e.g. new_room_id from an elimination because sometimes a lesson is substituted AND cancelled and the cancellation has the normal room_id
+                        // of the lesson as its override so the elimination resets the room override of the substitution (god, I wish the data we're parsing was somewhat logical)
+                        if(!type.equals("ASSIGNMENT") && !type.equals("ELIMINATION"))
+                            applyDataModifications(substitution, timeTable.Lessons[dayI][period]);
 
                         switch (type) {
                             case "ASSIGNMENT":
@@ -186,16 +189,6 @@ public class TimeTableParser {
                             case "SWAP":
                             case "ROOM_SUBSTITUTION":
                                 // Update the timetable according to the substitutions
-                                if (substitution.has("SUBJECT_ID_NEW") && substitution.getInt("SUBJECT_ID_NEW") != 0) {
-                                    timeTable.Lessons[dayI][period].Subject = lookup.lookupSubjectName(substitution.getInt("SUBJECT_ID_NEW"));
-                                    timeTable.Lessons[dayI][period].SubjectShortName = lookup.lookupSubjectShortName(substitution.getInt("SUBJECT_ID_NEW"));
-                                }
-                                if (substitution.has("ROOM_ID_NEW") && substitution.getInt("ROOM_ID_NEW") != 0) {
-                                    timeTable.Lessons[dayI][period].Room = lookup.lookupRoom(substitution.getInt("ROOM_ID_NEW"));
-                                }
-                                if (substitution.has("TEACHER_ID_NEW") && substitution.getInt("TEACHER_ID_NEW") != 0) {
-                                    timeTable.Lessons[dayI][period].Teacher = lookup.lookupTeacher(substitution.getInt("TEACHER_ID_NEW"));
-                                }
                                 if (type.equals("ROOM_SUBSTITUTION"))
                                     timeTable.Lessons[dayI][period].Type = LessonType.RoomSubstitution;
                                 else
