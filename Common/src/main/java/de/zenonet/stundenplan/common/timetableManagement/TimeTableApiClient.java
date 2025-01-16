@@ -72,7 +72,7 @@ public class TimeTableApiClient {
         Request request = getAuthenticatedRequestBuilder("me").build();
         try(Response response = client.newCall(request).execute()) {
 
-            if (response.isSuccessful()) {
+            if (!response.isSuccessful()) {
                 Log.e(LogTags.Api, String.format("Unable to load personal data: Response code %d", response.code()));
             }
             user = new Gson().fromJson(new InputStreamReader(response.body().byteStream()), User.class);
