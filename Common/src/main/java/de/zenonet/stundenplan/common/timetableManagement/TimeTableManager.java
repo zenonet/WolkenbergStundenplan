@@ -61,7 +61,13 @@ public class TimeTableManager {
         if (apiClient.isLoggedIn) return ResultType.Success;
 
         ResultType resultType = apiClient.login();
-        if(resultType != ResultType.Success) return resultType;
+        if(resultType != ResultType.Success) {
+            try {
+                user = cacheClient.getUser();
+            } catch (UserLoadException ignored) {
+            }
+            return resultType;
+        }
 
         try {
             if (!lookup.isLookupDataAvailable())
