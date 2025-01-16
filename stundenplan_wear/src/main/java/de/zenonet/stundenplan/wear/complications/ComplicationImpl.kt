@@ -45,7 +45,11 @@ fun getTimeTable(context: Context): TimeTable?{
     }else{
         val manager = TimeTableManager()
         manager.init(context)
-        manager.getCurrentTimeTable()
+        try {
+            manager.getCurrentTimeTable()
+        }catch (e: Exception){
+            return null
+        }
     }
     return timetable
 }
