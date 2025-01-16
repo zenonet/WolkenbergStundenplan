@@ -16,6 +16,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 
 import de.zenonet.stundenplan.common.LogTags;
@@ -47,8 +49,10 @@ public class TimeTableCacheClient {
                 in.read(bytes);
             }
             String contents = new String(bytes);
-
+            Instant start = Instant.now();
             TimeTable timeTable = new Gson().fromJson(contents, TimeTable.class);
+            Instant end = Instant.now();
+            Log.i(LogTags.Timing, String.format("Deserializing timetable for week %d took %fms", week.WeekOfYear, ((float)ChronoUnit.MICROS.between(start, end))/1000));
             timeTable.source = TimeTableSource.Cache;
             timeTable.isCacheStateConfirmed = false;
             // Re-add the uncached start- and end-times of the periods
