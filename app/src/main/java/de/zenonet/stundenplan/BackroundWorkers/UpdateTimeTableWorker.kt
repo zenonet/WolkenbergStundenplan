@@ -16,9 +16,12 @@ import androidx.work.WorkerParameters
 import de.zenonet.stundenplan.StundenplanPhoneApplication
 import de.zenonet.stundenplan.activities.TimeTableViewActivity
 import de.zenonet.stundenplan.common.DataNotAvailableException
+import de.zenonet.stundenplan.common.Formatter
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.R
 import de.zenonet.stundenplan.common.Timing
+import de.zenonet.stundenplan.common.Utils
+import de.zenonet.stundenplan.common.timetableManagement.Lesson
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
@@ -28,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import kotlin.math.max
 
 class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
@@ -47,8 +51,10 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
             } catch (_: TimeTableLoadException) {
                 null
             }
-            val timeTable = loadTimeTableAsync(client).await()
+            Log.i(LogTags.BackgroundWork, "Loaded local timetable")
 
+            val timeTable = loadTimeTableAsync(client).await()
+            Log.i(LogTags.BackgroundWork, "Loaded timetable from API")
 
             TimetableWidget().updateAll(applicationContext)
 
@@ -67,14 +73,22 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
                     val intent = Intent(applicationContext, TimeTableViewActivity::class.java)
                     val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-                    // TODO: Make this detect exactly what changed and explain it in the notification content text
+                    val changes = getChanges(Formatter(applicationContext), localTimeTable, timeTable)
+                    val changeListString = changes.take(3).map { it.prependIndent("- ") }.joinToString("\n")
                     // Create notification
+
                     val notification = NotificationCompat.Builder(
                         applicationContext,
                         StundenplanPhoneApplication.TIME_TABLE_UPDATE_CHANNEL_ID
                     )
                         .setContentTitle("Stundenplanänderung")
-                        .setContentText("Dein Stundenplan hat sich geändert. Sie ihn Dir an!")
+                        //.setContentText("Dein Stundenplan hat sich geändert. Sie ihn Dir an!")
+                        .setContentText(changeListString)
+                        .setStyle(NotificationCompat.InboxStyle().also{
+                            changes.take(9).forEach { change -> it.addLine(change) }
+                        })
+/*                        .setStyle(NotificationCompat.BigTextStyle()
+                            .bigText(changeListString))*/
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true)
                         .setSmallIcon(R.drawable.ic_notification_icon)
@@ -88,6 +102,8 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
                         "new timetable is identical to old one, ignoring..."
                     )
                 }
+            }else{
+                Log.i(LogTags.BackgroundWork, "counter value didn't change, done!")
             }
 
         } catch (_: DataNotAvailableException) {
@@ -97,6 +113,43 @@ class UpdateTimeTableWorker(appContext: Context, workerParams: WorkerParameters)
         return Result.success()
     }
 
+    private fun getChanges(formatter: Formatter, timeTableA: TimeTable, timeTableB: TimeTable): ArrayList<String>{
+        val changes = ArrayList<String>()
+        for(dayI in 0..4){
+            for(period in 0..max(timeTableA.Lessons[dayI].size, timeTableB.Lessons[dayI].size)-1){
+                val lessonA:Lesson? = if(period < timeTableA.Lessons[dayI].size) timeTableA.Lessons[dayI][period] else null
+                val lessonB:Lesson? = if(period < timeTableB.Lessons[dayI].size) timeTableB.Lessons[dayI][period] else null
+
+                if((lessonA == null && lessonB == null) || lessonA == lessonB) continue
+
+                if(Lesson.doesTakePlace(lessonA) && !Lesson.doesTakePlace(lessonB)){
+                    changes.add("${Utils.getWordForDayOfWeek(dayI)} ${period+1}. Std: Ausfall")
+                    continue
+                }
+
+                if(!Lesson.doesTakePlace(lessonA) && Lesson.doesTakePlace(lessonB)){
+                    changes.add("${Utils.getWordForDayOfWeek(dayI)} ${period+1}. Std: Zusatzstunde ${lessonB!!.SubjectShortName} " +
+                            "mit ${formatter.formatTeacherName(lessonB.Teacher)} " +
+                            "in ${formatter.formatRoomName(lessonB.Room)}"
+                    )
+                    continue
+                }
+
+                if(Lesson.doesTakePlace(lessonA) && Lesson.doesTakePlace(lessonB)){
+                    if(lessonA!!.Subject != lessonB!!.Subject){
+
+                    }
+                    changes.add(
+                        "${Utils.getWordForDayOfWeek(dayI)} ${period+1}. Std: ${lessonB.SubjectShortName} " +
+                                "mit ${formatter.formatTeacherName(lessonB.Teacher)} " +
+                                "in ${formatter.formatRoomName(lessonB.Room)}"
+                    )
+                    continue
+                }
+            }
+        }
+        return changes
+    }
 
     private suspend fun loadTimeTableAsync(ttm: TimeTableManager): Deferred<TimeTable> =
         coroutineScope {
