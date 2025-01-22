@@ -89,7 +89,7 @@ class StundenplanPhoneApplication() : StundenplanApplication() {
         val workRequest: PeriodicWorkRequest =
             PeriodicWorkRequest.Builder(UpdateTimeTableWorker::class.java, 2, TimeUnit.HOURS)
                 .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, Duration.ofMinutes(5))
+                .setBackoffCriteria(BackoffPolicy.LINEAR, Duration.ofMinutes(15))
                 .build()
 
         val workManager = WorkManager.getInstance(this)
