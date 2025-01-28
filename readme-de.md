@@ -1,4 +1,14 @@
+<div align="center">
+
+
+<img src="https://github.com/user-attachments/assets/4b137aa3-100f-4e32-ab47-37476a9bdb44" height="120">
+
 # Wolkenberg Stundenplan
+
+Eine effiziente App für die Stundenpläne des Wolkenberg Gymnasiums
+
+<a href="https://play.google.com/store/apps/details?id=de.zenonet.stundenplan"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/de_badge_web_generic.png" height="70"/></a>
+</div>
 
 Dies ist ein nativer Android-Client für die (undokumentierte) TimeTable API des Wolkenberg Gymnasiums Michendorf.
 Er läuft nativ auf der JVM, um auch unter extremen Bedingungen wie dem furchtbar langsamen Internet im Schulgebäude oder sehr alten/preiswerten Smartphones die beste Startgeschwindigkeit zu gewährleisten.
