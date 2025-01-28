@@ -224,8 +224,8 @@ public class TimeTableParser {
                 if (substitutionsThatDay.has("absences")) {
                     JSONArray absencesArray = substitutionsThatDay.getJSONArray("absences");
                     for (int i = 0; i < absencesArray.length(); i++) {
-                        int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 2, 0); // Two-indexing again (I am going insane)
-                        int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 2, 0);
+                        int periodFrom = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_FROM") - 1, 0);
+                        int periodTo = Math.max(absencesArray.getJSONObject(i).getInt("PERIOD_TO") - 1, 0);
 
                         for (int p = periodFrom; p <= periodTo; p++) {
                             if (timeTable.Lessons[dayI].length <= p || timeTable.Lessons[dayI][p] == null)
