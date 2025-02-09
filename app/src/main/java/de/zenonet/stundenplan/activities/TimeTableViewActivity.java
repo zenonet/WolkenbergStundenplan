@@ -534,10 +534,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
             popupWindow.showAtLocation(findViewById(R.id.mainViewGroup), Gravity.CENTER, 50, 50);
         }*/
 
-        if (isInitialLoad) {
-            Log.i(LogTags.Timing, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
-            isInitialLoad = false;
-        }
+
         updateDayDisplayForWeek(selectedWeek);
 
         if (!nonCrucialUiLoaded && !isLoadingNonCrucialUi) {
@@ -547,6 +544,11 @@ public class TimeTableViewActivity extends AppCompatActivity {
         }
 
         StatisticsManager.reportTimetableTime(StundenplanApplication.getMillisSinceAppStart());
+
+        if (isInitialLoad) {
+            Log.i(LogTags.Timing, String.format("Time from application start to cached timetable displayed: %d ms - DISPLAYED", Duration.between(StundenplanApplication.applicationEntrypointInstant, Instant.now()).toMillis()));
+            isInitialLoad = false;
+        }
     }
 
     private void setTimetableSourceText(@Nullable TimeTable timeTable, boolean isRefetching) {
