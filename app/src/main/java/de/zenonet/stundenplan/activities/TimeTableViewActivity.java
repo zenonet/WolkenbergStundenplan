@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
+import de.zenonet.stundenplan.common.Base64SerializationKt;
 import de.zenonet.stundenplan.common.Formatter;
 import de.zenonet.stundenplan.common.HomeworkManager;
 import de.zenonet.stundenplan.common.LogTags;
@@ -129,7 +130,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         createTableLayout();
 
-        findViewById(R.id.settingsButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
+        //findViewById(R.id.menuButton).setOnClickListener((sender) -> settingsIntentLauncher.launch(new Intent(this, SettingsActivity.class)));
 
         previousWeekButton = findViewById(R.id.previousWeekButton);
         nextWeekButton = findViewById(R.id.nextWeekButton);
@@ -167,6 +168,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
             openOutlook();
         });
 
+        findViewById(R.id.menuButton).setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(this, v);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                popup.setForceShowIcon(true);
+            }
+            popup.setOnMenuItemClickListener(new TimeTableContextMenuListener());
+            popup.getMenuInflater().inflate(R.menu.timetablecontextmenu, popup.getMenu());
+            popup.show();
+        });
+
         if (isPreview)
             loadPreviewTimeTable();
 
@@ -182,6 +193,51 @@ public class TimeTableViewActivity extends AppCompatActivity {
         });
 
     }
+
+    private class TimeTableContextMenuListener implements PopupMenu.OnMenuItemClickListener {
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final int id = item.getItemId();
+            if (id == R.id.shareTimeTable) {
+                String shareUrl = Base64SerializationKt.getShareUrlForTimeTable(currentTimeTable);
+
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareUrl);
+
+                Intent chooserIntent = Intent.createChooser(shareIntent, "Stundenplan teilen");
+                startActivity(chooserIntent);
+                return true;
+            }
+            if(id == R.id.shareApp){
+                String shareUrl = "https://play.google.com/store/apps/details?id=de.zenonet.stundenplan";
+
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareUrl);
+
+                Intent chooserIntent = Intent.createChooser(shareIntent, "App teilen");
+                startActivity(chooserIntent);
+                return true;
+            }
+            if(id == R.id.openSettings){
+                settingsIntentLauncher.launch(new Intent(TimeTableViewActivity.this, SettingsActivity.class));
+                return true;
+            }
+/*            if (id == R.id.exportTimeTable) {
+                String json = new Gson().toJson(currentTimeTable);
+
+                Intent.createChooser()
+                HomeworkManager.INSTANCE.deleteNoteFor(selectedWeek, dayOfWeek, currentTimeTable.Lessons[dayOfWeek][period].SubjectShortName.hashCode());
+                runOnUiThread(TimeTableViewActivity.this::onHomeworkDataChanged);
+                return true;
+            }*/
+            return true;
+        }
+    }
+
 
     private void updateWeekNavButtonEnabledStates() {
         /*previousWeekButton.setEnabled(selectedWeek != 0);

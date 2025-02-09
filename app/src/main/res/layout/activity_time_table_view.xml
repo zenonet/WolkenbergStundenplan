@@ -81,7 +81,7 @@
                 android:id="@+id/mailButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_alignLeft="@id/settingsButton"
+                android:layout_alignLeft="@id/menuButton"
                 android:layout_marginLeft="-40dp"
                 android:background="#00000000"
                 android:src="@drawable/baseline_email_24"
@@ -92,17 +92,17 @@
                 app:tint="?normalForeground" />
 
             <ImageButton
-                android:id="@+id/settingsButton"
+                android:id="@+id/menuButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="#00000000"
                 android:layout_alignParentRight="true"
                 android:layout_marginEnd="5dp"
-                android:src="@drawable/baseline_settings_24"
+                android:src="@drawable/baseline_more_vert_24"
                 android:scaleType="fitXY"
                 android:minWidth="30dp"
                 android:minHeight="30dp"
-                android:tooltipText="Einstellungen"
+                android:tooltipText="Optionen"
                 app:tint="?normalForeground">
             </ImageButton>
         </RelativeLayout>
