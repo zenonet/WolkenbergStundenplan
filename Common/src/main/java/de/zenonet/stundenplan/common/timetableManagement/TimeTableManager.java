@@ -103,7 +103,7 @@ public class TimeTableManager {
                 final byte[] masterDataChanged = {-2};
                 Thread masterDataFetchThread = getMasterDataFetchThread(masterDataChanged);
 
-                rawData = apiClient.getRawDataFromApi();
+                rawData = apiClient.fetchRawDataFromApi();
                 Log.i(LogTags.Api, "Fetched raw timetable data");
                 masterDataFetchThread.join();
 
@@ -118,7 +118,7 @@ public class TimeTableManager {
                     if(oldUserId != user.id){
                         Log.i(LogTags.Api, "Detected change in user id, re-fetching...");
                         // We need to re-fetch raw timetable data
-                        rawData = apiClient.getRawDataFromApi();
+                        rawData = apiClient.fetchRawDataFromApi();
                     }
                 }
 
@@ -281,7 +281,7 @@ public class TimeTableManager {
     }
 
     private void fetchUser() throws UserLoadException {
-        user = apiClient.getUser();
+        user = apiClient.fetchUserData();
         cacheClient.saveUser(user);
         apiClient.user = user;
     }
@@ -293,7 +293,7 @@ public class TimeTableManager {
         String apiHash = apiClient.postsHash;
 
         if(!localHash.equals(apiHash)){
-            Post[] posts = apiClient.getPosts();
+            Post[] posts = apiClient.fetchPosts();
             cacheClient.cachePosts(posts);
             return posts;
         }

@@ -68,7 +68,7 @@ public class TimeTableApiClient {
     }
 
 
-    public User getUser() throws UserLoadException {
+    public User fetchUserData() throws UserLoadException {
         Request request = getAuthenticatedRequestBuilder("me").build();
         try(Response response = client.newCall(request).execute()) {
 
@@ -233,14 +233,14 @@ public class TimeTableApiClient {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + accessToken);
     }
-    public String getRawData() throws IOException {
+    public String fetchRawData() throws IOException {
         Request request = getAuthenticatedRequestBuilder("timetable/student/" + user.id).build();
         try(Response response = client.newCall(request).execute()){
             if(!response.isSuccessful()) throw new IOException("Request for timetable/student/ not successful");
             return response.body().string();
         }
     }
-    public String getRawSubstitutionData() throws IOException {
+    public String fetchRawSubstitutionData() throws IOException {
         Request request = getAuthenticatedRequestBuilder("substitution/student/" + user.id).build();
         try(Response response = client.newCall(request).execute()){
             if(!response.isSuccessful()) throw new IOException("Request for timetable/student/ not successful");
@@ -252,20 +252,20 @@ public class TimeTableApiClient {
      * Simultaneously fetches timetable and substitution data from the API
      * @return A Pair containing the raw timetable data and raw substitution data (in that order)
      */
-    Pair<String, String> getRawDataFromApi() {
+    Pair<String, String> fetchRawDataFromApi() {
         final String[] rawDataArray = {null, null};
 
         // fetch timetable and substitutions simultaneously
         Thread timeTableFetchThread = new Thread(() -> {
             try {
-                rawDataArray[0] = (getRawData());
+                rawDataArray[0] = (fetchRawData());
             } catch (IOException ignored) {
             }
         });
         timeTableFetchThread.start();
         Thread substitutionFetchThread = new Thread(() -> {
             try {
-                rawDataArray[1] = getRawSubstitutionData();
+                rawDataArray[1] = fetchRawSubstitutionData();
             } catch (IOException ignored) {
             }
         });
@@ -283,7 +283,7 @@ public class TimeTableApiClient {
         );
     }
 
-    public Post[] getPosts(){
+    public Post[] fetchPosts(){
         Request request = getAuthenticatedRequestBuilder("posts").build();
         try(Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful())

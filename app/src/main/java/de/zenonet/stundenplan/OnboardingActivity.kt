@@ -198,7 +198,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                                                 AuthCodeRedeemedCallback {
                                                 override fun authCodeRedeemed() {
                                                     try {
-                                                        activity.userData = apiClient.getUser()
+                                                        activity.userData = apiClient.fetchUserData()
                                                         username = activity.userData!!.fullName
                                                         loginState = 2
                                                     } catch (e: UserLoadException) {
