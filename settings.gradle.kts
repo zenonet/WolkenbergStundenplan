@@ -17,3 +17,4 @@ rootProject.name = "Stundenplan"
 include(":app")
 include(":stundenplan_wear")
 include(":Common")
+include(":baselineprofile")

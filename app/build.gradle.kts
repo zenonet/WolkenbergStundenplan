@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("androidx.baselineprofile")
 }
 
 android {
@@ -62,6 +63,9 @@ android {
     lint {
         abortOnError = false
     }
+    baselineProfile{
+        dexLayoutOptimization = true
+    }
 }
 
 dependencies {
@@ -83,6 +87,7 @@ dependencies {
     implementation("androidx.wear:wear-remote-interactions:1.0.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose-android:2.8.7")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     // implementation ("com.android.support:appcompat-v7:23.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -95,6 +100,7 @@ dependencies {
     implementation(project(":Common"))
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.04.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    "baselineProfile"(project(":baselineprofile"))
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
@@ -112,4 +118,6 @@ dependencies {
     implementation("com.google.android.play:review-ktx:2.0.1")
 
 
+    //baseline profile installer
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 }
