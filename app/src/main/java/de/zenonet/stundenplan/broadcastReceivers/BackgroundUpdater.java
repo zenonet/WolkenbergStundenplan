@@ -94,7 +94,7 @@ public class BackgroundUpdater extends BroadcastReceiver {
                             nextLesson.Subject,
                             formatter.formatRoomName(nextLesson.Room),
                             formatter.formatTeacherName(nextLesson.Teacher),
-                            nextLesson.EndTime);
+                        timeTable.Lessons[dayOfWeek][nextPeriod+count-1].EndTime);
                 if(count > 1){
                     title = String.format(Locale.GERMANY, "%dx %s", count, title);
                 }
