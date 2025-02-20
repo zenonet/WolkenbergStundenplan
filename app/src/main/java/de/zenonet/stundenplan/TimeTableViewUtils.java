@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,6 +101,8 @@ public class TimeTableViewUtils {
                 TextView teacherView = new TextView(context);
                 lessonLayout.addView(teacherView);
                 teacherView.setTextColor(MaterialColors.getColor(teacherView, R.attr.lessonForeground));
+                teacherView.setEllipsize(TextUtils.TruncateAt.END);
+                teacherView.setSingleLine();
                 teacherView.setTextSize(11);
 
                 // Teacher view:
