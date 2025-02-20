@@ -26,6 +26,14 @@
         android:theme="@style/Theme.Stundenplan"
         tools:targetApi="34">
         <activity
+            android:name=".activities.SearchActivity"
+            android:exported="true"
+            android:label="Search"
+            android:theme="@style/Theme.Stundenplan"/>
+        <activity
+            android:name=".activities.OthersTimeTableViewActivity"
+            android:exported="true" />
+        <activity
             android:name=".activities.TokenViewerActivity"
             android:exported="false"
             android:label="Token Viewer"
@@ -33,14 +41,14 @@
         <activity
             android:name=".activities.OutlookWebView"
             android:exported="true"
-            android:taskAffinity="@string/mail_task_affinity"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask"
+            android:taskAffinity="@string/mail_task_affinity" />
         <activity
             android:name=".homework.HomeworkEditorActivity"
             android:exported="false"
             android:label="Hausaufgaben-Editor"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Stundenplan" />
+            android:theme="@style/Theme.Stundenplan"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".OnboardingActivity"
             android:exported="true"

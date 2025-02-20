@@ -233,39 +233,51 @@ public class TimeTableApiClient {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + accessToken);
     }
+
     public String fetchRawData() throws IOException {
-        Request request = getAuthenticatedRequestBuilder("timetable/student/" + user.id).build();
+        return fetchRawData("student", user.id);
+    }
+
+    public String fetchRawSubstitutionData() throws IOException{
+        return fetchRawSubstitutionData("student", user.id);
+    }
+    public String fetchRawData(String entityType, int entityId) throws IOException {
+        Request request = getAuthenticatedRequestBuilder("timetable/" + entityType + "/" + entityId).build();
         try(Response response = client.newCall(request).execute()){
             if(!response.isSuccessful()) throw new IOException("Request for timetable/student/ not successful");
             return response.body().string();
         }
     }
-    public String fetchRawSubstitutionData() throws IOException {
-        Request request = getAuthenticatedRequestBuilder("substitution/student/" + user.id).build();
+    public String fetchRawSubstitutionData(String entityType, int entityId) throws IOException {
+        Request request = getAuthenticatedRequestBuilder("substitution/" + entityType + "/" + entityId).build();
         try(Response response = client.newCall(request).execute()){
             if(!response.isSuccessful()) throw new IOException("Request for timetable/student/ not successful");
             return response.body().string();
         }
     }
 
+
+    public Pair<String, String> fetchRawDataFromApi(){
+        return fetchRawDataFromApi("student", user.id);
+    }
     /**
      * Simultaneously fetches timetable and substitution data from the API
      * @return A Pair containing the raw timetable data and raw substitution data (in that order)
      */
-    Pair<String, String> fetchRawDataFromApi() {
+    public Pair<String, String> fetchRawDataFromApi(String entityType, int entityId) {
         final String[] rawDataArray = {null, null};
 
         // fetch timetable and substitutions simultaneously
         Thread timeTableFetchThread = new Thread(() -> {
             try {
-                rawDataArray[0] = (fetchRawData());
+                rawDataArray[0] = (fetchRawData(entityType, entityId));
             } catch (IOException ignored) {
             }
         });
         timeTableFetchThread.start();
         Thread substitutionFetchThread = new Thread(() -> {
             try {
-                rawDataArray[1] = fetchRawSubstitutionData();
+                rawDataArray[1] = fetchRawSubstitutionData(entityType, entityId);
             } catch (IOException ignored) {
             }
         });

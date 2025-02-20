@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="false"
+    android:id="@+id/main">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="5dp">
+
+            <TextView
+                android:id="@+id/nameView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_marginEnd="51dp"
+                android:layout_toStartOf="@+id/previousWeekButton"
+                android:text="Max Mustermann"
+                android:textSize="20dp" />
+
+            <ImageButton
+                android:id="@+id/previousWeekButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignLeft="@id/currentWeekButton"
+                android:layout_marginLeft="-40dp"
+                android:background="#00000000"
+                android:minWidth="30dp"
+                android:minHeight="30dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/baseline_arrow_back_24"
+                android:tooltipText="Zur vorherigen Woche"
+                app:tint="?normalForeground" />
+
+            <ImageButton
+                android:id="@+id/currentWeekButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignLeft="@id/nextWeekButton"
+                android:layout_marginLeft="-40dp"
+                android:background="#00000000"
+                android:minWidth="30dp"
+                android:minHeight="30dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/baseline_arrow_circle_down_24"
+                android:tooltipText="Zur aktuellen Woche"
+                app:tint="?normalForeground" />
+
+            <ImageButton
+                android:id="@+id/nextWeekButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignLeft="@id/menuButton"
+                android:layout_marginLeft="-40dp"
+                android:background="#00000000"
+                android:minWidth="30dp"
+                android:minHeight="30dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/baseline_arrow_forward_24"
+                android:tooltipText="Zur nächsten Woche"
+                app:tint="?normalForeground" />
+
+
+            <ImageButton
+                android:id="@+id/menuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginEnd="5dp"
+                android:background="#00000000"
+                android:minWidth="30dp"
+                android:minHeight="30dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/baseline_more_vert_24"
+                android:tooltipText="Optionen"
+                app:tint="?normalForeground"></ImageButton>
+        </RelativeLayout>
+
+        <TableLayout
+            android:id="@+id/tableLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="1dp"
+            android:columnCount="5"
+            android:focusable="false"
+            android:orientation="horizontal"
+            android:stretchColumns="0,1,2,3,4"></TableLayout>
+
+    </LinearLayout>
+</ScrollView>

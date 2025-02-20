@@ -29,6 +29,18 @@ public class NameLookup {
         return LookupData.getJSONObject("Room").getJSONObject(String.valueOf(roomId)).getString("NAME");
     }
 
+    public String lookupStudent(int studentId) throws JSONException {
+        JSONObject student = LookupData.getJSONObject("Student");
+        return String.format("%s %s",
+                student.getJSONObject(String.valueOf(studentId)).getString("FIRSTNAME"),
+                student.getJSONObject(String.valueOf(studentId)).getString("LASTNAME")
+        );
+    }
+    public String lookupClassName(int classId) throws JSONException {
+        return LookupData.getJSONObject("Class").getJSONObject(String.valueOf(classId)).getString("NAME");
+
+    }
+
     public void loadLookupData() throws IOException {
         try {
             LookupData = new JSONObject(Utils.readAllText(new File(lookupDirectory, "lookup.json")));

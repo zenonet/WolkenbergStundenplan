@@ -33,7 +33,7 @@ public class TimeTableManager {
     public TimeTableCacheClient cacheClient = new TimeTableCacheClient();
     public RawTimeTableCacheClient rawCacheClient = new RawTimeTableCacheClient();
     public NameLookup lookup = new NameLookup();
-    private TimeTableParser parser;
+    public  TimeTableParser parser;
     private SharedPreferences sharedPreferences;
 
     public void init(Context context) throws UserLoadException {
@@ -141,7 +141,7 @@ public class TimeTableManager {
 
         } else {
             // Get data from raw cache
-            rawData = rawCacheClient.loadRawData();
+            rawData = rawCacheClient.loadRawData(); // note that this might return null
             source = TimeTableSource.RawCache;
         }
 

@@ -9,7 +9,9 @@
     <item android:id="@+id/shareTimeTable"
         android:icon="@drawable/baseline_share_24"
         android:title="Stundenplan teilen"/>
-
+    <item android:id="@+id/openSearch"
+        android:icon="@drawable/baseline_search_24"
+        android:title="Schüler suchen"/>
 
     <item android:id="@+id/exportTimeTable"
         android:visible="false"
