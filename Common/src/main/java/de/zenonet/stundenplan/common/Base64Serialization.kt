@@ -29,8 +29,9 @@ fun serializeTimeTableToBase64(tt: TimeTable): String {
     stream.write(lookupCount)
 
     lookup.forEach {
-        stream.write(it.length)
-        stream.write(it.toByteArray(Charsets.UTF_8))
+        val nameBytes = it.toByteArray(Charsets.UTF_8);
+        stream.write(nameBytes.size)
+        stream.write(nameBytes)
     }
 
     // Serialize outline
