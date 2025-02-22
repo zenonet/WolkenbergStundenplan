@@ -36,12 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.NameLookup
-import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.homework.ViewModelFactory
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
 import java.time.Instant
@@ -52,11 +51,7 @@ class SearchActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // TODO: Remove dependency on TimeTableManager
-        val manager = TimeTableManager()
-        manager.init(this)
-
-        val lookup = manager.lookup
+        val lookup = StundenplanApplication.getAuxiliaryManager().lookup
 
         val viewModelFactory = ViewModelFactory {
             SearchViewModel(lookup)
@@ -173,9 +168,11 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
             completions = students.filter { it.id.toString().startsWith(searchFieldText) }
         } else {
             completions = students.filter { st ->
-                st.name.split(' ').fastAny {
+                // TODO: Implement a more fuzzy search algorithm
+                st.searchName.contains(searchFieldText, true)
+                /*st.name.split(' ').fastAny {
                     it.startsWith(searchText, true)
-                }
+                }*/
             }
         }
 
@@ -189,7 +186,6 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
 
     fun completionClicked(context: Context, student: Student) {
         val intent = Intent(context, OthersTimeTableViewActivity::class.java)
-        // TODO: Add flags to not reopen activity
         intent.putExtra("studentId", student.id)
         context.startActivity(intent)
     }
@@ -198,5 +194,6 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
 data class Student(
     val id: Int,
     val name: String,
+    val searchName: String = name.replace('-', ' '),
     val cClass: String,
-);
+)

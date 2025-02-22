@@ -1,6 +1,7 @@
 package de.zenonet.stundenplan.activities
 
 import android.os.Bundle
+import android.util.Log
 import android.util.Pair
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -13,19 +14,24 @@ import androidx.core.view.WindowInsetsCompat
 import de.zenonet.stundenplan.R
 import de.zenonet.stundenplan.TimeTableViewUtils
 import de.zenonet.stundenplan.common.Formatter
+import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.ResultType
+import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.common.Timing
 import de.zenonet.stundenplan.common.Week
 import de.zenonet.stundenplan.common.timetableManagement.TimeTableLoadException
-import de.zenonet.stundenplan.common.timetableManagement.TimeTableManager
+import java.time.Duration
+import java.time.Instant
 
 class OthersTimeTableViewActivity : AppCompatActivity() {
 
     lateinit var tableLayout:ViewGroup
     var studentId: Int = -1
     var week: Week = Timing.getRelevantWeekOfYear()
-    val timeTableManager = TimeTableManager()
+    val timeTableManager = StundenplanApplication.getAuxiliaryManager()
     lateinit var formatter:Formatter;
+
+    val start = Instant.now()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +75,7 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
 
     fun loadTimeTable(){
         Thread {
+            Log.i(LogTags.Timing, "Activity start until load thread start took ${Duration.between(start, Instant.now()).nano/1000000f}ms")
             val res = timeTableManager.login()
 
             if(res != ResultType.Success){
@@ -78,9 +85,12 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
                 return@Thread
             }
 
+            timeTableManager.apiClient.loginIfTokenHasExpired()
+
             // No need to re-fetch if raw data is already loaded
             if(data == null) data = timeTableManager.apiClient.fetchRawDataFromApi("student", studentId)
 
+            Log.i(LogTags.Timing, "Activity start until data fetched start took ${Duration.between(start, Instant.now()).nano/1000000f}ms")
             try {
 
                 val timeTable = timeTableManager.parser.parseWeek(
@@ -88,10 +98,12 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
                     data!!.second,
                     week
                 )
+                Log.i(LogTags.Timing, "Activity start until data parsed took ${Duration.between(start, Instant.now()).nano/1000000f}ms")
 
                 runOnUiThread {
                     TimeTableViewUtils.updateTimeTableView(this, timeTable, formatter)
                     TimeTableViewUtils.updateDayDisplayForWeek(this, week)
+                    Log.i(LogTags.Timing, "Activity start until others timetable display took ${Duration.between(start, Instant.now()).nano/1000000f}ms")
                 }
             }catch (e: TimeTableLoadException){
                 runOnUiThread{

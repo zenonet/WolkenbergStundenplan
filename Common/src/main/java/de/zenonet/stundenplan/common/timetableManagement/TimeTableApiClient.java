@@ -16,6 +16,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Locale;
 
@@ -38,6 +40,7 @@ public class TimeTableApiClient {
     private final int CounterOffset = 3;
 
     public String accessToken;
+    public Instant accessTokenExpirationTime;
     public User user;
 
     public NameLookup lookup;
@@ -95,6 +98,7 @@ public class TimeTableApiClient {
                 ))
                 .build();
 
+        Instant startTime = Instant.now();
         try(Response response = client.newCall(request).execute()) {
             int respCode = response.code();
 
@@ -108,6 +112,7 @@ public class TimeTableApiClient {
 
             sharedPreferences.edit().putString("refreshToken", jObj.getString("refresh_token")).apply();
             accessToken = jObj.getString("access_token");
+            accessTokenExpirationTime = startTime.plusSeconds(jObj.getInt("expires_in"));
 
             isLoggedIn = true;
             Log.i(LogTags.Login, "Logged in successfully");
@@ -122,6 +127,12 @@ public class TimeTableApiClient {
             Log.e(LogTags.Login, "Can't login to API");
         }
         return ResultType.UnknownError;
+    }
+
+    public void loginIfTokenHasExpired(){
+        if(Instant.now().isBefore(accessTokenExpirationTime)) return;
+
+        login();
     }
 
     public void redeemOAuthCodeAsync(String code, AuthCodeRedeemedCallback callback){
@@ -267,11 +278,13 @@ public class TimeTableApiClient {
     public Pair<String, String> fetchRawDataFromApi(String entityType, int entityId) {
         final String[] rawDataArray = {null, null};
 
+        Instant start = Instant.now();
         // fetch timetable and substitutions simultaneously
         Thread timeTableFetchThread = new Thread(() -> {
             try {
                 rawDataArray[0] = (fetchRawData(entityType, entityId));
             } catch (IOException ignored) {
+
             }
         });
         timeTableFetchThread.start();
@@ -289,6 +302,7 @@ public class TimeTableApiClient {
         }catch (InterruptedException ignored){
 
         }
+        Log.i(LogTags.Timing, String.format("Loading json data for %s %d took %dms", entityType, entityId, Duration.between(start, Instant.now()).toMillis()));
         return new Pair<>(
                 rawDataArray[0],
                 rawDataArray[1]

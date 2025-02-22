@@ -608,7 +608,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                 return;
             }
         } else {
-            nonCrucialViewModel = new NonCrucialViewModel(manager, null, null);
+            nonCrucialViewModel = new NonCrucialViewModel(StundenplanApplication.getAuxiliaryManager(), null, null);
         }
 
         NonCrucialUiKt.applyUiToComposeView(cv, nonCrucialViewModel);
