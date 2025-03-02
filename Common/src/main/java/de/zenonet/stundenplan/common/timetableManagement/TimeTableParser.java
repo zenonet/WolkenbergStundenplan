@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.Week;
@@ -155,6 +156,18 @@ public class TimeTableParser {
                         JSONObject substitution = substitutionsArray.getJSONObject(i);
                         int period = substitution.getInt("PERIOD") - 1; // Two-indexing again (except not anymore, yay)
 
+                        // Yes, apparently there are sometimes 0th lessons which can't even be displayed by the official timetable app
+                        if(period < 0){
+                            Log.w(LogTags.Parser, String.format("There is a substitution in period %d (zero-indexed). Ignoring...", period));
+                            continue;
+                        }
+
+                        // Determine if the period array needs to be resized (Hopefully this will never have to happen)
+                        if (period >= timeTable.Lessons[dayI].length) {
+                            // Resize the period array
+                            timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
+                        }
+
                         if (substitution.has("TEXT")) {
                             String text = substitution.getString("TEXT");
                             if (!text.isEmpty())
@@ -196,13 +209,6 @@ public class TimeTableParser {
 
                                 continue;
                             case "EXTRA_LESSON":
-
-                                // Determine if the period array needs to be resized (Hopefully this will never have to happen)
-                                if (period >= timeTable.Lessons[dayI].length) {
-                                    // Resize the period array
-                                    timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
-                                }
-
                                 if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
                                     // If the extra lesson is in the time frame of a cancelled lesson, then that's called a substitution
                                     timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
