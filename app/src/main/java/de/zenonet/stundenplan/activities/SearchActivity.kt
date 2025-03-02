@@ -37,12 +37,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.zenonet.stundenplan.common.LogTags
 import de.zenonet.stundenplan.common.NameLookup
 import de.zenonet.stundenplan.common.StundenplanApplication
 import de.zenonet.stundenplan.homework.ViewModelFactory
 import de.zenonet.stundenplan.ui.theme.StundenplanTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
 class SearchActivity : ComponentActivity() {
@@ -160,28 +164,33 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
     }
 
     fun generateCompletions() {
-        val start = Instant.now()
-        val searchText = searchFieldText
+        viewModelScope.launch(viewModelScope.coroutineContext){
+            val start = Instant.now()
+            val searchText = searchFieldText
+            val intOrNull = searchText.toIntOrNull()
 
-        val intOrNull = searchText.toIntOrNull()
-        if (intOrNull != null) {
-            completions = students.filter { it.id.toString().startsWith(searchFieldText) }
-        } else {
-            completions = students.filter { st ->
-                // TODO: Implement a more fuzzy search algorithm
-                st.searchName.contains(searchFieldText, true)
-                /*st.name.split(' ').fastAny {
-                    it.startsWith(searchText, true)
-                }*/
+
+            withContext(Dispatchers.Default) {
+                if (intOrNull != null) {
+                    completions = students.filter { it.id.toString().startsWith(searchFieldText) }
+                } else {
+                    completions = students.filter { st ->
+                        // TODO: Implement a more fuzzy search algorithm
+                        st.searchName.contains(searchFieldText, true)
+                        /*st.name.split(' ').fastAny {
+                        it.startsWith(searchText, true)
+                    }*/
+                    }.sortedBy { !it.name.startsWith(searchText, ignoreCase = true) }
+                }
             }
-        }
 
-        Log.i(
-            LogTags.Timing,
-            "Generating completions took ${
-                java.time.Duration.between(start, Instant.now()).toMillis()
-            }ms"
-        )
+            Log.i(
+                LogTags.Timing,
+                "Generating completions took ${
+                    java.time.Duration.between(start, Instant.now()).toMillis()
+                }ms"
+            )
+        }
     }
 
     fun completionClicked(context: Context, student: Student) {
