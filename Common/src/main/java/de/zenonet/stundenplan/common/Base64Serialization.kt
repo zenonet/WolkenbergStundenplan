@@ -1,5 +1,6 @@
 package de.zenonet.stundenplan.common
 
+import android.util.Log
 import de.zenonet.stundenplan.common.timetableManagement.LessonType
 import de.zenonet.stundenplan.common.timetableManagement.TimeTable
 import java.io.ByteArrayOutputStream
@@ -13,13 +14,16 @@ fun serializeTimeTableToBase64(tt: TimeTable): String {
     val stream = ByteArrayOutputStream()
 
 
+    // write version to stream
+    stream.write(0) // zero indicate that this is not the first format which didn't have a version
+    stream.write(1) // actual version code
+
     // Generate lookup table
     val lookupSet = HashSet<String>()
 
     tt.Lessons.flatten().filterNotNull().forEach{
         lookupSet.add(it.Room)
         lookupSet.add(it.Subject)
-        lookupSet.add(it.SubjectShortName)
         lookupSet.add(it.Teacher)
     }
 
@@ -29,23 +33,27 @@ fun serializeTimeTableToBase64(tt: TimeTable): String {
     stream.write(lookupCount)
 
     lookup.forEach {
-        val nameBytes = it.toByteArray(Charsets.UTF_8);
+        // TODO: Make sure the deserializer no longer reads 2-byte-chars as 2 bytes when this is pushed to prod
+        val nameBytes = it.toByteArray(Charsets.UTF_8)
         stream.write(nameBytes.size)
         stream.write(nameBytes)
     }
+
+    val lookupBytes = stream.size()
+    Log.i(LogTags.Debug, "Serialization: Lookup is $lookupBytes bytes long")
 
     // Serialize outline
     tt.Lessons.forEach {
         stream.write(it.size)
     }
 
+    val bytesBeforeData = stream.size()
     // Serialize actual data
     tt.Lessons.flatten().forEach {
         if(it == null){
             stream.write(0)
-            stream.write(0)
-            stream.write(0)
-            stream.write(0)
+            //stream.write(0)
+            //stream.write(0)
             return@forEach
         }
 
@@ -67,9 +75,10 @@ fun serializeTimeTableToBase64(tt: TimeTable): String {
 
         stream.write(roomByte)
         stream.write(lookup.indexOf(it.Subject)+offset)
-        stream.write(lookup.indexOf(it.SubjectShortName)+offset)
         stream.write(teacherByte)
     }
+    Log.i(LogTags.Debug, "Serialization: Data is ${stream.size()-bytesBeforeData} bytes long")
+    Log.i(LogTags.Debug, "Serialization: TimeTable is ${stream.size()} bytes long in total")
 
     return Base64.encode(stream.toByteArray())
 
