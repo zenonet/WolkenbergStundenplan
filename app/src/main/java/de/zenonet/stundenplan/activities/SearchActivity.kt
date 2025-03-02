@@ -138,7 +138,7 @@ fun Completion(completion: Student, vm: SearchViewModel, modifier: Modifier = Mo
             }
             .padding(10.dp)) {
         Text(completion.name, fontSize = 16.sp)
-        Text("Schüler • " + completion.cClass + " • " + completion.id, fontSize = 12.sp)
+        Text("Schüler • " + completion.cClass/* + " • " + completion.id*/, fontSize = 12.sp)
     }
 }
 
