@@ -206,6 +206,7 @@ public class TimeTableParser {
                                 if (timeTable.Lessons[dayI][period].Type == LessonType.Cancelled) {
                                     timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
                                 }
+                                timeTable.Lessons[dayI][period].Type = LessonType.Substitution;
                                 continue;
                             case "SUBSTITUTION":
                             case "SWAP":
