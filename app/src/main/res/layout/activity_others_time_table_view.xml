@@ -60,7 +60,7 @@
                 android:id="@+id/nextWeekButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_alignLeft="@id/menuButton"
+                android:layout_alignParentRight="true"
                 android:layout_marginLeft="-40dp"
                 android:background="#00000000"
                 android:minWidth="30dp"
@@ -71,7 +71,7 @@
                 app:tint="?normalForeground" />
 
 
-            <ImageButton
+<!--            <ImageButton
                 android:id="@+id/menuButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -83,7 +83,7 @@
                 android:scaleType="fitXY"
                 android:src="@drawable/baseline_more_vert_24"
                 android:tooltipText="Optionen"
-                app:tint="?normalForeground"></ImageButton>
+                app:tint="?normalForeground"></ImageButton>-->
         </RelativeLayout>
 
         <TableLayout
