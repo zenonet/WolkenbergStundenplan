@@ -168,6 +168,15 @@ public class TimeTableParser {
                             timeTable.Lessons[dayI] = Arrays.copyOf(timeTable.Lessons[dayI], period + 1);
                         }
 
+                        if(timeTable.Lessons[dayI][period] == null){
+                            Lesson l = new Lesson();
+                            l.Room = "";
+                            l.SubjectShortName = "";
+                            l.Subject = "";
+                            l.Teacher = "";
+                            timeTable.Lessons[dayI][period] = l;
+                        }
+
                         if (substitution.has("TEXT")) {
                             String text = substitution.getString("TEXT");
                             if (!text.isEmpty())
