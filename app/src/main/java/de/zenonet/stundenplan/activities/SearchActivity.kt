@@ -29,9 +29,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -99,6 +102,7 @@ class SearchActivity : ComponentActivity() {
 
 @Composable
 fun Search(vm: SearchViewModel) {
+    val focusRequester = remember { FocusRequester() }
     TextField(
         value = vm.searchFieldText,
         onValueChange = {
@@ -108,8 +112,13 @@ fun Search(vm: SearchViewModel) {
         placeholder = {
             Text("Suchen")
         },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
     )
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     LazyColumn(
         Modifier
             .clip(RoundedCornerShape(0.dp, 0.dp, 10.dp, 10.dp))
