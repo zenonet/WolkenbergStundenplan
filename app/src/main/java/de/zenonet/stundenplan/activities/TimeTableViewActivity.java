@@ -232,7 +232,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode){
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if(nextWeekButton.isEnabled()) nextWeekButton.callOnClick();
@@ -240,10 +240,18 @@ public class TimeTableViewActivity extends AppCompatActivity {
             case KeyEvent.KEYCODE_DPAD_LEFT:
                 if(previousWeekButton.isEnabled()) previousWeekButton.callOnClick();
                 return true;
+            case KeyEvent.KEYCODE_K:
+                if(event.isCtrlPressed()){
+                    Intent intent = new Intent(this, SearchActivity.class);
+                    startActivity(intent);
+                    return true;
+                }
+                return false;
             default:
                 return super.onKeyUp(keyCode, event);
         }
     }
+
 
     private void initializeTimeTableManagement() {
         manager = new TimeTableManager();

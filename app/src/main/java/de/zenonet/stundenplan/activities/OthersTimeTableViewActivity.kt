@@ -3,6 +3,7 @@ package de.zenonet.stundenplan.activities
 import android.os.Bundle
 import android.util.Log
 import android.util.Pair
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
@@ -67,8 +68,6 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
         TimeTableViewUtils.createTableLayout(this,  tableLayout, null)
 
         loadTimeTable()
-
-
     }
 
     var data: Pair<String?, String?>? = null
@@ -114,5 +113,14 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
                 return@Thread
             }
         }.start()
+    }
+
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if(keyCode == KeyEvent.KEYCODE_ESCAPE){
+            finish();
+            return true
+        }
+        return false
     }
 }
