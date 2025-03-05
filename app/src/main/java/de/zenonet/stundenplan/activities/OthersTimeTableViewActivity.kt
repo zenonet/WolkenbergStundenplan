@@ -121,6 +121,6 @@ class OthersTimeTableViewActivity : AppCompatActivity() {
             finish();
             return true
         }
-        return false
+        return super.onKeyUp(keyCode, event)
     }
 }
