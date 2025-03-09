@@ -51,6 +51,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastSumBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -260,20 +262,37 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
         viewModelScope.launch(viewModelScope.coroutineContext){
             val start = Instant.now()
             val searchText = searchFieldText
-            val intOrNull = searchText.toIntOrNull()
 
             withContext(Dispatchers.Default) {
-                if (intOrNull != null) {
-                    completions = students.filter { it.id.toString().startsWith(searchFieldText) }
-                } else {
-                    completions = students.filter { st ->
-                        // TODO: Implement a more fuzzy search algorithm
-                        st.searchName.contains(searchFieldText, true)
-                        /*st.name.split(' ').fastAny {
-                        it.startsWith(searchText, true)
-                    }*/
-                    }.sortedBy { !it.name.startsWith(searchText, ignoreCase = true) }
-                }
+                val searchTextParts = searchText.split(' ')
+
+                completions = students.fastMap { st ->
+                    // Parts that start with a search term, count extra
+                    val searchScore = searchTextParts.fastSumBy{
+
+                        if (it.isNotEmpty() && it[0].isDigit()) {
+                            // Search by ids
+                            if(st.id == it.toIntOrNull()){
+                                return@fastSumBy 1
+                            }
+                            // Search by classes
+                            if (st.cClass.trimStart('0').startsWith(it, ignoreCase = true)) {
+                                return@fastSumBy 1
+                            }
+                        }
+
+                        if(st.searchName.contains(it, ignoreCase = true)){
+                            if(st.searchName.startsWith(it, ignoreCase = true)){
+                                if(searchTextParts[0] == it) return@fastSumBy 3
+                                return@fastSumBy 2
+                            }
+                            return@fastSumBy 1
+                        }
+                        0
+                    }
+
+                    Pair<Student, Int>(st, searchScore)
+                }.filter { it.second > 1 }.sortedByDescending { it.second }.fastMap { it.first }
             }
 
             selectedCompletion = 0
