@@ -219,7 +219,7 @@ public class TimeTableManager {
                 long counter = apiClient.getLatestCounterValue();
                 confirmedCounter.set(apiClient.isCounterConfirmed ? counter : -1);
                 // If the data, the cache thread loaded is not up to date
-                if (cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1) {
+                if (cacheClient.getCounterForCacheEntry(week) < counter || stage.get() == -1 || sharedPreferences.getBoolean("alwaysParse", false)) {
                     // Load new data
                     TimeTable timeTable = getTimetableForWeekFromRawCacheOrApi(week);
 

@@ -272,6 +272,14 @@ fun View(activity: SettingsActivity?) {
                 summary = { Text(text = if (it) "Stunenplan wird über Sperrbildschirm angezeigt" else "Stunenplan wird nicht über Sperrbildschirm angezeigt") }
             )
             preferenceCategory("gn", title = {Text("Für Entwickler")})
+            if(BuildConfig.DEBUG) {
+                switchPreference(
+                    "alwaysParse",
+                    defaultValue = false,
+                    title = { Text("Demenzmodus (Debug only)") },
+                    summary = { Text(text = if (it) "Stundenplan wird immer aus Rohdaten geparst" else "Stunenplan nach Parsing gecached") }
+                )
+            }
             preference("showToken", {
                 Text("RefreshToken anzeigen")
             },
