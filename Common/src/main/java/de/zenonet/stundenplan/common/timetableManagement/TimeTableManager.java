@@ -207,14 +207,12 @@ public class TimeTableManager {
         // This is kind of the wrong name. It really is more like the currently best version of the timetable, we have
         AtomicReference<TimeTable> timeTableFromCache = new AtomicReference<>(null);
         AtomicLong confirmedCounter = new AtomicLong(-1);
-        // API fetch thread
+        // API-fetch/parsing thread
         new Thread(() -> {
             try {
                 ResultType loginResult = login();
-                if(loginResult != ResultType.Success && errorCallback != null){
-                    errorCallback.errorOccurred(loginResult);
-                    return;
-                }
+
+                // We actually don't care whether the login succeeded because this thread is needed for parsing from raw cache as well
 
                 long counter = apiClient.getLatestCounterValue();
                 confirmedCounter.set(apiClient.isCounterConfirmed ? counter : -1);
