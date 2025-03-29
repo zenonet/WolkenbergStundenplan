@@ -12,6 +12,8 @@ public class StundenplanApplication extends Application {
     public static Instant applicationEntrypointInstant;
     public static int millisToDisplay = -1;
     public static StundenplanApplication application;
+
+    public static ReportableError ReportableError;
     private static TimeTableManager AuxiliaryManager;
     public static TimeTableManager getAuxiliaryManager() {
         if(AuxiliaryManager != null) return AuxiliaryManager;

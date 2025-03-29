@@ -1,9 +1,14 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("androidx.baselineprofile")
 }
+
+val crashReportEndpoint: String = gradleLocalProperties(rootDir).getProperty("crashreport.endpoint")
 
 android {
     namespace = "de.zenonet.stundenplan"
@@ -19,6 +24,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "errorReportUrl", crashReportEndpoint)
     }
 
     buildTypes {
@@ -112,6 +118,9 @@ dependencies {
     // Glance app widgets
     implementation( "androidx.glance:glance-appwidget:1.0.0" )
     implementation( "androidx.glance:glance-material3:1.0.0" )
+
+    // OkHttp
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // In-App reviews
     implementation("com.google.android.play:review:2.0.1")

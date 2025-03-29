@@ -9,6 +9,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -18,6 +20,8 @@ import java.util.Locale;
 
 import de.zenonet.stundenplan.common.LogTags;
 import de.zenonet.stundenplan.common.NameLookup;
+import de.zenonet.stundenplan.common.ReportableError;
+import de.zenonet.stundenplan.common.StundenplanApplication;
 import de.zenonet.stundenplan.common.Utils;
 import de.zenonet.stundenplan.common.Week;
 
@@ -107,6 +111,7 @@ public class TimeTableParser {
             throw e;
         }
         catch (Exception e) {
+            setReportableError(e);
             throw new TimeTableLoadException(e);
         }
     }
@@ -258,7 +263,17 @@ public class TimeTableParser {
                 }
             }
         } catch (Exception e) {
+            setReportableError(e);
             throw new TimeTableLoadException(e);
         }
+    }
+
+    void setReportableError(Exception e){
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String sStackTrace = sw.toString();
+
+        StundenplanApplication.ReportableError = new ReportableError("crash", "parser", sStackTrace + "\n\n" + e.getMessage());
     }
 }

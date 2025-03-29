@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -34,6 +35,8 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
+import de.zenonet.stundenplan.BuildConfig;
+import de.zenonet.stundenplan.ErrorReportPromptKt;
 import de.zenonet.stundenplan.OnboardingActivity;
 import de.zenonet.stundenplan.R;
 import de.zenonet.stundenplan.SettingsActivity;
@@ -396,6 +399,16 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             Toast.makeText(this, "Stundenplan konnte nicht geladen werdern", Toast.LENGTH_SHORT).show();
                             updateTimeTableView(null);
+
+                            // show error report prompt
+                            if(StundenplanApplication.ReportableError != null) {
+                                ViewGroup parent = (ViewGroup) table.getParent();
+                                ComposeView composeView = new ComposeView(this);
+                                parent.addView(composeView);
+                                StundenplanApplication.ReportableError.setUserId(manager.user.id);
+                                StundenplanApplication.ReportableError.setAppVersion(String.format("%s (%s)" ,BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
+                                ErrorReportPromptKt.showDialog(composeView, ErrorReportPromptKt::createWorkRequest);
+                            }
                         });
                     }
                 }
