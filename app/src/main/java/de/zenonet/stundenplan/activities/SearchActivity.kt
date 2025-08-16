@@ -292,7 +292,7 @@ class SearchViewModel(private val lookup: NameLookup) : ViewModel() {
                     }
 
                     Pair<Student, Int>(st, searchScore)
-                }.filter { it.second > 1 }.sortedByDescending { it.second }.fastMap { it.first }
+                }.filter { it.second > 0 }.sortedByDescending { it.second }.fastMap { it.first }
             }
 
             selectedCompletion = 0
