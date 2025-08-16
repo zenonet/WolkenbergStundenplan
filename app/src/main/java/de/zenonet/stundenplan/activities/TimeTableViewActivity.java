@@ -77,6 +77,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
     ImageButton previousWeekButton;
     ImageButton nextWeekButton;
+    TextView messageView;
 
     Week selectedWeek = Timing.getRelevantWeekOfYear();
     private TimeTable currentTimeTable;
@@ -115,6 +116,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
 
         table = findViewById(R.id.tableLayout);
         stateView = findViewById(R.id.stateView);
+        messageView = findViewById(R.id.messageView);
+
         formatter = new Formatter(this);
 
         if (!isPreview)
@@ -360,7 +363,8 @@ public class TimeTableViewActivity extends AppCompatActivity {
                     if (timeTable == null) return;
                     timeTableVersionsReceived[0]++;
                     runOnUiThread(() -> {
-                                if (!timeTableLoaded)
+                        messageView.setText("");
+                        if (!timeTableLoaded)
                                     if (timeTable.source == TimeTableSource.Cache && !timeTable.isCacheStateConfirmed)
                                         Log.i(LogTags.Timing, String.format("Time from app start to cached timetable received: %d ms", StundenplanApplication.getMillisSinceAppStart()));
                                     else if (timeTable.isCacheStateConfirmed) {
@@ -380,6 +384,10 @@ public class TimeTableViewActivity extends AppCompatActivity {
                                 timeTableLoaded = true;
                                 currentTimeTable = timeTable;
                                 updateTimeTableView(timeTable);
+
+                                if(timeTable.isEmpty()){
+                                    messageView.setText("Frei");
+                                }
                             }
                     );
 
@@ -406,7 +414,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         });
                     }else if(error == ResultType.CantLoadTimeTable){
                         runOnUiThread(() -> {
-                            Toast.makeText(this, "Stundenplan konnte nicht geladen werden", Toast.LENGTH_SHORT).show();
+                            messageView.setText("Stundenplan konnte nicht geladen werden");
                             updateTimeTableView(null);
 
                             // show error report prompt

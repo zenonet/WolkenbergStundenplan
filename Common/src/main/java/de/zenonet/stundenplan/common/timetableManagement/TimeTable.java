@@ -30,6 +30,13 @@ public final class TimeTable {
         return Lessons != null && dayOfWeek >= 0 && dayOfWeek < 5 && Lessons[dayOfWeek].length > period && Lessons[dayOfWeek][period] != null;
     }
 
+    public boolean isEmpty(){
+        for (Lesson[] day : Lessons) {
+            if (day.length > 0) return false;
+        }
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
