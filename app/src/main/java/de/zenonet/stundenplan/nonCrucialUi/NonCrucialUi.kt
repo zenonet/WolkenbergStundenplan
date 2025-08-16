@@ -427,7 +427,7 @@ fun WidgetConfigurator() {
                     WidgetConfigToggle("Treppenanalyse", NonCrucialWidgetKeys.STAIRCASE_ANALYSIS)
                     WidgetConfigToggle("Hausaufgaben", NonCrucialWidgetKeys.HOMEWORK)
                     WidgetConfigToggle(
-                        "Update-Benachrichtigung",
+                        "Update-Informationen",
                         NonCrucialWidgetKeys.UPDATE_NOTICES
                     )
                     //WidgetConfigToggle("Posts aus dem offiziellen Stundenplan", NonCrucialWidgetKeys.POSTS)

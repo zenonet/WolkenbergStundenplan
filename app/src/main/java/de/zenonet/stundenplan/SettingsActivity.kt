@@ -318,7 +318,7 @@ fun View(activity: SettingsActivity?) {
                         withLink(LinkAnnotation.Url("https://github.com/zenonet/WolkenbergStundenplan/tree/v${BuildConfig.VERSION_NAME}")) {
                             appendLine("v${BuildConfig.VERSION_NAME}${if(BuildConfig.DEBUG) " (debug)" else ""}")
                         }
-                        append("Diese App ist vollständig Open Source. ")
+                        append("Diese App ist Open Source. ")
                         val style = SpanStyle(textDecoration = TextDecoration.Underline)
                         withStyle(style = style) {
                             withLink(LinkAnnotation.Url("https://github.com/zenonet/WolkenbergStundenplan")) {
