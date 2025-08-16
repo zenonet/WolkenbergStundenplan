@@ -15,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,7 +111,7 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                 .weight(1f)
                 .padding(15.dp)
         ) {
-            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(Modifier.height(30.dp))
                 when (it) {
                     0 -> {
@@ -128,12 +135,6 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
 
                         Spacer(Modifier.height(15.dp))
 
-                        Text(
-                            "Deine Login-Daten werden nicht gespeichert.\nDer Entwickler dieser App keinen Zugriff darauf.",
-                            fontSize = 10.sp,
-                            lineHeight = 15.sp
-                        )
-                        Spacer(Modifier.height(10.dp))
                         Button(onClick = {
                             // Go to the next page since that auto-triggers the login process
                             coroutineScope.launch {
@@ -143,16 +144,25 @@ fun OnboardingScreen(activity: OnboardingActivity?, modifier: Modifier = Modifie
                             Text("Login")
                         }
 
-                        /*                        ExpandableCard(header = { Text("Wie funktioniert das?") }) {
-                                                    Text(
-                                                        "Beim Login in der offiziellen WebApp (via Microsoft) entsteht ein OAuth Code. " +
-                                                                "Dies ist ein einmaliges Token, das der inoffizielle Client abfängt. " +
-                                                                "Damit kann er dann ein refreshToken generieren, aus dem er immer wieder neue accessTokens " +
-                                                                "generieren kann.\nDiese accessTokens ermöglichen es, den Stundenplan einzusehen.\n" +
-                                                                "Bei der Authentifizierung erhält der inoffizielle Stundenplan lediglich diese Tokens, NICHT DEIN PASSWORT."
-                                                    )
-                                                }
-                         */
+                        Spacer(Modifier.height(20.dp))
+
+                        ExpandableCard(header = { Text("Bedenken?") }) {
+                            Text(buildAnnotatedString {
+                                appendLine("Deine Login-Daten werden, wie bei der offiziellen App, ausschließlich an Microsoft übermittelt und nicht gespeichert. ")
+                                append("Den Quellcode für den Login-Mechanismus findest Du ")
+                                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)){
+                                    withLink(link = LinkAnnotation.Url("https://github.com/zenonet/WolkenbergStundenplan/blob/master/app/src/main/java/de/zenonet/stundenplan/activities/LoginActivity.java")){
+                                        append("hier")
+                                    }
+                                }
+                                append(".\nWenn Du fragen hast, ")
+                                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)){
+                                    withLink(link = LinkAnnotation.Url(BuildConfig.devEmail)){
+                                        append("wende Dich gern an den Entwickler")
+                                    }
+                                }
+                            })
+                        }
                         Spacer(Modifier.height(80.dp))
 
                         Header("Vorschau-Version")
@@ -326,7 +336,7 @@ fun ExpandableCard(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun OnBoardingScreenPreview() {
     StundenplanTheme {

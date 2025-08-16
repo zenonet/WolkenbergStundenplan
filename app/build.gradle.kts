@@ -8,7 +8,8 @@ plugins {
     id("androidx.baselineprofile")
 }
 
-val crashReportEndpoint: String = gradleLocalProperties(rootDir, providers).getProperty("crashreport.endpoint")
+val crashReportEndpoint: String = gradleLocalProperties(rootDir, providers).getProperty("crashreport.endpoint", "\"https://example.com\"")
+val devEmail: String = gradleLocalProperties(rootDir, providers).getProperty("dev.email", "\"about:blank\"")
 
 android {
     namespace = "de.zenonet.stundenplan"
@@ -25,6 +26,7 @@ android {
             useSupportLibrary = true
         }
         buildConfigField("String", "errorReportUrl", crashReportEndpoint)
+        buildConfigField("String", "devEmail", devEmail)
     }
 
     buildTypes {
