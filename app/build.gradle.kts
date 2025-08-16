@@ -8,15 +8,15 @@ plugins {
     id("androidx.baselineprofile")
 }
 
-val crashReportEndpoint: String = gradleLocalProperties(rootDir).getProperty("crashreport.endpoint")
+val crashReportEndpoint: String = gradleLocalProperties(rootDir, providers).getProperty("crashreport.endpoint")
 
 android {
     namespace = "de.zenonet.stundenplan"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 33
         versionName = "1.8.3"
 
@@ -95,7 +95,6 @@ dependencies {
     implementation("com.google.android.play:app-update-ktx:2.1.0")
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
     // implementation ("com.android.support:appcompat-v7:23.2.0")
-    testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("androidx.work:work-runtime:2.9.0")

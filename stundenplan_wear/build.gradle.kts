@@ -6,13 +6,13 @@ plugins {
 
 android {
     namespace = "de.zenonet.stundenplan.wear"
-    compileSdk = 34
+    compileSdk = 35
 
 
     defaultConfig {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 2037
         versionName = "1.8.0wear"
         vectorDrawables {
@@ -69,7 +69,7 @@ dependencies {
     implementation("androidx.wear:wear-complications-data-source-ktx:1.0.0-alpha22")
     implementation("androidx.wear:wear-complications-provider:1.0.0-alpha17")
     implementation("androidx.wear:wear:1.3.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")

@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "de.zenonet.stundenplan.common"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

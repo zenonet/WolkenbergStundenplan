@@ -27,6 +27,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.compose.ui.platform.ComposeView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.PreferenceManager;
 
 import java.io.IOException;
@@ -87,6 +90,12 @@ public class TimeTableViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_time_table_view);
         super.onCreate(savedInstanceState);
 
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.scrollView), (view, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            findViewById(R.id.mainViewGroup).setPadding(0, 0, 0, systemBars.bottom);
+            return insets;
+        });
         initializeTimeTableManagement();
 
         isPreview = getSharedPreferences().getBoolean("showPreview", false);
@@ -397,7 +406,7 @@ public class TimeTableViewActivity extends AppCompatActivity {
                         });
                     }else if(error == ResultType.CantLoadTimeTable){
                         runOnUiThread(() -> {
-                            Toast.makeText(this, "Stundenplan konnte nicht geladen werdern", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Stundenplan konnte nicht geladen werden", Toast.LENGTH_SHORT).show();
                             updateTimeTableView(null);
 
                             // show error report prompt
