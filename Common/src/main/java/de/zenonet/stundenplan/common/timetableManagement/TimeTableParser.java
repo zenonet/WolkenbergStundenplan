@@ -148,7 +148,13 @@ public class TimeTableParser {
 
     private void applySubstitutions(TimeTable timeTable, String json, Week week) throws TimeTableLoadException {
         try {
-            JSONArray substitutions = new JSONObject(json).getJSONObject("substitutions").getJSONArray(String.format(Locale.GERMANY, "%d-%02d", week.Year, week.WeekOfYear));
+            JSONObject subs = new JSONObject(json).getJSONObject("substitutions");
+            String weekIdentifier = String.format(Locale.GERMANY, "%d-%02d", week.Year, week.WeekOfYear);
+
+            // No substitutions for us :(
+            if(!subs.has(weekIdentifier)) return;
+
+            JSONArray substitutions = subs.getJSONArray(weekIdentifier);
             for (int dayI = 0; dayI < 5; dayI++) {
 
                 if (substitutions.isNull(dayI)) continue;
