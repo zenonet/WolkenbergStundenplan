@@ -22,4 +22,5 @@
 -keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableApiClient { *; }
 -keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableManager { *; }
 -keep class de.zenonet.stundenplan.common.timetableManagement.TimeTableCacheClient { *; }
+-keep class de.zenonet.stundenplan.activities.TimeTableViewActivity { *; }
 -keep class de.zenonet.stundenplan.common.models.User
