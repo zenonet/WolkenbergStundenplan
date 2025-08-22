@@ -323,7 +323,7 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                 }
             }
             item {
-                Spacer(Modifier.height(30.dp))
+                Spacer(Modifier.height(10.dp))
             }
             item {
                 if (viewModel.isPreview) {
@@ -339,7 +339,9 @@ fun Menu(viewModel: WearTimeTableViewModel, modifier: Modifier = Modifier) {
                     }
                 }
             }
-
+            item {
+                Spacer(Modifier.height(20.dp))
+            }
             item {
                 Text(
                     "v${BuildConfig.VERSION_NAME} (id: ${BuildConfig.VERSION_CODE})",
