@@ -6,15 +6,15 @@ plugins {
 
 android {
     namespace = "de.zenonet.stundenplan.wear"
-    compileSdk = 35
+    compileSdk = 36
 
 
     defaultConfig {
         applicationId = "de.zenonet.stundenplan"
         minSdk = 26
-        targetSdk = 35
         versionCode = 2037
         versionName = "1.8.0wear"
+        targetSdk = 36
         vectorDrawables {
             useSupportLibrary = true
         }
